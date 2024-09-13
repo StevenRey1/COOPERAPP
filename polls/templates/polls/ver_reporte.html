@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Detalles del Reporte</h2>
+  <p><strong>Fecha de Elaboración:</strong> {{ reporte.fecha_elaboracion }}</p>
+  <p><strong>Período:</strong> {{ reporte.get_periodo_display }}</p>
+  <p><strong>Desde:</strong> {{ reporte.desde }}</p>
+  <p><strong>Hasta:</strong> {{ reporte.hasta }}</p>
+{% endblock %}

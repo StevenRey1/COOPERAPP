@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>ACERCAMIENTOS DE COOPERACIÓN INTERNACIONAL {{ reporte }}</h2>
+  <p>¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación internacional en este periodo X?</p>
+
+  <!-- Radio buttons para 'Sí' y 'No' -->
+  <div>
+    <input type="radio" id="si" name="acercamiento" value="si" onclick="toggleForm(true)">
+    <label for="si">Sí</label>
+
+    <input type="radio" id="no" name="acercamiento" value="no" onclick="toggleForm(false)" checked>
+    <label for="no">No</label>
+  </div>
+
+  <!-- El formulario, inicialmente oculto si se selecciona 'No' -->
+  <fieldset id="acercamientoForm" style="display: none;">
+  
+    <form method="POST">
+      {% csrf_token %}
+    
+      <!-- Campo 1 -->
+      <label for="{{ form.entidad.id_for_label }}">Mencione aquí el nombre de la entidad con quien ha realizado los acercamientos</label>
+      {{ form.entidad }}
+    
+      <!-- Campo 2 -->
+      <label for="{{ form.campo2.id_for_label }}">Mencione aquí los temas y perspectivas de trabajo colaborativo:</label>
+      {{ form.temas_perspectivas }}
+    
+      <!-- Otros campos -->
+      <!-- Añade más campos de esta manera -->
+    
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </form>
+        
+  </fieldset>
+
+  <!-- Enlace para continuar sin guardar -->
+  <fieldset id="continuar_sin_guardar" style="display: block;">
+    <a href="{% url 'crear_necesidades' reporte.id %}" class="btn btn-primary">Continuar</a>
+  </fieldset>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- JavaScript para mostrar/ocultar el formulario -->
+<script type="text/javascript">
+  function toggleForm(show) {
+    var formFieldset = document.getElementById('acercamientoForm');
+    var continueField = document.getElementById('continuar_sin_guardar');
+    
+    if (show) {
+      formFieldset.style.display = 'block';  // Muestra el formulario si se selecciona 'Sí'
+      continueField.style.display = 'none';
+    } else {
+      formFieldset.style.display = 'none';  // Oculta el formulario si se selecciona 'No'
+      continueField.style.display = 'block';
+    }
+  }
+
+  // Llama a toggleForm(false) para que el formulario esté oculto inicialmente si 'No' está seleccionado
+  document.getElementById('no').checked ? toggleForm(false) : toggleForm(true);
+</script>
+{% endblock %}
