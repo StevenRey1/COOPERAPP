@@ -1,18 +1,49 @@
 {% extends 'base.html' %}
-
 {% block content %}
-  <h2>Listado de Reportes de Acercamiento</h2>
-  <ul>
+<h1>Reportes y Formularios</h1>
+
+<ul>
     {% for reporte in reportes %}
-      <li>
-        {{ reporte }} 
-        <a href="{% url 'ver_datos_quien_reporta' reporte_id=reporte.id %}">ver datos quien reporta</a> | 
-        <a href="{% url 'ver_acercamiento' reporte_id=reporte.id %}">ver datos de acercamiento</a> | 
-        <a href="{% url 'ver_necesidades' reporte_id=reporte.id %}">ver datos de necesidades</a>
-      </li>
+        <li>
+            <strong>Reporte {{ reporte.id }}:</strong>
+            <ul>
+                {% if reporte.estado == reporte.ESTADO_DATOS %}
+                    <li><a href="{% url 'crear_datos_quien_reporta' reporte_id=reporte.id %}">Formulario Datos Quien Reporta (Pendiente)</a></li>
+                {% elif reporte.estado == reporte.ESTADO_ACERCAMIENTO %}
+                    <li><a href="{% url 'ver_datos_quien_reporta' reporte_id=reporte.id %}">Formulario Datos Quien Reporta (Completado)</a>
+                    <a href = "{% url 'editar_datos_quien_reporta' reporte_id=reporte.id %}">Editar</a>
+                    </li>
+                    <li><a href="{% url 'crear_acercamiento' reporte_id=reporte.id %}">Formulario Acercamiento de Cooperación (Pendiente)</a></li>
+                {% elif reporte.estado == reporte.ESTADO_NECESIDADES %}
+                    <li><a href="{% url 'ver_datos_quien_reporta' reporte_id=reporte.id %}">Formulario Datos Quien Reporta (Completado)</a>
+                    <a href = "{% url 'editar_datos_quien_reporta' reporte_id=reporte.id %}">Editar</a>
+                    </li>
+                    <li><a href="{% url 'ver_acercamiento' reporte_id=reporte.id %}">Formulario Acercamiento de Cooperación (Completado)</a>
+                      
+                    {% for acercamiento in reporte.acercamientocooperacion_set.all %}
+                     <a href="{% url 'editar_acercamiento' reporte.id acercamiento.id %}">Editar Acercamiento {{ forloop.counter }}</a> |
+                    {% endfor %}
+                  
+                    </li>
+                    <li><a href="{% url 'crear_necesidades' reporte_id=reporte.id %}">Formulario Necesidades de Cooperación (Pendiente)</a></li>
+                {% elif reporte.estado == reporte.ESTADO_FINALIZADO %}
+                    <li><a href="{% url 'ver_datos_quien_reporta' reporte_id=reporte.id %}">Formulario Datos Quien Reporta (Completado)</a>
+                    <a href = "{% url 'editar_datos_quien_reporta' reporte_id=reporte.id %}">Editar</a>
+                    </li>
+                    <li><a href="{% url 'ver_acercamiento' reporte_id=reporte.id %}">Formulario Acercamiento de Cooperación (Completado)</a>
+                      {% for acercamiento in reporte.acercamientocooperacion_set.all %}
+                      <a href="{% url 'editar_acercamiento' reporte.id acercamiento.id %}">Editar Acercamiento {{ forloop.counter }}</a> |
+                     {% endfor %}
+                    </li>
+                    <li><a href="{% url 'ver_necesidades' reporte_id=reporte.id %}">Formulario Necesidades de Cooperación (Completado)</a>
+                    <a href="{% url 'editar_necesidades' reporte_id=reporte.id %}">Editar</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </li>
     {% endfor %}
-  </ul>
-  <a href="{% url 'crear_reporte_acercamiento' %}" class="btn btn-primary">
-    Agregar reporte
-</a>
-  {% endblock %}
+</ul>
+
+<a href="{% url 'crear_reporte_acercamiento' %}" class="btn btn-primary">Crear nuevo reporte</a>
+
+{% endblock %}

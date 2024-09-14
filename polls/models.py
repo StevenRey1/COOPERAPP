@@ -6,17 +6,30 @@ class ReporteAcercamiento(models.Model):
         ('2', 'Periodo 2'),
         ('3', 'Periodo 3'),
     ]
+    ESTADO_DATOS = 0
+    ESTADO_ACERCAMIENTO = 1
+    ESTADO_NECESIDADES = 2
+    ESTADO_FINALIZADO = 3
+
+    ESTADOS = [
+        (ESTADO_DATOS, 'Datos Quien Informa'),
+        (ESTADO_ACERCAMIENTO, 'Acercamiento de Cooperación'),
+        (ESTADO_NECESIDADES, 'Necesidades de Cooperación'),
+        (ESTADO_FINALIZADO, 'Finalizado'),
+    ]
+
     
     fecha_elaboracion = models.DateField()
     periodo = models.CharField(max_length=1, choices=PERIODOS)
     desde = models.DateField()
     hasta = models.DateField()
+    estado = models.IntegerField(choices=ESTADOS, default=ESTADO_DATOS)
 
     def __str__(self):
         return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"
 
 class DatosQuienReporta(models.Model):
-    reporte = models.ForeignKey(ReporteAcercamiento, on_delete=models.CASCADE)
+    reporte = models.OneToOneField(ReporteAcercamiento, on_delete=models.CASCADE)
     nombre_completo = models.CharField(max_length=255)
     rol = models.CharField(max_length=100, choices=[
         ('Director de dependencia a nivel nacional', 'Director de dependencia a nivel nacional'),
@@ -39,7 +52,7 @@ class AcercamientoCooperacion(models.Model):
         return f"Acercamiento {self.id} del Reporte {self.reporte.id}"
 
 class NecesidadesCooperacion(models.Model):
-    reporte = models.ForeignKey(ReporteAcercamiento, on_delete=models.CASCADE)
+    reporte = models.OneToOneField(ReporteAcercamiento, on_delete=models.CASCADE)
     necesidad_identificado = models.BooleanField(default=False)
     necesidades_identificadas = models.TextField(blank=True, null=True)
     cooperante_identificado = models.BooleanField(default=False)

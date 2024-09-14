@@ -1,8 +1,5 @@
-{% extends 'base.html' %}
-
-{% block content %}
-  <h2>Acercamiento</h2>
-  <p>Nombre entidad: {{ acercamientos.entidad }}</p>
-  <p>Detalles: {{ acercamientos.temas_perspectivas }}</p>
-  <!-- Agrega más campos según el modelo -->
-{% endblock %}
+{% for acercamiento in acercamientos %}
+  <p>Entidad: {{ acercamiento.entidad }}</p>
+  <p>Temas y Perspectivas: {{ acercamiento.temas_perspectivas }}</p>
+  <!-- ... otros campos ... -->
+{% endfor %}

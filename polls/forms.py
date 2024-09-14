@@ -56,14 +56,22 @@ class DatosQuienReportaForm(forms.ModelForm):
 
         
 
-class AcercamientoForm(ModelForm):
+
+class AcercamientoForm(forms.ModelForm):
     class Meta:
         model = AcercamientoCooperacion
-        fields = [ 'entidad', 'temas_perspectivas']
+        fields = ['entidad', 'temas_perspectivas']
         widgets = {
-            'entidad': TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 20 palabras'}),
-            'temas_perspectivas': Textarea(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 100 palabras'}),
+            'entidad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 20 palabras'}),
+            'temas_perspectivas': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 100 palabras'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Asegurando que los campos sean requeridos
+        self.fields['entidad'].required = True
+        self.fields['temas_perspectivas'].required = True
+
 
 
 class NecesidadesForm(ModelForm):
@@ -75,12 +83,4 @@ class NecesidadesForm(ModelForm):
             'cooperante': TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 15 palabras'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Ajusta los campos según los valores del formulario inicial
-        necesidad_identificado = self.initial.get('necesidad_identificado', False)
-        cooperante_identificado = self.initial.get('cooperante_identificado', False)
-
-        self.fields['necesidades_identificadas'].required = necesidad_identificado
-        self.fields['cooperante'].required = cooperante_identificado
+    

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Necesidades de Cooperación para {{ reporte }}</h2>
+  <h2>Editar Necesidades para {{ object.reporte }}</h2>
 
-  <form method="POST">
+  <form method="post">
     {% csrf_token %}
 
     <!-- Checkbox para necesidad identificada -->
@@ -34,7 +34,8 @@
       {{ form.cooperante }}
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a href="{% url 'ver_necesidades' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
   </form>
 
 {% endblock %}
