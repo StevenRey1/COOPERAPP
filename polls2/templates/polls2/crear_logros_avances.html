@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS</h2>
+
+<form method="POST" enctype="multipart/form-data">  {# Asegúrate de incluir enctype para subir archivos #}
+  {% csrf_token %}
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th scope="col">Resultados/Productos Esperados</th>
+        <th scope="col">Logros y/o avances</th>
+        <th scope="col">Departamentos</th>
+        <th scope="col">Municipios</th>
+        <th scope="col">Adjuntos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Fila 1 -->
+      <tr>
+        <td>{{ form.resultado_1 }}</td>
+        <td>{{ form.logros_avances_1 }}</td>
+        <td>{{ form.departamento_1 }}</td>
+        <td>{{ form.municipio_1 }}</td>
+        <td>{{ form.adjunto_1 }}</td>
+      </tr>
+      <!-- Fila 2 -->
+      <tr>
+        <td>{{ form.resultado_2 }}</td>
+        <td>{{ form.logros_avances_2 }}</td>
+        <td>{{ form.departamento_2 }}</td>
+        <td>{{ form.municipio_2 }}</td>
+        <td>{{ form.adjunto_2 }}</td>
+      </tr>
+      <!-- Fila 3 -->
+      <tr>
+        <td>{{ form.resultado_3 }}</td>
+        <td>{{ form.logros_avances_3 }}</td>
+        <td>{{ form.departamento_3 }}</td>
+        <td>{{ form.municipio_3 }}</td>
+        <td>{{ form.adjunto_3 }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Campos adicionales -->
+  <div class="form-group">
+    <label for="id_logros_significativos">Algún aspecto a resaltar como un logro significativo en este periodo:</label>
+    <div class="row">
+      {{ form.logros_significativos }}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="id_dificultades">Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:</label>
+    <div class="row">
+      {{ form.dificultades }}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante:</label><br>
+    <div class="form-check">
+      <input class="form-check-input" id="riesgo_si" type="radio" name="riesgo_relacionamiento" value="True">
+      <label class="form-check-label" for="riesgo_si">Sí</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" id="riesgo_no" type="radio" name="riesgo_relacionamiento" value="False">
+      <label class="form-check-label" for="riesgo_no">No</label>
+    </div>
+  </div>
+  
+  <!-- Aquí debe estar tu campo de detalle de riesgo -->
+  <div class="form-group" id="id_detalle_riesgo" style="display: none;">
+    <label for="id_detalle_riesgo">Explique detalladamente:</label>
+    <div class="row">
+      {{ form.detalle_riesgo }}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="id_observaciones_generales">Observaciones o comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes etc.):</label>
+    <div class="row">
+      {{ form.observaciones_generales }}
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Guardar</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const riesgoSi = document.getElementById('riesgo_si');
+    const riesgoNo = document.getElementById('riesgo_no');
+    const detalleRiesgoField = document.getElementById('id_detalle_riesgo');
+
+    function toggleDetalleRiesgo() {
+      if (riesgoSi.checked) {
+        detalleRiesgoField.style.display = 'block';
+      } else {
+        detalleRiesgoField.style.display = 'none';
+      }
+    }
+
+    // Inicializa el estado del campo al cargar la página
+    toggleDetalleRiesgo();
+
+    // Añade eventos para los radio buttons
+    riesgoSi.addEventListener('change', toggleDetalleRiesgo);
+    riesgoNo.addEventListener('change', toggleDetalleRiesgo);
+  });
+</script>
+{% endblock %}

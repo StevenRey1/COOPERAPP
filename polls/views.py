@@ -11,7 +11,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-
+from django.views import View
 
 
 class ReporteAcercamientoCreateView(CreateView):
@@ -20,9 +20,9 @@ class ReporteAcercamientoCreateView(CreateView):
     template_name = 'polls/crear_reporte_acercamiento.html'
     def form_valid(self, form):
         response = super().form_valid(form)
-        return redirect('crear_datos_quien_reporta', reporte_id=self.object.id)
+        return redirect('polls:crear_datos_quien_reporta', reporte_id=self.object.id)
     def get_success_url(self):
-        return reverse_lazy('crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
+        return reverse_lazy('polls:crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
 
 class DatosQuienReportaCreateView(CreateView):
     model = DatosQuienReporta
@@ -33,11 +33,11 @@ class DatosQuienReportaCreateView(CreateView):
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
        
         if reporte.estado == ReporteAcercamiento.ESTADO_ACERCAMIENTO:
-            return redirect('crear_necesidades', reporte_id=reporte.id)
+            return redirect('polls::crear_necesidades', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
-            return redirect('crear_necesidades', reporte_id=reporte.id)
+            return redirect('polls::crear_necesidades', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_FINALIZADO:
-            return redirect('listar_reportes_acercamiento')
+            return redirect('polls::listar_reportes_acercamiento')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -55,10 +55,10 @@ class DatosQuienReportaCreateView(CreateView):
         reporte.estado = ReporteAcercamiento.ESTADO_ACERCAMIENTO
         reporte.save()
         
-        return redirect('crear_acercamiento', reporte_id=self.kwargs['reporte_id'])
+        return redirect('polls:crear_acercamiento', reporte_id=self.kwargs['reporte_id'])
 
     def get_success_url(self):
-        return reverse_lazy('crear_acercamiento', kwargs={'reporte_id': self.kwargs['reporte_id']})
+        return reverse_lazy('polls:crear_acercamiento', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
 from django.forms import formset_factory    
 from django.views.generic import FormView, UpdateView
@@ -75,9 +75,9 @@ class AcercamientoCreateView(FormView):
     def dispatch(self, request, *args, **kwargs):
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
         if reporte.estado == ReporteAcercamiento.ESTADO_DATOS:
-            return redirect('crear_datos_quien_reporta', reporte_id=reporte.id)
+            return redirect('polls:crear_datos_quien_reporta', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
-            return redirect('crear_necesidades', reporte_id=reporte.id)
+            return redirect('polls:crear_necesidades', reporte_id=reporte.id)
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -97,10 +97,10 @@ class AcercamientoCreateView(FormView):
         reporte.estado = ReporteAcercamiento.ESTADO_NECESIDADES
         reporte.save()
         
-        return redirect('crear_necesidades', reporte_id=self.kwargs['reporte_id'])
+        return redirect('polls:crear_necesidades', reporte_id=self.kwargs['reporte_id'])
 
     def get_success_url(self):
-        return reverse_lazy('crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
+        return reverse_lazy('polls:crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
 
 class NecesidadesCreateView(CreateView):
     model = NecesidadesCooperacion
@@ -110,9 +110,9 @@ class NecesidadesCreateView(CreateView):
     def dispatch(self, request, *args, **kwargs):
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
         if reporte.estado == ReporteAcercamiento.ESTADO_DATOS:
-            return redirect('crear_datos_quien_reporta', reporte_id=reporte.id)
+            return redirect('polls:crear_datos_quien_reporta', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_ACERCAMIENTO:
-            return redirect('crear_acercamiento', reporte_id=reporte.id)
+            return redirect('polls:crear_acercamiento', reporte_id=reporte.id)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -124,10 +124,10 @@ class NecesidadesCreateView(CreateView):
         reporte.estado = ReporteAcercamiento.ESTADO_FINALIZADO
         reporte.save()
 
-        return redirect('listar_reportes_acercamiento')
+        return redirect('polls:listar_reportes_acercamiento')
 
     def get_success_url(self):
-        return reverse_lazy('listar_reportes_acercamiento')
+        return reverse_lazy('polls:listar_reportes_acercamiento')
 
 
 from django.views.generic.list import ListView
@@ -202,10 +202,10 @@ class DatosQuienReportaUpdateView(UpdateView):
         except IntegrityError:
             form.add_error(None, "Error: El ID ya está en uso.")
             return self.form_invalid(form)
-        return redirect('ver_datos_quien_reporta', reporte_id=self.kwargs['reporte_id'])
+        return redirect('polls:ver_datos_quien_reporta', reporte_id=self.kwargs['reporte_id'])
 
     def get_success_url(self):
-        return reverse_lazy('ver_datos_quien_reporta', kwargs={'reporte_id': self.kwargs['reporte_id']})
+        return reverse_lazy('polls:ver_datos_quien_reporta', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
     
 
@@ -219,7 +219,7 @@ class AcercamientoUpdateView(UpdateView):
         return get_object_or_404(AcercamientoCooperacion, id=self.kwargs['pk'], reporte=reporte)
 
     def get_success_url(self):
-        return reverse_lazy('crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
+        return reverse_lazy('polls:crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
 
 
@@ -238,10 +238,10 @@ class NecesidadesCooperacionUpdateView(UpdateView):
         except IntegrityError:
             form.add_error(None, "Error: El ID ya está en uso.")
             return self.form_invalid(form)
-        return redirect('ver_necesidades', reporte_id=self.kwargs['reporte_id'])
+        return redirect('polls:ver_necesidades', reporte_id=self.kwargs['reporte_id'])
 
     def get_success_url(self):
-        return reverse_lazy('ver_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
+        return reverse_lazy('polls:ver_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
     
     
@@ -378,3 +378,16 @@ def generar_pdf_reporte(request, reporte_id):
     response.write(pdf)
 
     return response
+
+
+class SaltarAcercamientoView(View):
+    def get(self, request, *args, **kwargs):
+        # Obtén el reporte con el ID
+        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        
+        # Cambia el estado del reporte para marcar que se ha saltado el acercamiento
+        reporte.estado = ReporteAcercamiento.ESTADO_NECESIDADES  # Define el nuevo estado en el modelo
+        reporte.save()
+
+        # Redirige al paso de necesidades
+        return redirect('polls:crear_necesidades', reporte_id=reporte.id)

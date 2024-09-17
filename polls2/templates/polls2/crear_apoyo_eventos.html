@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Apoyo de este proyecto / cooperante para asistir o realizar eventos, jornadas y otros espacios de información, sensibilización y/o capacitación</h2>
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="form-group mb-2">
+      <label for="{{ form.cantidad_eventos.id_for_label }}">Cantidad de eventos apoyados por este proyecto / cooperante en el período reportado:</label>
+      {{ form.cantidad_eventos }}
+    </div>
+
+    <div class="form-group mb-2">
+      <label for="{{ form.opciones_eventos.id_for_label }}">Tipo de eventos apoyados:</label>
+      {{ form.opciones_eventos }}
+    </div>
+
+    <div class="form-group mb-2" id="otros_eventos" style="display: none;">
+        <label for="{{ form.otros_eventos.id_for_label }}">¿Cuáles?</label>
+        {{ form.otros_eventos }}
+    </div>
+
+    <div class="form-group mb-2">
+      <label for="{{ form.objetivo_principal.id_for_label }}">Objectivo principal de los eventos apoyados:</label>
+      <div class="row">
+        {{ form.objetivo_principal }}
+      </div>
+       
+    </div>
+
+    <div class="form-group mb-2">
+        <label for="{{ form.opciones_publico.id_for_label }}">Principal público objetivo de los eventos:</label>
+          {{ form.opciones_publico }}
+    </div>
+
+    <div class="form-group mb-2" id="otros_publico" style="display: none;">
+        <label for="{{ form.otros_publico.id_for_label }}">¿Cuál?</label>
+        {{ form.otros_publicos }}
+    </div>
+
+    <div class="form-group mb-2">
+        <label for="{{ form.cantidad_participantes.id_for_label }}">Cantidad total de los participantes en los eventos en este período:</label>
+        {{ form.cantidad_participantes }}
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </form>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const opcionesEventosCheckbox = document.querySelector('input[name="opciones_eventos"][value="Otros"]');
+        const otrosEventos = document.getElementById('otros_eventos');
+
+        opcionesEventosCheckbox.addEventListener('change', () => {
+            if (opcionesEventosCheckbox.checked) {
+                otrosEventos.style.display = 'block';
+            } else {
+                otrosEventos.style.display = 'none';
+            }
+        });
+
+
+        const opcionesPublicoCheckbox = document.querySelector('input[name="opciones_publico"][value="Otros"]');
+        const otrosPublico = document.getElementById('otros_publico');
+
+        opcionesPublicoCheckbox.addEventListener('change', () => {
+            if (opcionesPublicoCheckbox.checked) {
+                otrosPublico.style.display = 'block';
+            } else {
+                otrosPublico.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

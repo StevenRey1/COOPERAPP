@@ -6,6 +6,6 @@
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary">Guardar cambios</button>
-    <a href="{% url 'ver_acercamiento' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
+    <a href="{% url 'polls:ver_acercamiento' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
   </form>
 {% endblock %}

@@ -40,8 +40,8 @@
     </fieldset>
   </form>
   <fieldset id="continuar_sin_guardar" style="display: block;">
-    <a href="{% url 'crear_necesidades' reporte.id %}" class="btn btn-primary">Continuar</a>
-  </fieldset>
+    <a href="{% url 'polls:saltar_acercamiento' reporte.id %}" class="btn btn-primary">Continuar</a>
+</fieldset>
 
 {% endblock %}
 
