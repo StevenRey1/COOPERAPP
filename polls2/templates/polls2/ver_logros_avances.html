@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<table>
+    <thead>
+      <tr>
+        <th>Resultado</th>
+        <th>Logros o Avances</th>
+        <th>Departamento</th>
+        <th>Municipio</th>
+        <th>Adjunto</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ logros_avances.resultado_1 }}</td>
+        <td>{{ logros_avances.logros_avances_1 }}</td>
+        <td>{{ logros_avances.departamento_1 }}</td>
+        <td>{{ logros_avances.municipio_1 }}</td>
+        <td>{{ logros_avances.adjunto_1 }}</td>
+      </tr>
+      <tr>
+        <td>{{ logros_avances.resultado_2 }}</td>
+        <td>{{ logros_avances.logros_avances_2 }}</td>
+        <td>{{ logros_avances.departamento_2 }}</td>
+        <td>{{ logros_avances.municipio_2 }}</td>
+        <td>{{ logros_avances.adjunto_2 }}</td>
+      </tr>
+      <tr>
+        <td>{{ logros_avances.resultado_3 }}</td>
+        <td>{{ logros_avances.logros_avances_3 }}</td>
+        <td>{{ logros_avances.departamento_3 }}</td>
+        <td>{{ logros_avances.municipio_3 }}</td>
+        <td>{{ logros_avances.adjunto_3 }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <p>{{logros_avances.logros_significativos}}</p>
+  <p>{{logros_avances.dificultades}}</p>
+  <p>Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante: {{ logros_avances.detalle_riesgo ? 'Sí' : 'No' }}</p>
+  
+  <!-- Mostrar el detalle solo si existe -->
+  <p v-if="logros_avances.detalle_riesgo">Detalle: {{logros_avances.detalle_riesgo}}</p>
+  
+  <p>Observaciones generales: {{logros_avances.observaciones_generales}}</p>
+  
+
+
+{% endblock %}

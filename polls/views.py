@@ -33,11 +33,11 @@ class DatosQuienReportaCreateView(CreateView):
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
        
         if reporte.estado == ReporteAcercamiento.ESTADO_ACERCAMIENTO:
-            return redirect('polls::crear_necesidades', reporte_id=reporte.id)
+            return redirect('polls:crear_necesidades', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
-            return redirect('polls::crear_necesidades', reporte_id=reporte.id)
+            return redirect('polls:crear_necesidades', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_FINALIZADO:
-            return redirect('polls::listar_reportes_acercamiento')
+            return redirect('polls:listar_reportes_acercamiento')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -165,7 +165,7 @@ class AcercamientoDetailView(ListView):
     context_object_name = 'acercamientos'  # Cambia el nombre a plural
     
     def get_queryset(self):
-        # Aquí usamos `informe` en lugar de `reporte`
+        
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
         return AcercamientoCooperacion.objects.filter(reporte=reporte)
 
@@ -178,7 +178,7 @@ class NecesidadesDetailView(DetailView):
     context_object_name = 'necesidades'
 
     def get_object(self):
-        # Aquí usamos `informe` en lugar de `reporte`
+        
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
         return get_object_or_404(NecesidadesCooperacion, reporte=reporte)
 

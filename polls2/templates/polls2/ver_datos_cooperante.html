@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Datos de Cooperante</h2>
+<p>Nombre Completo: {{ datos_cooperante.nombre_cooperante }}</p>
+<p>Identificación: {{ datos_cooperante.identificacion }}</p>
+<p>Dependencia: {{ datos_cooperante.nombre_implementador }}</p>
+<p>Programa: {{ datos_cooperante.programa_proyecto_plan }}</p>
+<p>Linea de Acción: {{ datos_cooperante.linea_accion }}</p>
+<p> Rol quien reporta: {{rol_quien_reporta}}</p>
+{% endblock %}

@@ -1,0 +1,81 @@
+
+{% extends 'base.html' %} {% block content %}
+<h1>Reportes y Formularios</h1>
+
+<ul>
+  {% for reporte in reportes %}
+  <li>
+    <strong>Reporte {{ reporte.id }}:</strong>
+    <ul>
+      {% if reporte.estado == reporte.ESTADO_DATOS_QUIEN_REPORTA %}
+      <li>
+        <a href="{% url 'polls2:crear_datos_quien_reporta' reporte_id=reporte.id %}"
+          >Formulario Datos Quien Reporta (Pendiente)</a
+        >
+      </li>
+      {% elif reporte.estado == reporte.ESTADO_DATOS_COOPERANTE %}
+      <li>
+        <a href="{% url 'polls2:ver_datos_quien_reporta' reporte_id=reporte.id %}"
+          >Formulario Datos Quien Reporta (Completado)</a
+        >
+      </li>
+      <li>
+        <a href="{% url 'polls2:crear_datos_cooperante' reporte_id=reporte.id %}"
+          >Formulario Datos del Cooperante (Pendiente)</a
+        >
+      </li>
+      {% elif reporte.estado == reporte.ESTADO_LOGROS_AVANCES %}
+      <li>
+        <a href="{% url 'polls2:ver_datos_quien_reporta' reporte_id=reporte.id %}"
+          >Formulario Datos Quien Reporta (Completado)</a
+        >
+      </li>
+      <li>
+        <a href="{% url 'polls2:ver_datos_cooperante' reporte_id=reporte.id %}"
+          >Formulario Datos del Coperante (Completado)</a
+        >
+
+      </li>
+      <li>
+        <a href="{% url 'polls2:crear_logros_avances' reporte_id=reporte.id %}"
+          >Formulario Logros y Avances (Pendiente)</a
+        >
+      </li>
+      {% elif reporte.estado == reporte.ESTADO_FINALIZADO %}
+      <li>
+        <a href="{% url 'polls2:ver_datos_quien_reporta' reporte_id=reporte.id %}"
+          >Formulario Datos Quien Reporta (Completado)</a
+        >
+    
+      </li>
+      <li>
+        <a href="{% url 'polls2:ver_datos_cooperante' reporte_id=reporte.id %}"
+          >Formulario Datos del Cooperante (Completado)</a
+        >
+        
+      </li>
+      <li>
+        <a href="{% url 'polls2:ver_logros_avances' reporte_id=reporte.id %}"
+          >Formulario Logros y Avances (Completado)</a
+        >
+        
+      </li>
+      <li>
+        <a href="{% url 'polls2:reporte_avances_pdf' reporte_id=reporte.id %}"
+          >Generar reporte 1</a
+        >
+        
+      </li>
+      
+      {% endif %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'polls2:crear_reporte_avances' %}" class="btn btn-primary"
+  >Crear nuevo reporte</a
+>
+
+{% endblock %}
+

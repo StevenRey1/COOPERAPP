@@ -1,18 +1,28 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+
 class ReporteAvances(models.Model):
     PERIODOS = [
         ('1', 'Periodo 1'),
         ('2', 'Periodo 2'),
         ('3', 'Periodo 3'),
     ]
-
+    
+    ESTADO_DATOS_QUIEN_REPORTA = 0
+    ESTADO_DATOS_COOPERANTE = 1
+    ESTADO_LOGROS_AVANCES = 2
+    ESTADO_FINALIZADO = 3
+    
+    ESTADOS = [(ESTADO_DATOS_QUIEN_REPORTA, 'Datos Quien Reporta'),
+               (ESTADO_DATOS_COOPERANTE, 'Datos Cooperante'),
+               (ESTADO_LOGROS_AVANCES, 'Logros y Avances')]
     
     fecha_elaboracion = models.DateField()
     periodo = models.CharField(max_length=1, choices=PERIODOS)
     desde = models.DateField()
     hasta = models.DateField()
+    estado = models.IntegerField(choices=ESTADOS, default=ESTADO_DATOS_QUIEN_REPORTA)
     
     def __str__(self):
         return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"
