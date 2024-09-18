@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "polls.apps.PollsConfig",
-    "polls2.apps.Polls2Config"
+    "polls2.apps.Polls2Config",
+    "accounts.apps.AccountsConfig",
     
 ]
 
@@ -136,3 +137,9 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+LOGIN_REDIRECT_URL = 'polls:index'
+LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'

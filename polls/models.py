@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+
 
 class ReporteAcercamiento(models.Model):
     PERIODOS = [
@@ -24,6 +26,8 @@ class ReporteAcercamiento(models.Model):
     desde = models.DateField()
     hasta = models.DateField()
     estado = models.IntegerField(choices=ESTADOS, default=ESTADO_DATOS)
+    
+    
 
     def __str__(self):
         return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"

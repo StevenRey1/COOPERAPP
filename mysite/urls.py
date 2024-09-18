@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('polls/', include('polls.urls')),  # Aquí 'mi_app' es el nombre de tu aplicación
     path("polls2/", include("polls2.urls")),
+     path('accounts/', include('accounts.urls')),  # Incluye las URLs de la aplicación de autenticación
 ]
