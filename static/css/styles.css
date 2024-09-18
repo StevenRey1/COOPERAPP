@@ -1,0 +1,42 @@
+.custom-row {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.custom-row:hover {
+    background-color: green;
+}
+
+.custom-row:hover a, .custom-row:hover i, .custom-row:hover span {
+    color: white !important;
+}
+
+.custom-font {
+    font-family: 'Work Sans', Arial, sans-serif;
+    color: black;
+  }
+
+
+/* Estilos personalizados para el banner */
+.banner {
+ background-color: #28a745; /* Verde */
+ color: #ffffff; /* Texto blanco */
+ font-family: 'Work Sans', Arial, sans-serif;
+ padding: 20px 0; /* Espaciado superior e inferior */
+}
+
+.banner h1 {
+    margin: 0;
+    font-size: 2rem; /* Tamaño de fuente */
+}
+
+
+.sidebar {
+    background-color: #f8f9fa;
+}
+.navbar-custom {
+    background-color: #f8f9fa;
+}
+.navbar-nav .nav-link {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}

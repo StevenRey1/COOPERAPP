@@ -37,7 +37,7 @@ class DatosQuienReportaCreateView(CreateView):
         elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
             return redirect('polls:crear_necesidades', reporte_id=reporte.id)
         elif reporte.estado == ReporteAcercamiento.ESTADO_FINALIZADO:
-            return redirect('polls:listar_reportes_acercamiento')
+            return redirect('polls:index')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -124,10 +124,10 @@ class NecesidadesCreateView(CreateView):
         reporte.estado = ReporteAcercamiento.ESTADO_FINALIZADO
         reporte.save()
 
-        return redirect('polls:listar_reportes_acercamiento')
+        return redirect('polls:index')
 
     def get_success_url(self):
-        return reverse_lazy('polls:listar_reportes_acercamiento')
+        return reverse_lazy('polls:index')
 
 
 from django.views.generic.list import ListView

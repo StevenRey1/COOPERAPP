@@ -1,40 +1,51 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Necesidades de Cooperación para {{ reporte }}</h2>
+  <h2 class="text-center">PRE-IDENTIFICACIÓN DE NECESIDADES DE COOPERACIÓN INTERNACIONAL</h2>
 
   <form method="POST">
     {% csrf_token %}
 
     <!-- Checkbox para necesidad identificada -->
-    <div class="form-check">
-      <input type="checkbox" id="necesidad_identificado" name="necesidad_identificado" 
+     <p>¿Su dependencia ha identificado alguna necesidad de apoyo de la cooperación 
+      internacional en el período {{reporte.periodo}}? </p>
+
+    <div class="form-check mb-3">  
+      <label for="necesidad_identificado">Si</label>
+        <input type="checkbox" id="necesidad_identificado" name="necesidad_identificado" 
              {% if form.necesidad_identificado.value %} checked {% endif %}
              onclick="toggleFields()">
-      <label for="necesidad_identificado">Necesidad Identificada</label>
     </div>
 
     <!-- Campo de texto para necesidades identificadas -->
     <div class="form-group">
-      <label for="{{ form.necesidades_identificadas.id_for_label }}">Necesidades Identificadas:</label>
+      <label for="{{ form.necesidades_identificadas.id_for_label }}">Mencione necesidades identificadas por su  dependencia como acciones para
+        las cuales busca apoyo por parte de entidades de Cooperación Internacional.</label>
       {{ form.necesidades_identificadas }}
     </div>
 
     <!-- Checkbox para cooperante identificado -->
-    <div class="form-check">
+     <p>¿Su dependencia ha identificado un posible cooperante para apoyar estas necesidades?</p>
+    <div class="form-check mb-3">
+      
+      <label for="cooperante_identificado">Si</label>
       <input type="checkbox" id="cooperante_identificado" name="cooperante_identificado" 
              {% if form.cooperante_identificado.value %} checked {% endif %}
              onclick="toggleFields()">
-      <label for="cooperante_identificado">Cooperante Identificado</label>
     </div>
 
     <!-- Campo de texto para cooperante -->
-    <div class="form-group">
-      <label for="{{ form.cooperante.id_for_label }}">Cooperante:</label>
+    <div class="form-group mb-3">
+      <label for="{{ form.cooperante.id_for_label }}">Cuál/es:</label>
       {{ form.cooperante }}
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar</button>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'polls:index' %}" class="btn btn-danger">Salir</a>
+  </div>
+
+
   </form>
 
 {% endblock %}

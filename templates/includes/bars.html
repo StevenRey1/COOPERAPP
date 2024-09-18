@@ -1,0 +1,89 @@
+<!-- Navbar para pantallas pequeñas -->
+<nav class="navbar navbar-expand-sm navbar-custom d-block d-sm-none">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav">
+            <div class="row custom-row" style="border-bottom: 2px solid green;">
+                <li class="nav-item ">
+                    <a href="{% url 'polls:crear_reporte_acercamiento' %}" class="nav-link">
+                        <i class="fs-4 bi-house"></i> 
+                        1. Reporte de Acercamiento y Necesidades
+                    </a>
+                </li>
+            </div>
+
+            <div class="row custom-row" style="border-bottom: 2px solid green;">
+
+                <li class="nav-item ">
+                    <a href="{% url 'polls2:index' %}" class="nav-link">
+                        <i class="fs-4 bi-house"></i> 
+                        2. Reporte de Avances de programa, proyecto o Plan y aportes del cooperante
+                    </a>
+                </li>
+            </div>
+
+            <div class="row custom-row" style="border-bottom: 2px solid green;">
+                <li class="nav-item ">
+                    <a href="#" class="nav-link">
+                        <i class="fs-4 bi-house"></i> 
+                        3. Usuario de Cooperación
+                    </a>
+
+                </li>
+
+            </div>
+
+
+                    
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar para pantallas grandes -->
+<div class="d-none d-sm-block col-md-3 col-xl-2 px-sm-2 px-0 sidebar">
+    <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-custom min-vh-100 bg-light">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+            <div class="d-flex flex-column align-items-stretch w-100">
+                <!-- Fila 1 -->
+                <div class="row custom-row" style="border-bottom: 2px solid green;">
+                    <li class="nav-item">
+                        <a href="{% url 'polls:crear_reporte_acercamiento' %}" class="nav-link align-middle px-0">
+                            <i class="fs-4 bi-house"></i> 
+                            <span class="ms-1 d-none d-sm-inline custom-font">
+                                1. Reporte de Acercamiento y Necesidades
+                            </span>
+                        </a>
+                    </li>
+                </div>
+                <!-- Fila 2 -->
+                <div class="row custom-row" style="border-bottom: 2px solid green;">
+                    <li class="nav-item">
+                        <a href="{% url 'polls2:index' %}" class="nav-link align-middle px-0">
+                            <i class="fs-4 bi-house"></i> 
+                            <span class="ms-1 d-none d-sm-inline custom-font">
+                                2. Reporte de Avances de programa, proyecto o Plan y aportes del cooperante
+                            </span>
+                        </a>
+                    </li>
+                </div>
+                <!-- Fila 3 -->
+                <div class="row custom-row" style="border-bottom: 2px solid green;">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link align-middle px-0">
+                            <i class="fs-4 bi-house"></i> 
+                            <span class="ms-1 d-none d-sm-inline custom-font">
+                                3. Usuario de Cooperación
+                            </span>
+                        </a>
+                    </li>
+                </div>
+            </div>
+        </ul>
+        <hr>
+    </div>
+</div>

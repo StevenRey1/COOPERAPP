@@ -1,0 +1,34 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<h1 class="text-center">Reportes Registrados</h1>
+
+
+  {% for reporte in reportes %}
+
+  {% if reporte.estado == reporte.ESTADO_FINALIZADO %}
+
+  <div class="row text-center mt-5">
+    <div class="col-3 ">
+      <strong>Periodo {{ reporte.periodo }}</strong>
+    </div>
+    <div class="col-3 ">
+      {{reporte.fecha_elaboracion}}
+    </div>
+    <div class="col-3 ">
+      <p>Reporte 1</p>
+    </div>
+    <div class="col-3 ">
+      <a href="{% url 'polls:reporte_pdf' reporte_id=reporte.id %}">Ver pdf 1</a>
+    </div>
+  
+  </div>
+  
+      {% endif %}
+
+  {% endfor %}
+
+
+
+
+{% endblock %}
