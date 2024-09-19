@@ -4,7 +4,7 @@ from . models import *
 from . forms import *
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import IntegrityError
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -12,19 +12,34 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from django.views import View
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class ReporteAcercamientoCreateView(CreateView):
+
+class ReporteAcercamientoCreateView(LoginRequiredMixin, CreateView):
     model = ReporteAcercamiento
     form_class = ReporteAcercamientoForm
     template_name = 'polls/crear_reporte_acercamiento.html'
+
     def form_valid(self, form):
-        response = super().form_valid(form)
-        return redirect('polls:crear_datos_quien_reporta', reporte_id=self.object.id)
+        # Asignar el usuario autenticado
+        form.instance.usuario = self.request.user
+        try:
+            # Intentar guardar el formulario
+            response = super().form_valid(form)
+            return redirect('polls:crear_datos_quien_reporta', reporte_id=self.object.id)
+        except IntegrityError:
+            # Mensaje flash de error si ya existe un reporte para ese período
+            messages.error(self.request, 'Ya has creado un reporte para este período.')
+            return self.form_invalid(form)
+
     def get_success_url(self):
         return reverse_lazy('polls:crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
+    
 
-class DatosQuienReportaCreateView(CreateView):
+class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
     model = DatosQuienReporta
     form_class = DatosQuienReportaForm
     template_name = 'polls/crear_datos_quien_reporta.html'
@@ -63,7 +78,7 @@ class DatosQuienReportaCreateView(CreateView):
 from django.forms import formset_factory    
 from django.views.generic import FormView, UpdateView
 
-class AcercamientoCreateView(FormView):
+class AcercamientoCreateView(LoginRequiredMixin, FormView):
     template_name = 'polls/crear_acercamiento.html'
     form_class = AcercamientoForm
 
@@ -102,7 +117,7 @@ class AcercamientoCreateView(FormView):
     def get_success_url(self):
         return reverse_lazy('polls:crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
 
-class NecesidadesCreateView(CreateView):
+class NecesidadesCreateView(LoginRequiredMixin, CreateView):
     model = NecesidadesCooperacion
     form_class = NecesidadesForm
     template_name = 'polls/crear_necesidades.html'
@@ -132,7 +147,7 @@ class NecesidadesCreateView(CreateView):
 
 from django.views.generic.list import ListView
 
-class ReporteAcercamientoListView(ListView):
+class ReporteAcercamientoListView(LoginRequiredMixin,ListView):
     model = ReporteAcercamiento
     template_name = 'polls/listar_reportes_acercamiento.html'
     context_object_name = 'reportes'
@@ -148,7 +163,7 @@ class ReporteAcercamientoListView(ListView):
 
 from django.views.generic.detail import DetailView
 
-class DatosQuienReportaDetailView(DetailView):
+class DatosQuienReportaDetailView(LoginRequiredMixin,DetailView):
     model = DatosQuienReporta
     template_name = 'polls/ver_datos_quien_reporta.html'
     context_object_name = 'datos_quien_reporta'
@@ -159,7 +174,7 @@ class DatosQuienReportaDetailView(DetailView):
         return get_object_or_404(DatosQuienReporta, reporte=reporte)
 
 
-class AcercamientoDetailView(ListView):
+class AcercamientoDetailView(LoginRequiredMixin,ListView):
     model = AcercamientoCooperacion
     template_name = 'polls/ver_acercamiento.html'
     context_object_name = 'acercamientos'  # Cambia el nombre a plural
@@ -172,7 +187,7 @@ class AcercamientoDetailView(ListView):
     
 
 
-class NecesidadesDetailView(DetailView):
+class NecesidadesDetailView(LoginRequiredMixin,DetailView):
     model = NecesidadesCooperacion
     template_name = 'polls/ver_necesidades.html'
     context_object_name = 'necesidades'
@@ -187,7 +202,7 @@ class NecesidadesDetailView(DetailView):
 
 
 
-class DatosQuienReportaUpdateView(UpdateView):
+class DatosQuienReportaUpdateView(LoginRequiredMixin,UpdateView):
     model = DatosQuienReporta
     form_class = DatosQuienReportaForm
     template_name = 'polls/editar_datos_quien_reporta.html'
@@ -209,7 +224,7 @@ class DatosQuienReportaUpdateView(UpdateView):
     
     
 
-class AcercamientoUpdateView(UpdateView):
+class AcercamientoUpdateView(LoginRequiredMixin,UpdateView):
     model = AcercamientoCooperacion
     template_name = 'polls/editar_acercamiento.html'  # Ajusta la ruta del template
     form_class = AcercamientoForm
@@ -223,7 +238,7 @@ class AcercamientoUpdateView(UpdateView):
     
 
 
-class NecesidadesCooperacionUpdateView(UpdateView):
+class NecesidadesCooperacionUpdateView(LoginRequiredMixin,UpdateView):
     model = NecesidadesCooperacion
     form_class = NecesidadesForm
     template_name = 'polls/editar_necesidades.html'
@@ -244,16 +259,18 @@ class NecesidadesCooperacionUpdateView(UpdateView):
         return reverse_lazy('polls:ver_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
     
-    
-    
-    
-    
-    
-    
-    
+     
+@login_required
 def generar_pdf_reporte(request, reporte_id):
     # Obtener el reporte
     reporte = get_object_or_404(ReporteAcercamiento, id=reporte_id)
+    
+    # Verificar si el estado del reporte es FINALIZADO
+    if reporte.estado != ReporteAcercamiento.ESTADO_FINALIZADO:
+        # Devolver un mensaje de error o redirigir al usuario
+        return HttpResponseForbidden("No se puede generar el PDF hasta que el reporte esté finalizado.")
+
+
     usuario = reporte.datosquienreporta
     reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
     reporte_hasta = reporte.hasta.strftime('%Y-%m-%d')
@@ -384,6 +401,13 @@ class SaltarAcercamientoView(View):
     def get(self, request, *args, **kwargs):
         # Obtén el reporte con el ID
         reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        
+        # Crear un registro de AcercamientoCooperacion con datos predeterminados o vacíos
+        AcercamientoCooperacion.objects.create(
+            reporte=reporte,
+            entidad=None,  # Puedes usar algún valor predeterminado o "Ninguna"
+            temas_perspectivas=None
+        )
         
         # Cambia el estado del reporte para marcar que se ha saltado el acercamiento
         reporte.estado = ReporteAcercamiento.ESTADO_NECESIDADES  # Define el nuevo estado en el modelo

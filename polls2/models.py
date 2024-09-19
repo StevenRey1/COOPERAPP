@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.contrib.auth.models import User
 
 class ReporteAvances(models.Model):
     PERIODOS = [
@@ -23,6 +23,13 @@ class ReporteAvances(models.Model):
     desde = models.DateField()
     hasta = models.DateField()
     estado = models.IntegerField(choices=ESTADOS, default=ESTADO_DATOS_QUIEN_REPORTA)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    class Meta:
+        unique_together = ('usuario', 'periodo')
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'periodo'], name='unique_reporteAvances_per_user_periodo')
+        ]
     
     def __str__(self):
         return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"
@@ -80,19 +87,19 @@ class LogrosAvances(models.Model):
     logros_avances_1 = models.CharField(max_length=50, verbose_name="Logros y/o avances 1")
     departamento_1 = models.CharField(max_length=255, verbose_name="Departamento 1")
     municipio_1 = models.CharField(max_length=255,  verbose_name="Municipio 1")
-    adjunto_1 = models.FileField(upload_to='adjuntos/', blank=True, null=True, verbose_name="Adjunto 1")
+    adjunto_1 = models.FileField(upload_to='adjuntos/', verbose_name="Adjunto 1")
 
     resultado_2 = models.CharField(max_length=255, default="Automático", verbose_name="Resultado 2")
     logros_avances_2 = models.CharField(max_length=50, blank=True, verbose_name="Logros y/o avances 2")
     departamento_2 = models.CharField(max_length=255, verbose_name="Departamento 2")
     municipio_2 = models.CharField(max_length=255, verbose_name="Municipio 2")
-    adjunto_2 = models.FileField(upload_to='adjuntos/', blank=True, null=True, verbose_name="Adjunto 2")
+    adjunto_2 = models.FileField(upload_to='adjuntos/',  verbose_name="Adjunto 2")
 
     resultado_3 = models.CharField(max_length=255, default="Automático", verbose_name="Resultado 3")
     logros_avances_3 = models.CharField(max_length=50,  verbose_name="Logros y/o avances 3")
     departamento_3 = models.CharField(max_length=255, verbose_name="Departamento 3")
     municipio_3 = models.CharField(max_length=255, verbose_name="Municipio 3")
-    adjunto_3 = models.FileField(upload_to='adjuntos/', blank=True, null=True, verbose_name="Adjunto 3")
+    adjunto_3 = models.FileField(upload_to='adjuntos/',  verbose_name="Adjunto 3")
 
     # Campos adicionales
     logros_significativos = models.CharField(max_length=50,  verbose_name="Logros significativos en este periodo")
@@ -100,7 +107,7 @@ class LogrosAvances(models.Model):
     
     detalle_riesgo = models.CharField(max_length=50, blank=True, null=True, verbose_name="Detalle situación de riesgo", help_text="Solo si la respuesta es 'Sí'")
 
-    observaciones_generales = models.CharField(max_length=50, blank=True, verbose_name="Observaciones o comentarios generales")
+    observaciones_generales = models.CharField(max_length=50,verbose_name="Observaciones o comentarios generales")
 
     def __str__(self):
         return f"Reporte de Logros y Avances"

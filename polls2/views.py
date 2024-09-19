@@ -6,26 +6,35 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
+from django.contrib import messages
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-
-class ReporteAvancesCreateView(CreateView):
+class ReporteAvancesCreateView(LoginRequiredMixin,CreateView):
     model = ReporteAvances
     form_class = ReporteAvancesForm
     template_name = 'polls2/crear_reporte_avances.html'
     def form_valid(self, form):
-        response = super().form_valid(form)
-        return redirect('polls2:crear_datos_quien_reporta', reporte_id=self.object.id)
+        form.instance.usuario = self.request.user
+        try:
+            # Intentar guardar el formulario
+            response = super().form_valid(form)
+            return redirect('polls2:crear_datos_quien_reporta', reporte_id=self.object.id)
+        except IntegrityError:
+            # Mensaje flash de error si ya existe un reporte para ese período
+            messages.error(self.request, 'Ya has creado un reporte para este período.')
+            return self.form_invalid(form)
     def get_success_url(self):
         return reverse_lazy('polls2:crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
 
-class DatosQuienReportaCreateView(CreateView):
+class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     model = DatosQuienReporta
     form_class = DatosQuienReportaForm
     template_name = 'polls2/crear_datos_quien_reporta.html'
@@ -59,7 +68,7 @@ class DatosQuienReportaCreateView(CreateView):
     def get_success_url(self):
         return reverse_lazy('polls2:crear_datos_cooperante', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
-class DatosCooperanteCreateView(CreateView):
+class DatosCooperanteCreateView(LoginRequiredMixin,CreateView):
     model = DatosCooperante
     form_class = DatosCooperanteForm
     template_name = 'polls2/crear_datos_cooperante.html'
@@ -88,7 +97,7 @@ class DatosCooperanteCreateView(CreateView):
         return reverse_lazy('polls2:crear_logros_avances', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
 
-class LogrosAvancesCreateView(CreateView):
+class LogrosAvancesCreateView(LoginRequiredMixin,CreateView):
     model = LogrosAvances
     form_class = LogrosAvancesForm  # Usa form_class en lugar de fields
     template_name = 'polls2/crear_logros_avances.html'
@@ -117,7 +126,7 @@ class LogrosAvancesCreateView(CreateView):
         return reverse_lazy('polls2:index')
     
 
-class ApoyoEventosCreateView(CreateView):
+class ApoyoEventosCreateView(LoginRequiredMixin,CreateView):
     model = ApoyoEventos
     form_class = ApoyoEventosForm
     template_name = 'polls2/crear_apoyo_eventos.html'
@@ -134,7 +143,7 @@ class ApoyoEventosCreateView(CreateView):
         return reverse_lazy('polls2:crear_datos_quien_reporta', kwargs={'reporte_id': self.kwargs['reporte_id']})
 
 
-class ListarReportesView(ListView):
+class ListarReportesView(LoginRequiredMixin,ListView):
     model = ReporteAvances
     template_name = 'polls2/listar_reportes_avances.html'
     context_object_name = 'reportes'
@@ -145,7 +154,7 @@ class ListarReportesView(ListView):
 
 from django.views.generic.detail import DetailView
 
-class DatosQuienReportaDetailView(DetailView):
+class DatosQuienReportaDetailView(LoginRequiredMixin,DetailView):
     model = DatosQuienReporta
     template_name = 'polls2/ver_datos_quien_reporta.html'
     context_object_name = 'datos_quien_reporta'
@@ -156,7 +165,7 @@ class DatosQuienReportaDetailView(DetailView):
         return get_object_or_404(DatosQuienReporta, reporte=reporte)
 
     
-class DatosCooperanteDetailView(DetailView):
+class DatosCooperanteDetailView(LoginRequiredMixin,DetailView):
     model = DatosCooperante
     template_name = 'polls2/ver_datos_cooperante.html'
     context_object_name = 'datos_cooperante'
@@ -164,7 +173,7 @@ class DatosCooperanteDetailView(DetailView):
         reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
         return get_object_or_404(DatosCooperante, reporte=reporte)
 
-class LogrosAvancesDetailView(DetailView):
+class LogrosAvancesDetailView(LoginRequiredMixin,DetailView):
     model = LogrosAvances
     template_name = 'polls2/ver_logros_avances.html'
     context_object_name = 'logros_avances'
@@ -175,7 +184,7 @@ class LogrosAvancesDetailView(DetailView):
     
     
     
-
+@login_required
 def generar_pdf_reporte_avances(request, reporte_id):
     # Obtener el reporte
     reporte = get_object_or_404(ReporteAvances, id=reporte_id)
@@ -227,7 +236,7 @@ def generar_pdf_reporte_avances(request, reporte_id):
         [Paragraph("", styles['TableHeader'])],
         [Paragraph("¿Algún aspecto a resaltar como un logro significativo en este período?"), Paragraph(logros.logros_significativos)],
         [Paragraph("Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:"), Paragraph(logros.dificultades)],
-        [Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros.detalle_riesgo)],
+        [Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros.detalle_riesgo if logros.detalle_riesgo else '')],
         [Paragraph("Observaciones y comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes, etc.)"), Paragraph(logros.observaciones_generales)],
        
     ]

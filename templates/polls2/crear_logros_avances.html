@@ -79,14 +79,17 @@
     </div>
   </div>
 
-  <div class="form-group">
+  <div class="form-group mb-3">
     <label for="id_observaciones_generales">Observaciones o comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes etc.):</label>
     <div class="row">
       {{ form.observaciones_generales }}
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary">Guardar</button>
+  <div class="text-center">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'polls2:index' %}" class="btn btn-danger">Salir</a>
+</div>
 </form>
 {% endblock %}
 

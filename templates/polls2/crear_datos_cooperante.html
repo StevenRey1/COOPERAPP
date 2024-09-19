@@ -1,97 +1,104 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container"> 
-    <h2 class="text-center mb-4">DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN</h2>
-  
-    <form method="POST" class="row g-3">
-      {% csrf_token %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      
+      <form method="POST">
+        {% csrf_token %}
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title">DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN</h5>
+        </div>
 
-
-    <div class = "row"> 
-      <!-- Campo Nombre del Cooperante -->
-      <div class="col-md-6">
+        <div class="card-body">
+       
+        <!-- Campo Nombre del Cooperante -->
+        <div class="row">
         <label for="nombre_cooperante" class="form-label">Nombre del cooperante:</label>
         {{ form.nombre_cooperante }}
-      </div>
+        </div>
 
-      </div>
 
-      <div class="row mb-3">
 
-      <div class="col-md-6" id="id_cual_nombre_cooperante" style="display: none;">
+  
+
+      <div class="row" id="id_cual_nombre_cooperante" style="display: none;">
         <label for="cual_cooperante" class="form-label">Especifique otro:</label>
         {{ form.cual_cooperante }}
       </div>
 
-    </div>
+    
 
     <div class = "row mb-3"> 
       <!-- Campo Identificación del Cooperante -->
-      <div class="col-md-6">
+      
         <label for="identificacion" class="form-label">Identificación del cooperante:</label>
         {{ form.identificacion }}
-      </div>
+      
     </div>
 
     <div class = "row mb-3">
       <!-- Nombre del implementador u operador (readonly) -->
-      <div class="col-md-6">
+      
         <label for="nombre_implementador" class="form-label">Nombre del implementador u operador:</label>
         {{ form.nombre_implementador }}
-      </div>
+     
     </div>
 
     
       <!-- Campo Programa / Proyecto o plan -->
     <div class = "row">
-      <div class="col-md-6">
+     
         <label for="programa_proyecto_plan" class="form-label">Programa / proyecto o plan:</label>
         {{ form.programa_proyecto_plan }}
-      </div>
+     
     </div>
 
-    <div class="row mb-3" >
-      <div class="col-md-6" id="id_cual_programa_proyecto" style="display: none;">
+      <div class="row" id="id_cual_programa_proyecto" style="display: none;">
         <label for="cual_programa" class="form-label">Especifique otro:</label>
         {{ form.cual_programa }}
       </div>
-    </div>
+    
 
     <!-- Campo Línea de acción / componente -->
 
     <div class="row">
-      <div class="col-md-6">
+      
         <label for="linea_accion" class="form-label">Línea de acción / componente:</label>
         {{ form.linea_accion }}
-      </div>
+      
     </div>
-    <div class="row mb-3">
-      <div class="col-md-6" id="id_cual_linea_accion" style="display: none;">
+   
+      <div class="row" id="id_cual_linea_accion" style="display: none;">
         <label for="cual_linea_accion" class="form-label">Especifique otro:</label>
         {{ form.cual_linea_accion }}
       </div>
-    </div>
+    
 
     
       <!-- Campo Rol de quien reporta -->
       <div class="row">
-      <div class="col-md-6">
+      
         <label for="rol_quien_reporta" class="form-label">Rol de quien reporta:</label>
         {{ form.rol_quien_reporta }}
+      
       </div>
-      </div>
-      <div class="row mb-3">
-      <div class="col-md-6" id="id_cual_rol_quien_reporta" style="display: none;">
+      
+      <div class="row" id="id_cual_rol_quien_reporta" style="display: none;">
         <label for="cual_rol_reporta" class="form-label">Especifique otro:</label>
         {{ form.cual_rol_reporta }}
       </div>
-    </div>
-  
-      <div class="col-12 text-center">
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+        <div class="card-footer text-center">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <a href="{% url 'polls2:index' %}" class="btn btn-danger">Salir</a>
       </div>
+    </div>  
     </form>
+    </div>
+  </div>
 
 {% endblock %}
     

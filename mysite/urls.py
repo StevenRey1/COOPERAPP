@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('polls/', include('polls.urls')),  # Aquí 'mi_app' es el nombre de tu aplicación
     path("polls2/", include("polls2.urls")),
-     path('accounts/', include('accounts.urls')),  # Incluye las URLs de la aplicación de autenticación
+    path('accounts/', include('accounts.urls')),  # Incluye las URLs de la aplicación de autenticación
+    path('', lambda request: redirect('login')),  # Redirige a la vista de login de la app 'accounts'
 ]

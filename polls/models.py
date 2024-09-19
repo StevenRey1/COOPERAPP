@@ -19,15 +19,19 @@ class ReporteAcercamiento(models.Model):
         (ESTADO_NECESIDADES, 'Necesidades de Cooperación'),
         (ESTADO_FINALIZADO, 'Finalizado'),
     ]
-
     
     fecha_elaboracion = models.DateField()
     periodo = models.CharField(max_length=1, choices=PERIODOS)
     desde = models.DateField()
     hasta = models.DateField()
     estado = models.IntegerField(choices=ESTADOS, default=ESTADO_DATOS)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     
-    
+    class Meta:
+        unique_together = ('usuario', 'periodo')
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'periodo'], name='unique_reporteAcercamiento_per_user_periodo')
+        ]
 
     def __str__(self):
         return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"
@@ -49,8 +53,8 @@ class DatosQuienReporta(models.Model):
 
 class AcercamientoCooperacion(models.Model):
     reporte = models.ForeignKey(ReporteAcercamiento, on_delete=models.CASCADE)
-    entidad = models.CharField(max_length=200)
-    temas_perspectivas = models.TextField()
+    entidad = models.CharField(max_length=200, blank=True, null=True)
+    temas_perspectivas = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f"Acercamiento {self.id} del Reporte {self.reporte.id}"

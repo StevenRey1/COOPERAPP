@@ -140,6 +140,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-LOGIN_REDIRECT_URL = 'polls:index'
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'polls:index'
 LOGIN_URL = 'login'
