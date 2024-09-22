@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Datos de Quien Reporta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <label class="mb-1 p-0">Nombres y apellidos: </label>
+                            {{ form.nombre_completo }}                    
+                        </div>
+                        <div class="row mb-3">
+                            <label class="mb-1 p-0" >Rol:</label>
+                            {{ form.rol }}
+                        </div>
+                        <div class="row mb-3">
+                            <label class="mb-1 p-0">Dependencia:</label>
+                            {{ form.dependencia }}
+                        </div>
+                        <!-- Añade aquí el resto de los campos del formulario -->
+                        <div class="row mb-3">
+                            <label class="mb-1 p-0">Correo electrónico</label>
+                            {{ form.correo_electronico }}
+                        </div>
+                        <div class="row mb-3  ">
+                            <label class="mb-1 p-0">Su correo electrónico institucional:</label>
+                            {{ form.correo_electronico_institucional }}
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a href="{% url 'reporteAcercamientos:index' %}" class="btn btn-danger">Salir</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

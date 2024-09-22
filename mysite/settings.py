@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "polls.apps.PollsConfig",
-    "polls2.apps.Polls2Config",
+    "reporteAcercamientos",
+    "reporteProgramas",
     "accounts.apps.AccountsConfig",
     
 ]
@@ -141,5 +141,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 LOGIN_REDIRECT_URL = 'login'
-LOGOUT_REDIRECT_URL = 'polls:index'
+LOGOUT_REDIRECT_URL = 'reporteAcercamientos:index'
 LOGIN_URL = 'login'

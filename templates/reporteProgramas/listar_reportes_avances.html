@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center mb-4">Reportes Registrados</h1>
+
+<div class="container">
+  {% for reporte in reportes %}
+    <div class="row text-center mt-5 border-bottom pb-3">
+      <!-- Columna para el periodo -->
+      <div class="col-12 col-md-2 mb-3 mb-md-0">
+        <strong>Período {{ reporte.periodo }}</strong>
+      </div>
+      <!-- Columna para la fecha de elaboración -->
+      <div class="col-12 col-md-2 mb-3 mb-md-0">
+        {{ reporte.fecha_elaboracion|date:"d/m/Y" }}
+      </div>
+      <!-- Columna para el nombre del reporte -->
+      <div class="col-12 col-md-2 mb-3 mb-md-0">
+        <p>Reporte 2</p>
+      </div>
+
+      <!-- Control de estado del reporte -->
+      <div class="col-12 col-md-2 mb-3 mb-md-0">
+        {% if reporte.estado == reporte.ESTADO_FINALIZADO %}
+          <p>Estado Finalizado</p>
+        {% else %}
+          <a href="{% url 'reporteProgramas:crear_datos_quien_reporta' reporte_id=reporte.id %}" class="btn btn-warning">Estado Pendiente</a>
+        {% endif %}
+      </div>
+
+      <!-- Columna para acciones (ver PDF o continuar) -->
+      <div class="col-12 col-md-2">
+        {% if reporte.estado == reporte.ESTADO_FINALIZADO %}
+          <a href="{% url 'reporteProgramas:reporte_avances_pdf' reporte_id=reporte.id %}" class="btn btn-info">Ver PDF</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

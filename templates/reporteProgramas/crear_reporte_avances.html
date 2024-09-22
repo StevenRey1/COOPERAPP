@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Crear Reporte de Avances</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <span>Fecha de elaboración del reporte:</span>
+                            {{ form.fecha_elaboracion }}
+                        </div>
+                        <div class="form-group mb-3">
+                            {{ form.periodo.label_tag }}
+                            {{ form.periodo }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.desde.label_tag }}
+                            {{ form.desde }}
+                       
+                        
+                            {{ form.hasta.label_tag }}
+                            {{ form.hasta }}
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a href="{% url 'reporteProgramas:index' %}" class="btn btn-danger">Salir</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bloque para mostrar mensajes flash -->
+{% if messages %}
+<div class="alert alert-danger">
+    {% for message in messages %}
+        {{ message }}
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+<script type="text/javascript">
+  function updateFechas() {
+      var periodo = document.getElementById('id_periodo').value;
+      var hoy = new Date();
+      var ano = hoy.getFullYear();
+      
+      var desde, hasta;
+      
+      if (periodo === '1') {
+          desde = ano + '-01-01';
+          hasta = ano + '-04-30';
+      } else if (periodo === '2') {
+          desde = ano + '-05-01';
+          hasta = ano + '-08-31';
+      } else if (periodo === '3') {
+          desde = ano + '-09-01';
+          hasta = ano + '-12-31';
+      } else {
+          desde = '';
+          hasta = '';
+      }
+
+      document.getElementById('id_desde').value = desde;
+      document.getElementById('id_hasta').value = hasta;
+  }
+</script>
+{% endblock %}

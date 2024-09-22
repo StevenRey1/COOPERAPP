@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      
+      <form method="POST">
+        {% csrf_token %}
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title">DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN</h5>
+        </div>
+
+        <div class="card-body">
+       
+        <!-- Campo Nombre del Cooperante -->
+        <div class="row">
+        <label for="nombre_cooperante" class="form-label">Nombre del cooperante:</label>
+        {{ form.nombre_cooperante }}
+        </div>
+
+
+
+  
+
+      <div class="row" id="id_cual_nombre_cooperante" style="display: none;">
+        <label for="cual_cooperante" class="form-label">Especifique otro:</label>
+        {{ form.cual_cooperante }}
+      </div>
+
+    
+
+    <div class = "row mb-3"> 
+      <!-- Campo Identificación del Cooperante -->
+      
+        <label for="identificacion" class="form-label">Identificación del cooperante:</label>
+        {{ form.identificacion }}
+      
+    </div>
+
+    <div class = "row mb-3">
+      <!-- Nombre del implementador u operador (readonly) -->
+      
+        <label for="nombre_implementador" class="form-label">Nombre del implementador u operador:</label>
+        {{ form.nombre_implementador }}
+     
+    </div>
+
+    
+      <!-- Campo Programa / Proyecto o plan -->
+    <div class = "row">
+     
+        <label for="programa_proyecto_plan" class="form-label">Programa / proyecto o plan:</label>
+        {{ form.programa_proyecto_plan }}
+     
+    </div>
+
+      <div class="row" id="id_cual_programa_proyecto" style="display: none;">
+        <label for="cual_programa" class="form-label">Especifique otro:</label>
+        {{ form.cual_programa }}
+      </div>
+    
+
+    <!-- Campo Línea de acción / componente -->
+
+    <div class="row">
+      
+        <label for="linea_accion" class="form-label">Línea de acción / componente:</label>
+        {{ form.linea_accion }}
+      
+    </div>
+   
+      <div class="row" id="id_cual_linea_accion" style="display: none;">
+        <label for="cual_linea_accion" class="form-label">Especifique otro:</label>
+        {{ form.cual_linea_accion }}
+      </div>
+    
+
+    
+      <!-- Campo Rol de quien reporta -->
+      <div class="row">
+      
+        <label for="rol_quien_reporta" class="form-label">Rol de quien reporta:</label>
+        {{ form.rol_quien_reporta }}
+      
+      </div>
+      
+      <div class="row" id="id_cual_rol_quien_reporta" style="display: none;">
+        <label for="cual_rol_reporta" class="form-label">Especifique otro:</label>
+        {{ form.cual_rol_reporta }}
+      </div>
+        </div>
+        <div class="card-footer text-center">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <a href="{% url 'reporteProgramas:index' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </div>  
+    </form>
+    </div>
+  </div>
+
+{% endblock %}
+    
+{% block extra_js %}
+
+  <script>
+    // Función para activar/desactivar el campo "Cual" y hacerlo requerido
+    function toggleCualField(selectElement, cualFieldId, cualFieldName) {
+      const cualField = document.getElementById(cualFieldId);
+      const cualFieldInput = document.getElementsByName(cualFieldName)[0];
+      if (selectElement.value === 'otro') {
+        cualField.style.display = 'block';
+        cualFieldInput.setAttribute('required', 'true');
+      } else {
+        cualField.style.display = 'none';
+        cualFieldInput.value = '';  // Borrar el valor del campo "Cual"
+        cualFieldInput.removeAttribute('required');
+      }
+    }
+
+    // Agregar eventos de escucha a los campos select
+    document.getElementById('{{ form.nombre_cooperante.id_for_label }}').addEventListener('change', function() {
+      toggleCualField(this, 'id_cual_nombre_cooperante', 'cual_cooperante');
+    });
+
+    document.getElementById('{{ form.programa_proyecto_plan.id_for_label }}').addEventListener('change', function() {
+      toggleCualField(this, 'id_cual_programa_proyecto', 'cual_programa');
+    });
+
+    document.getElementById('{{ form.linea_accion.id_for_label }}').addEventListener('change', function() {
+      toggleCualField(this, 'id_cual_linea_accion', 'cual_linea_accion');
+    });
+
+    document.getElementById('{{ form.rol_quien_reporta.id_for_label }}').addEventListener('change', function() {
+      toggleCualField(this, 'id_cual_rol_quien_reporta', 'cual_rol_reporta');
+    });
+  </script>
+{% endblock %}
