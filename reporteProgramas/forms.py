@@ -1,5 +1,5 @@
 from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea
-from reporteProgramas.models import  DatosCooperante, LogrosAvances, Logro, Departamento, Municipio,Resultado
+from reporteProgramas.models import  LogrosAvances, Logro, Departamento, Municipio,Resultado
 from django import forms
 from reporteAcercamientos.models import Reporte, DatosQuienReporta
 import datetime
@@ -57,53 +57,6 @@ class DatosQuienReportaForm(forms.ModelForm):
             self.fields['correo_electronico'].initial = 'EXAMPLE@GMAIL.COM'
             
 
-class DatosCooperanteForm(forms.ModelForm):
-    class Meta:
-        model = DatosCooperante
-        exclude = ['reporte']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Campo "Nombre del Cooperante"
-        self.fields['nombre_cooperante'].widget = forms.Select(choices=[
-            # Aquí debes definir las opciones para el campo "nombre_cooperante"
-            # Por ejemplo:
-            ('opcion1', 'Opción 1'),
-            ('opcion2', 'Opción 2'),
-            ('otro', 'Otro'), 
-        ])
-
-        # Campo "Programa / Proyecto o plan"
-        self.fields['programa_proyecto_plan'].widget = forms.Select(choices=[
-              # Aquí debes definir las opciones para el campo "nombre_cooperante"
-            # Por ejemplo:
-            ('opcion1', 'Opción 1'),
-            ('opcion2', 'Opción 2'),
-            ('otro', 'Otro'), 
-        ])
-
-        # Campo "Línea de acción / componente"
-        self.fields['linea_accion'].widget = forms.Select(choices=[
-              # Aquí debes definir las opciones para el campo "nombre_cooperante"
-            # Por ejemplo:
-            ('opcion1', 'Opción 1'),
-            ('opcion2', 'Opción 2'),
-            ('otro', 'Otro'), 
-        ])
-
-        # Campo "Rol de quien reporta"
-        self.fields['rol_quien_reporta'].widget = forms.Select(choices=[
-              # Aquí debes definir las opciones para el campo "nombre_cooperante"
-            # Por ejemplo:
-            ('opcion1', 'Opción 1'),
-            ('opcion2', 'Opción 2'),
-            ('otro', 'Otro'), 
-        ])
-
-        # Campo "Nombre del implementador u operador" (readonly)
-        self.fields['nombre_implementador'].widget.attrs.update({'readonly': 'readonly'})
-        self.fields['nombre_implementador'].initial = 'Automático'
-        
 
 
 class LogrosAvancesForm(forms.ModelForm):
@@ -146,7 +99,7 @@ class LogroForm(forms.ModelForm):
 
     
 
-LogroFormSet = modelformset_factory(Logro, form=LogroForm, extra=1, can_delete=True)
+LogroFormSet = modelformset_factory(Logro, form=LogroForm, extra=2, can_delete=True)
     
 
     

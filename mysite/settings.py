@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "reporteAcercamientos",
     "reporteProgramas",
-    "accounts.apps.AccountsConfig",
+    "accounts",
     "reporteAportes"
     
 ]
@@ -142,5 +142,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 LOGIN_REDIRECT_URL = 'login'
-LOGOUT_REDIRECT_URL = 'reporteAcercamientos:index'
+LOGIN_REDIRECT_URL = 'accounts:listar_reportes'
 LOGIN_URL = 'login'

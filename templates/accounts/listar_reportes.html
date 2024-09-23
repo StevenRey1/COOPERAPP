@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Reportes Registrados</h1>
+
+  {% regroup reportes by periodo as grouped_reportes %}
+
+  {% for grupo in grouped_reportes %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="mb-0">Periodo {{ grupo.grouper }}</h2>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Reporte</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reporte in grupo.list %}
+                <tr>
+                  <td>{{ reporte.fecha_elaboracion|date:"d/m/Y" }}</td>
+                  <td>
+                    {% if reporte.tipo == 1 %}
+                      Reporte 1
+                    {% elif reporte.tipo == 2 %}
+                      Reporte 2
+                    {% else %}
+                      Reporte 3
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if reporte.avance == 3 %}
+                      Finalizado
+                    {% else %}
+                      Pendiente
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if reporte.avance == 3 %}
+                      <a href="{% if reporte.tipo == 1 %}{% url 'reporteAcercamientos:reporte_pdf' reporte_id=reporte.id %}{% else %}{% url 'reporteProgramas:reporte_avances_pdf' reporte_id=reporte.id %}{% endif %}" class="btn btn-sm btn-info">Ver PDF</a>
+                    {% else %}
+                      <a href="{% if reporte.tipo == 1 %}{% url 'reporteAcercamientos:crear_datos_quien_reporta' reporte_id=reporte.id %}{% else %}{% url 'reporteProgramas:crear_datos_quien_reporta' reporte_id=reporte.id %}{% endif %}" class="btn btn-sm btn-warning">Completar</a>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

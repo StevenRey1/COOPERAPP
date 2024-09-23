@@ -23,5 +23,5 @@ urlpatterns = [
     path('reporte-acercamientos/', include('reporteAcercamientos.urls')),  # Aquí 'mi_app' es el nombre de tu aplicación
     path("reporteProgramas/", include("reporteProgramas.urls")),
     path('accounts/', include('accounts.urls')),  # Incluye las URLs de la aplicación de autenticación
-    path('', lambda request: redirect('login')),  # Redirige a la vista de login de la app 'accounts'
+    path('', lambda request: redirect('accounts:login')),  # Redirige a la vista de login de la app 'accounts'
 ]

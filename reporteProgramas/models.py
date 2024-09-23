@@ -4,38 +4,76 @@ from django.contrib.auth.models import User
 from reporteAcercamientos.models import Reporte
 
 
+class Acuerdo(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    identificacion = models.CharField(max_length=100, unique=True)
+    pais = models.CharField(max_length=100)  # Nuevo atributo
+    tipo_cooperacion = models.CharField(max_length=100)  # Nuevo atributo
+    fecha_inicio = models.DateField()  # Nuevo atributo
+    fecha_finalizacion = models.DateField()  # Nuevo atributo
+    objetivo = models.TextField()  # Nuevo atributo
 
-class DatosCooperante(models.Model):
-    # Opciones para campos de selección
-    IDENTIFICACION_CHOICES = [
-        ('Acuerdo/Convenio', 'Acuerdo/Convenio'),
-        ('Otro', 'Otro'),
-    ]
-
-    # Campos del formulario
-    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE)
-    nombre_cooperante = models.CharField(max_length=255, verbose_name="Nombre del cooperante")
-    cual_cooperante = models.CharField(max_length=255, blank=True, null=True, verbose_name="Cual (cooperante)")
-    
-    identificacion = models.CharField(max_length=50, verbose_name="Identificación")
-    
-    nombre_implementador = models.CharField(max_length=255, default='Automático', verbose_name="Nombre del implementador u operador")
-
-    programa_proyecto_plan = models.CharField(max_length=255, verbose_name="Programa/proyecto o plan")
-    cual_programa = models.CharField(max_length=255, blank=True, null=True, verbose_name="Cual (programa/proyecto o plan)")
-
-    linea_accion = models.CharField(max_length=255, verbose_name="Línea de acción/componente")
-    cual_linea_accion = models.CharField(max_length=255, blank=True, null=True, verbose_name="Cual (línea de acción)")
-
-    rol_quien_reporta = models.CharField(max_length=255, verbose_name="Rol de quien reporta")
-    cual_rol_reporta = models.CharField(max_length=255, blank=True, null=True, verbose_name="Cual (rol quien reporta)")
-    
     class Meta:
-        db_table = "datos_cooperante"
-        
-    def __str__(self):
-        return f"Reporte de {self.nombre_cooperante}"
-    
+        db_table = 'acuerdo'
+
+
+class Cooperante(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    nombre_corto = models.CharField(max_length=10, unique=True)
+    tipo = models.CharField(max_length=10, unique=True)
+
+    class Meta:
+        db_table = 'cooperante'
+
+
+class Operador(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    nombre_corto = models.CharField(max_length=10, unique=True)
+
+    class Meta:
+        db_table = 'operador'
+
+
+class ProyectoPlan(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    cobertura_geografica = models.CharField(max_length=100)  # Nuevo atributo
+    fecha_inicio = models.DateField()  # Nuevo atributo
+    fecha_finalizacion = models.DateField()  # Nuevo atributo
+    valor_aporte = models.DecimalField(max_digits=10, decimal_places=2)  # Nuevo atributo
+    valor_contrapartida = models.DecimalField(max_digits=10, decimal_places=2)  # Nuevo atributo
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2)  # Nuevo atributo
+    observaciones_valor_economico = models.TextField()  # Nuevo atributo
+
+    class Meta:
+        db_table = 'proyecto_plan'
+
+
+class LineaAccion(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    responsable = models.CharField(max_length=100)  # Nuevo atributo
+    rol = models.CharField(max_length=100)  # Nuevo atributo
+    nombre_supervisor = models.CharField(max_length=100)  # Nuevo atributo
+    formularios = models.TextField()  # Nuevo atributo
+    resultados = models.TextField()  # Nuevo atributo
+    observaciones = models.TextField()  # Nuevo atributo
+
+    class Meta:
+        db_table = 'linea_accion'
+
+
+class AcuerdoCooperacion(models.Model):
+    acuerdo = models.ForeignKey(Acuerdo, on_delete=models.CASCADE)
+    cooperante = models.ForeignKey(Cooperante, on_delete=models.CASCADE)
+    operador = models.ForeignKey(Operador, on_delete=models.CASCADE)
+    proyecto_plan = models.ForeignKey(ProyectoPlan, on_delete=models.CASCADE)
+    lineas_accion = models.ManyToManyField(LineaAccion)
+
+    class Meta:
+        db_table = 'acuerdo_cooperacion'
+
+
+
+
 
 
 

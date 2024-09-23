@@ -53,7 +53,7 @@ class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
         elif reporte.avance == 2 and reporte.tipo == 1 :
             return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
         elif reporte.avance == 3 and reporte.tipo == 1 :
-            return redirect('reporteAcercamientos:index')
+            return redirect('accounts:listar_reportes')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -96,7 +96,7 @@ class AcercamientoCreateView(LoginRequiredMixin, FormView):
             return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
         
         elif reporte.avance == 3 and reporte.tipo == 1 :
-            return redirect('reporteAcercamientos:index')
+            return redirect('accounts:listar_reportes')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -143,10 +143,10 @@ class NecesidadesCreateView(LoginRequiredMixin, CreateView):
         reporte.avance = 3
         reporte.save()
 
-        return redirect('reporteAcercamientos:index')
+        return redirect('accounts:listar_reportes')
 
     def get_success_url(self):
-        return reverse_lazy('reporteAcercamientos:index')
+        return reverse_lazy('accounts:listar_reportes')
     
 class ReporteAcercamientoListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):

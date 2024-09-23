@@ -1,5 +1,5 @@
-from reporteProgramas.models import  DatosCooperante, LogrosAvances, Logro
-from  reporteProgramas.forms import   DatosCooperanteForm, LogrosAvancesForm, LogroFormSet
+from reporteProgramas.models import  LogrosAvances, Logro
+from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet
 from django.views.generic.edit import CreateView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404, redirect, render
@@ -53,7 +53,7 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
         elif reporte.avance == 2:
             return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id)
         elif reporte.avance == 3:
-            return redirect('reporteProgramas:index')
+            return redirect('accounts:listar_reportes')
         return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -73,34 +73,6 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
 
     def get_success_url(self):
         return reverse_lazy('reporteProgramas:crear_datos_cooperante', kwargs={'reporte_id': self.kwargs['reporte_id']})
-    
-class DatosCooperanteCreateView(LoginRequiredMixin,CreateView):
-    model = DatosCooperante
-    form_class = DatosCooperanteForm
-    template_name = 'reporteProgramas/crear_datos_cooperante.html'
-    
-    def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
-       
-        if reporte.avance == 0:
-            return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte.id)
-        elif reporte.avance == 2:
-            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id)
-        elif reporte.avance == 3:
-            return redirect('reporteProgramas:index')
-        return super().dispatch(request, *args, **kwargs)
-    
-    def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
-        response = super().form_valid(form)
-        reporte = form.instance.reporte
-        reporte.avance = 2
-        reporte.save()
-        
-        return redirect('reporteProgramas:crear_logros_avances', reporte_id=self.kwargs['reporte_id'])
-    
-    def get_success_url(self):
-        return reverse_lazy('reporteProgramas:crear_logros_avances', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
 
 @login_required
@@ -126,7 +98,7 @@ def crear_reporte_logros(request, reporte_id):
                     nuevo_logro.logros_avances = logros_avances  # Asociar el logro
                     nuevo_logro.save()
 
-            return redirect('reporteProgramas:index')  # Redirige a donde desees
+            return redirect('accounts:listar_reportes')  # Redirige a donde desees
         
         if not form_logros_avances.is_valid():
           print(form_logros_avances.errors)  # Para depuración
