@@ -1,11 +1,11 @@
 from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea
-from reporteAcercamientos.models import ReporteAcercamiento, AcercamientoCooperacion, NecesidadesCooperacion, DatosQuienReporta, Rol, Dependencia
+from reporteAcercamientos.models import Reporte, AcercamientoCooperacion, NecesidadesCooperacion, DatosQuienReporta, Rol, Dependencia
 from django import forms
 import datetime
 
-class ReporteAcercamientoForm(forms.ModelForm):
+class ReporteForm(forms.ModelForm):
     class Meta:
-        model = ReporteAcercamiento
+        model = Reporte
         fields = ['fecha_elaboracion', 'periodo', 'desde', 'hasta']
         widgets = {
             'fecha_elaboracion': forms.DateInput(attrs={'readonly': 'readonly'}),  # Solo lectura

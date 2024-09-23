@@ -21,7 +21,7 @@
 
       <!-- Control de estado del reporte -->
       <div class="col-12 col-md-2 mb-3 mb-md-0">
-        {% if reporte.estado == reporte.ESTADO_FINALIZADO %}
+        {% if reporte.avance == 3 %}
           <p>Estado Finalizado</p>
         {% else %}
           <a href="{% url 'reporteAcercamientos:crear_datos_quien_reporta' reporte_id=reporte.id %}" class="btn btn-warning">Estado Pendiente</a>
@@ -30,7 +30,7 @@
 
       <!-- Columna para acciones (ver PDF o continuar) -->
       <div class="col-12 col-md-2">
-        {% if reporte.estado == reporte.ESTADO_FINALIZADO %}
+        {% if reporte.avance == 3 %}
           <a href="{% url 'reporteAcercamientos:reporte_pdf' reporte_id=reporte.id %}" class="btn btn-info">Ver PDF</a>
         {% endif %}
       </div>

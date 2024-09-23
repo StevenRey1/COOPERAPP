@@ -1,119 +1,156 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS</h2>
+<div class="container">
+  <h2 class="text-center mb-4">RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS</h2>
 
-<form method="POST" enctype="multipart/form-data">  {# Asegúrate de incluir enctype para subir archivos #}
-  {% csrf_token %}
+  <form method="POST" enctype="multipart/form-data" id="logrosForm">
+    {% csrf_token %}
 
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th scope="col">Resultados/Productos Esperados</th>
-        <th scope="col">Logros y/o avances</th>
-        <th scope="col">Departamentos</th>
-        <th scope="col">Municipios</th>
-        <th scope="col">Adjuntos</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Fila 1 -->
-      <tr>
-        <td>{{ form.resultado_1 }}</td>
-        <td>{{ form.logros_avances_1 }}</td>
-        <td>{{ form.departamento_1 }}</td>
-        <td>{{ form.municipio_1 }}</td>
-        <td>{{ form.adjunto_1 }}</td>
-      </tr>
-      <!-- Fila 2 -->
-      <tr>
-        <td>{{ form.resultado_2 }}</td>
-        <td>{{ form.logros_avances_2 }}</td>
-        <td>{{ form.departamento_2 }}</td>
-        <td>{{ form.municipio_2 }}</td>
-        <td>{{ form.adjunto_2 }}</td>
-      </tr>
-      <!-- Fila 3 -->
-      <tr>
-        <td>{{ form.resultado_3 }}</td>
-        <td>{{ form.logros_avances_3 }}</td>
-        <td>{{ form.departamento_3 }}</td>
-        <td>{{ form.municipio_3 }}</td>
-        <td>{{ form.adjunto_3 }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Campos adicionales -->
-  <div class="form-group">
-    <label for="id_logros_significativos">Algún aspecto a resaltar como un logro significativo en este periodo:</label>
-    <div class="row">
-      {{ form.logros_significativos }}
+    <!-- Tabla de Logros -->
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th scope="col">Resultados/Productos Esperados</th>
+            <th scope="col">Logros y/o avances</th>
+            <th scope="col">Departamentos</th>
+            <th scope="col">Municipios</th>
+            <th scope="col">Adjuntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for resultado in resultados %}
+          {{ formset_logro.management_form }}
+          {% for form in formset_logro %}
+          <tr>
+            <td>
+              <select name="{{ form.resultado.html_name }}" id="{{ form.resultado.id_for_label }}" >
+                
+                  <option value="{{ resultado.id }}">{{ resultado.nombre }}</option>
+               
+              </select>
+            </td>
+            <td>{{ form.logros_avances_texto }}</td>
+            <td>{{ form.departamento }}</td>
+            <td>{{ form.municipio }}</td>
+            <td>{{ form.adjunto }}</td>
+          </tr>
+          {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label for="id_dificultades">Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:</label>
-    <div class="row">
-      {{ form.dificultades }}
-    </div>
-  </div>
+    <!-- Campos de LogrosAvances -->
+    <div class="container">
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.logros_significativos.id_for_label }}" class="form-label">Algún aspecto a resaltar como un logro significativo en este periodo:</label>
+        <div class="col-12">
+          {{ form_logros_avances.logros_significativos }}
+          <small class="text-muted" id="count_logros_significativos">0 palabras</small>
+          <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
+        </div>
+      </div>
 
-  <div class="form-group">
-    <label>Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante:</label><br>
-    <div class="form-check">
-      <input class="form-check-input" id="riesgo_si" type="radio" name="riesgo_relacionamiento" value="True">
-      <label class="form-check-label" for="riesgo_si">Sí</label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" id="riesgo_no" type="radio" name="riesgo_relacionamiento" value="False">
-      <label class="form-check-label" for="riesgo_no">No</label>
-    </div>
-  </div>
-  
-  <!-- Aquí debe estar tu campo de detalle de riesgo -->
-  <div class="form-group" id="id_detalle_riesgo" style="display: none;">
-    <label for="id_detalle_riesgo">Explique detalladamente:</label>
-    <div class="row">
-      {{ form.detalle_riesgo }}
-    </div>
-  </div>
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.dificultades.id_for_label }}" class="form-label">Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:</label>
+        <div class="col-12">
+          {{ form_logros_avances.dificultades }}
+          <small class="text-muted" id="count_dificultades">0 palabras</small>
+          <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
+        </div>
+      </div>
 
-  <div class="form-group mb-3">
-    <label for="id_observaciones_generales">Observaciones o comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes etc.):</label>
-    <div class="row">
-      {{ form.observaciones_generales }}
-    </div>
-  </div>
+      <div class="row mb-3">
+        <p class="form-label">¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?</p>
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="riesgo_relacionamiento" value="Sí" id="riesgo_si">
+            <label class="form-check-label" for="riesgo_si">Sí</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="riesgo_relacionamiento" value="No" id="riesgo_no">
+            <label class="form-check-label" for="riesgo_no">No</label>
+          </div>
+        </div>
+      </div>
 
-  <div class="text-center">
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a href="{% url 'reporteProgramas:index' %}" class="btn btn-danger">Salir</a>
+      <div class="row mb-3" id="id_detalle_riesgo" style="display: none;">
+        <label for="{{ form_logros_avances.detalle_riesgo.id_for_label }}" class="form-label">Explique detalladamente:</label>
+        <div class="col-12">
+          {{ form_logros_avances.detalle_riesgo }}
+          <small class="text-muted" id="count_detalle_riesgo">0 palabras</small>
+          <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.observaciones_generales.id_for_label }}" class="form-label">Observaciones o comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes etc.):</label>
+        <div class="col-12">
+          {{ form_logros_avances.observaciones_generales }}
+          <small class="text-muted" id="count_observaciones_generales">0 palabras</small>
+          <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'reporteProgramas:index' %}" class="btn btn-danger">Salir</a>
+    </div>
+  </form>
 </div>
-</form>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const riesgoSi = document.getElementById('riesgo_si');
-    const riesgoNo = document.getElementById('riesgo_no');
-    const detalleRiesgoField = document.getElementById('id_detalle_riesgo');
+<script type="text/javascript">
+  // Mostrar/ocultar el campo "Detalle situación de riesgo"
+  const riesgoRelacionamientoField = document.querySelectorAll('input[name="riesgo_relacionamiento"]');
+  const detalleRiesgoField = document.getElementById('id_detalle_riesgo');
 
-    function toggleDetalleRiesgo() {
-      if (riesgoSi.checked) {
-        detalleRiesgoField.style.display = 'block';
-      } else {
-        detalleRiesgoField.style.display = 'none';
-      }
-    }
+  riesgoRelacionamientoField.forEach(radio => {
+    radio.addEventListener('change', () => {
+      detalleRiesgoField.style.display = document.querySelector('input[name="riesgo_relacionamiento"]:checked').value === "Sí" ? 'block' : 'none';
+    });
+  });
 
-    // Inicializa el estado del campo al cargar la página
-    toggleDetalleRiesgo();
+  // Filtrar municipios al seleccionar departamento
+const departamentoSelects = document.querySelectorAll('[id^="id_form-"][id$="-departamento"]');
+const municipioSelects = document.querySelectorAll('[id^="id_form-"][id$="-municipio"]');
 
-    // Añade eventos para los radio buttons
-    riesgoSi.addEventListener('change', toggleDetalleRiesgo);
-    riesgoNo.addEventListener('change', toggleDetalleRiesgo);
+departamentoSelects.forEach((departamentoSelect, index) => {
+  departamentoSelect.addEventListener('change', function() {
+    const departamentoId = this.value;
+    const municipioSelect = municipioSelects[index];
+
+    // Habilitar el campo de municipio
+    municipioSelect.disabled = false;
+
+    // Generar la URL usando el ID del departamento
+    const url = `{% url 'reporteProgramas:get_municipios' 0 %}`.replace('0', departamentoId);
+
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log(data);
+        // Limpiar municipios actuales
+        municipioSelect.innerHTML = '';
+
+        // Agregar opciones de municipios
+        data.municipios.forEach(municipio => {
+          const option = document.createElement('option');
+          option.value = municipio.id;
+          option.textContent = municipio.nombre;
+          municipioSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error:', error));
+  });
+
   });
 </script>
 {% endblock %}

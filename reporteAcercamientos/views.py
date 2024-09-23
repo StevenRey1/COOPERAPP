@@ -18,14 +18,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 
-class ReporteAcercamientoCreateView(LoginRequiredMixin, CreateView):
-    model = ReporteAcercamiento
-    form_class = ReporteAcercamientoForm
+class ReporteAcercamientosCreateView(LoginRequiredMixin, CreateView):
+    model = Reporte
+    form_class = ReporteForm
     template_name = 'reporteAcercamientos/crear_reporte_acercamiento.html'
 
     def form_valid(self, form):
         # Asignar el usuario autenticado
         form.instance.usuario = self.request.user
+        form.instance.tipo = 1  # Reporte de Acercamientos
         try:
             # Intentar guardar el formulario
             response = super().form_valid(form)
@@ -45,19 +46,19 @@ class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
     template_name = 'reporteAcercamientos/crear_datos_quien_reporta.html'
     
     def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
        
-        if reporte.estado == ReporteAcercamiento.ESTADO_ACERCAMIENTO:
+        if reporte.avance == 1 and reporte.tipo == 1 :
             return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
+        elif reporte.avance == 2 and reporte.tipo == 1 :
             return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAcercamiento.ESTADO_FINALIZADO:
+        elif reporte.avance == 3 and reporte.tipo == 1 :
             return redirect('reporteAcercamientos:index')
         
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         
         try:
             response = super().form_valid(form)
@@ -67,7 +68,7 @@ class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
         
         # Actualizar el estado del reporte a 1 (Acercamientos)
         reporte = form.instance.reporte
-        reporte.estado = ReporteAcercamiento.ESTADO_ACERCAMIENTO
+        reporte.avance = 1
         reporte.save()
         
         return redirect('reporteAcercamientos:crear_acercamiento', reporte_id=self.kwargs['reporte_id'])
@@ -84,20 +85,23 @@ class AcercamientoCreateView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['reporte'] = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        context['reporte'] = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        if reporte.estado == ReporteAcercamiento.ESTADO_DATOS:
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
+        if reporte.avance == 0 and reporte.tipo == 1:
             return redirect('reporteAcercamientos:crear_datos_quien_reporta', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAcercamiento.ESTADO_NECESIDADES:
+        elif reporte.avance == 2 and reporte.tipo == 1:
             return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
+        
+        elif reporte.avance == 3 and reporte.tipo == 1 :
+            return redirect('reporteAcercamientos:index')
         
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         entidades = self.request.POST.getlist('entidad')
         temas_perspectivas = self.request.POST.getlist('temas_perspectivas')
 
@@ -109,7 +113,7 @@ class AcercamientoCreateView(LoginRequiredMixin, FormView):
             )
 
         # Actualizar el estado del reporte a 2 (Necesidades)
-        reporte.estado = ReporteAcercamiento.ESTADO_NECESIDADES
+        reporte.avance = 2
         reporte.save()
         
         return redirect('reporteAcercamientos:crear_necesidades', reporte_id=self.kwargs['reporte_id'])
@@ -123,150 +127,41 @@ class NecesidadesCreateView(LoginRequiredMixin, CreateView):
     template_name = 'reporteAcercamientos/crear_necesidades.html'
 
     def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        if reporte.estado == ReporteAcercamiento.ESTADO_DATOS:
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
+        if reporte.avance == 0 and reporte.tipo == 1:
             return redirect('reporteAcercamientos:crear_datos_quien_reporta', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAcercamiento.ESTADO_ACERCAMIENTO:
+        elif reporte.avance == 1 and reporte.tipo == 1:
             return redirect('reporteAcercamientos:crear_acercamiento', reporte_id=reporte.id)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         response = super().form_valid(form)
 
         # Actualizar el estado del reporte a 3 (Finalizado)
         reporte = form.instance.reporte
-        reporte.estado = ReporteAcercamiento.ESTADO_FINALIZADO
+        reporte.avance = 3
         reporte.save()
 
         return redirect('reporteAcercamientos:index')
 
     def get_success_url(self):
         return reverse_lazy('reporteAcercamientos:index')
-
-
-from django.views.generic.list import ListView
-
-class ReporteAcercamientoListView(LoginRequiredMixin,ListView):
-    model = ReporteAcercamiento
-    template_name = 'reporteAcercamientos/listar_reportes_acercamiento.html'
-    context_object_name = 'reportes'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        for reporte in context['reportes']:
-            reporte.tiene_datos_quien_reporta = DatosQuienReporta.objects.filter(reporte=reporte).exists()
-            reporte.tiene_acercamiento_cooperacion = AcercamientoCooperacion.objects.filter(reporte=reporte).exists()
-            reporte.tiene_necesidades_cooperacion = NecesidadesCooperacion.objects.filter(reporte=reporte).exists()
-        return context
-
-
-from django.views.generic.detail import DetailView
-
-class DatosQuienReportaDetailView(LoginRequiredMixin,DetailView):
-    model = DatosQuienReporta
-    template_name = 'reporteAcercamientos/ver_datos_quien_reporta.html'
-    context_object_name = 'datos_quien_reporta'
-
-    def get_object(self):
-        # Aquí usamos `informe` en lugar de `reporte`
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return get_object_or_404(DatosQuienReporta, reporte=reporte)
-
-
-class AcercamientoDetailView(LoginRequiredMixin,ListView):
-    model = AcercamientoCooperacion
-    template_name = 'reporteAcercamientos/ver_acercamiento.html'
-    context_object_name = 'acercamientos'  # Cambia el nombre a plural
     
-    def get_queryset(self):
-        
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return AcercamientoCooperacion.objects.filter(reporte=reporte)
-
-    
+class ReporteAcercamientoListView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        reportes = Reporte.objects.filter(tipo=1)
+        return render(request, 'reporteAcercamientos/listar_reportes_acercamiento.html', {'reportes': reportes})
 
 
-class NecesidadesDetailView(LoginRequiredMixin,DetailView):
-    model = NecesidadesCooperacion
-    template_name = 'reporteAcercamientos/ver_necesidades.html'
-    context_object_name = 'necesidades'
-
-    def get_object(self):
-        
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return get_object_or_404(NecesidadesCooperacion, reporte=reporte)
-
-
-
-
-
-
-class DatosQuienReportaUpdateView(LoginRequiredMixin,UpdateView):
-    model = DatosQuienReporta
-    form_class = DatosQuienReportaForm
-    template_name = 'reporteAcercamientos/editar_datos_quien_reporta.html'
-
-    def get_object(self):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return get_object_or_404(DatosQuienReporta, reporte=reporte)
-
-    def form_valid(self, form):
-        try:
-            response = super().form_valid(form)
-        except IntegrityError:
-            form.add_error(None, "Error: El ID ya está en uso.")
-            return self.form_invalid(form)
-        return redirect('reporteAcercamientos:ver_datos_quien_reporta', reporte_id=self.kwargs['reporte_id'])
-
-    def get_success_url(self):
-        return reverse_lazy('reporteAcercamientos:ver_datos_quien_reporta', kwargs={'reporte_id': self.kwargs['reporte_id']})
-    
-    
-
-class AcercamientoUpdateView(LoginRequiredMixin,UpdateView):
-    model = AcercamientoCooperacion
-    template_name = 'reporteAcercamientos/editar_acercamiento.html'  # Ajusta la ruta del template
-    form_class = AcercamientoForm
-
-    def get_object(self, queryset=None):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return get_object_or_404(AcercamientoCooperacion, id=self.kwargs['pk'], reporte=reporte)
-
-    def get_success_url(self):
-        return reverse_lazy('reporteAcercamientos:crear_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
-    
-
-
-class NecesidadesCooperacionUpdateView(LoginRequiredMixin,UpdateView):
-    model = NecesidadesCooperacion
-    form_class = NecesidadesForm
-    template_name = 'reporteAcercamientos/editar_necesidades.html'
-
-    def get_object(self):
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
-        return get_object_or_404(NecesidadesCooperacion, reporte=reporte)
-
-    def form_valid(self, form):
-        try:
-            response = super().form_valid(form)
-        except IntegrityError:
-            form.add_error(None, "Error: El ID ya está en uso.")
-            return self.form_invalid(form)
-        return redirect('reporteAcercamientos:ver_necesidades', reporte_id=self.kwargs['reporte_id'])
-
-    def get_success_url(self):
-        return reverse_lazy('reporteAcercamientos:ver_necesidades', kwargs={'reporte_id': self.kwargs['reporte_id']})
-    
-    
      
 @login_required
 def generar_pdf_reporte(request, reporte_id):
     # Obtener el reporte
-    reporte = get_object_or_404(ReporteAcercamiento, id=reporte_id)
+    reporte = get_object_or_404(Reporte, id=reporte_id)
     
     # Verificar si el estado del reporte es FINALIZADO
-    if reporte.estado != ReporteAcercamiento.ESTADO_FINALIZADO:
+    if reporte.avance != 3:
         # Devolver un mensaje de error o redirigir al usuario
         return HttpResponseForbidden("No se puede generar el PDF hasta que el reporte esté finalizado.")
 
@@ -314,9 +209,9 @@ def generar_pdf_reporte(request, reporte_id):
         [Paragraph("Dependencia"), Paragraph(usuario.dependencia.nombre)],
         [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico)],
         [Paragraph("4. REPORTE DE ACERCAMIENTOS DE COOPERACIÓN INTERNACIONAL", styles['TableHeader'])],
-        [Paragraph("¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación internacional en este periodo?"), Paragraph("Sí" if reporte.acercamientocooperacion_set.all() else "No")],
-        [Paragraph("Mencione el nombre de la(s) entidad(es) con quien ha realizado los acercamientos:"), Paragraph( entidades_texto if entidades_texto else "N/A")],
-        [Paragraph("Mencione aquí los temas y perspectivas de trabajo colaborativo: "), Paragraph(temas_perspectivas_texto if temas_perspectivas_texto else "N/A")],
+        [Paragraph("¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación internacional en este periodo?"), Paragraph("Sí" if "Ninguna" not in entidades_texto else "No")],
+        [Paragraph("Mencione el nombre de la(s) entidad(es) con quien ha realizado los acercamientos:"), Paragraph( entidades_texto if "Ninguna" not in entidades_texto else "N/A")],
+        [Paragraph("Mencione aquí los temas y perspectivas de trabajo colaborativo: "), Paragraph(temas_perspectivas_texto if "Ninguno" not in temas_perspectivas_texto else "N/A")],
         [Paragraph("5. NECESIDADES DE COOPERACIÓN INTERNACIONAL", styles['TableHeader'])],
         [Paragraph("¿Se identificaron necesidades de cooperación internacional en este periodo?"), Paragraph("Sí" if reporte.necesidadescooperacion.necesidad_identificado else "No")],
         [Paragraph("Mencione aquí las necesidades identificadas:"), Paragraph(reporte.necesidadescooperacion.necesidades_identificadas if reporte.necesidadescooperacion.necesidades_identificadas else "N/A")],
@@ -400,17 +295,17 @@ def generar_pdf_reporte(request, reporte_id):
 class SaltarAcercamientoView(View):
     def get(self, request, *args, **kwargs):
         # Obtén el reporte con el ID
-        reporte = get_object_or_404(ReporteAcercamiento, id=self.kwargs['reporte_id'])
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         
         # Crear un registro de AcercamientoCooperacion con datos predeterminados o vacíos
         AcercamientoCooperacion.objects.create(
             reporte=reporte,
-            entidad=None,  # Puedes usar algún valor predeterminado o "Ninguna"
-            temas_perspectivas=None
+            entidad="Ninguna",  # Puedes usar algún valor predeterminado o "Ninguna"
+            temas_perspectivas="Ninguno"
         )
         
         # Cambia el estado del reporte para marcar que se ha saltado el acercamiento
-        reporte.estado = ReporteAcercamiento.ESTADO_NECESIDADES  # Define el nuevo estado en el modelo
+        reporte.avance = 2  # Define el nuevo estado en el modelo
         reporte.save()
 
         # Redirige al paso de necesidades

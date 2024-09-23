@@ -1,11 +1,13 @@
 from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea
-from reporteProgramas.models import ReporteAvances, DatosQuienReporta, DatosCooperante, LogrosAvances, ApoyoEventos
+from reporteProgramas.models import  DatosCooperante, LogrosAvances, Logro, Departamento, Municipio,Resultado
 from django import forms
+from reporteAcercamientos.models import Reporte, DatosQuienReporta
 import datetime
+from django.forms import modelformset_factory
 
 class ReporteAvancesForm(forms.ModelForm):
     class Meta:
-        model = ReporteAvances
+        model = Reporte
         fields = ['fecha_elaboracion', 'periodo', 'desde', 'hasta']
         widgets = {
             'fecha_elaboracion': forms.DateInput(attrs={'readonly': 'readonly'}),  # Solo lectura
@@ -107,92 +109,46 @@ class DatosCooperanteForm(forms.ModelForm):
 class LogrosAvancesForm(forms.ModelForm):
     class Meta:
         model = LogrosAvances
-        exclude = ['reporte']
+        fields = [
+            'riesgo_relacionamiento',
+            'logros_significativos',
+            'dificultades',
+            'detalle_riesgo',
+            'observaciones_generales',
+        ]
         
         widgets = {
-            'logros_avances_1': forms.TextInput(attrs={'placeholder': 'Logros y/o avances para Resultado 1'}),
-            'departamento_1': forms.Select(choices=[
-                ('departamento_1', 'Departamento 1'),
-                ('departamento_2', 'Departamento 2'),
-                ('departamento_3', 'Departamento 3')
-            ]),
-            'logros_avances_2': forms.TextInput(attrs={'placeholder': 'Logros y/o avances para Resultado 2'}),
-            'departamento_2': forms.Select(choices=[
-                ('departamento_1', 'Departamento 1'),
-                ('departamento_2', 'Departamento 2'),
-                ('departamento_3', 'Departamento 3')
-            ]),
-            'logros_avances_3': forms.TextInput(attrs={'placeholder': 'Logros y/o avances para Resultado 3'}),
-            'departamento_3': forms.Select(choices=[
-                ('departamento_1', 'Departamento 1'),
-                ('departamento_2', 'Departamento 2'),
-                ('departamento_3', 'Departamento 3')
-            ]),
-            'municipio_1': forms.Select(choices=[
-                ('municipio_1', 'Municipio 1'),
-                ('municipio_2', 'Municipio 2'),
-                ('municipio_3', 'Municipio 3')
-            ]),
-            'municipio_2': forms.Select(choices=[
-                ('municipio_1', 'Municipio 1'),
-                ('municipio_2', 'Municipio 2'),
-                ('municipio_3', 'Municipio 3')
-            ]),
-            'municipio_3': forms.Select(choices=[
-               ('municipio_1', 'Municipio 1'),
-                ('municipio_2', 'Municipio 2'),
-                ('municipio_3', 'Municipio 3')
-            ]),
-            
-            
-            'logros_significativos': forms.Textarea(attrs={'rows': 3}),
-            'dificultades': forms.Textarea(attrs={'rows': 3}),
-            'detalle_riesgo': forms.TextInput(attrs={'placeholder': 'Detalle de la situación de riesgo'}),
-            'observaciones_generales': forms.Textarea(attrs={'rows': 3}),
+            'logros_significativos': forms.Textarea(attrs={'rows': 4, 'cols': 180}),
+            'dificultades': forms.Textarea(attrs={'rows': 4, 'cols': 180}),
+            'detalle_riesgo': forms.Textarea(attrs={'rows': 4, 'cols': 180}),
+            'observaciones_generales': forms.Textarea(attrs={'rows': 4, 'cols': 180}),
         }
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        riesgo_relacionamiento = cleaned_data.get('riesgo_relacionamiento')
-        detalle_riesgo = cleaned_data.get('detalle_riesgo')
 
-        # Verificar que el campo "detalle_riesgo" sea obligatorio si "riesgo_relacionamiento" es True
-        if riesgo_relacionamiento and not detalle_riesgo:
-            self.add_error('detalle_riesgo', 'Este campo es obligatorio si hay una situación de riesgo.')
-        
-        return cleaned_data
-    
-OPCIONES_EVENTOS = [
-    ('opcion_1', 'Jornadas de información / sensibilización'),
-    ('opcion_2', 'Talleres de capacitación / formación'),
-    ('opcion_3', 'Jornadas de atención y servicio'),
-    ('opcion_4', 'Cursos de capacitación'),
-    ('Otros', 'Otros'),
-
-]
-OPCIONES_PUBLICO = [
-    ('opcion_1', 'Beneficiarios, solicitantes, comunidad en general'),
-    ('opcion_2', 'Funcionarios y/o contratistas de la URT'),
-    ('opcion_3', 'Funcionarios y/o contratistas de otras entidades'),
-    ('Otros', 'Otros' ),
-    
-]
-    
-class ApoyoEventosForm(forms.ModelForm):
-    opciones_eventos = forms.MultipleChoiceField(choices=OPCIONES_EVENTOS, widget=forms.CheckboxSelectMultiple)  # O puedes usar forms.SelectMultiple
-    opciones_publico = forms.MultipleChoiceField(choices=OPCIONES_PUBLICO, widget=forms.CheckboxSelectMultiple)  # O puedes usar forms.SelectMultiple
+class LogroForm(forms.ModelForm):
     class Meta:
-        model = ApoyoEventos
-        fields = [ 'cantidad_eventos', 'opciones_eventos', 'otros_eventos', 'objetivo_principal', 'opciones_publico', 'otros_publicos', 'cantidad_participantes']
-    def save(self, commit=True):
-        ApoyoEventos = super().save(commit=False)
-        ApoyoEventos.eventos_seleccionados = ','.join(self.cleaned_data['opciones_eventos'])  # Almacena como una cadena separada por comas
-        ApoyoEventos.publico_seleccionados = ','.join(self.cleaned_data['opciones_publico'])  # Almacena como una cadena separada por comas
-        if commit:
-            ApoyoEventos.save()
-        return ApoyoEventos
-
+        model = Logro
+        fields = [
+            'resultado',
+            'logros_avances_texto',
+            'departamento',
+            'municipio',
+            'adjunto',
+        ]
+        widgets = {
+            'municipio': forms.Select(attrs={'disabled': 'disabled'}),  # Desactiva inicialmente
+            'resultado': forms.Select(attrs={'disabled': 'disabled'}),  # Desactiva inicialmente
+        }
         
+
+
+   
+
+
+    
+
+LogroFormSet = modelformset_factory(Logro, form=LogroForm, extra=1, can_delete=True)
+    
+
     
 
         

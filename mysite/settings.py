@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "reporteAcercamientos",
     "reporteProgramas",
     "accounts.apps.AccountsConfig",
+    "reporteAportes"
     
 ]
 

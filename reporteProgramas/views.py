@@ -1,11 +1,12 @@
-from reporteProgramas.models import ReporteAvances, DatosQuienReporta, DatosCooperante, LogrosAvances, ApoyoEventos
-from  reporteProgramas.forms import ReporteAvancesForm, DatosQuienReportaForm, DatosCooperanteForm, LogrosAvancesForm, ApoyoEventosForm
+from reporteProgramas.models import  DatosCooperante, LogrosAvances, Logro
+from  reporteProgramas.forms import   DatosCooperanteForm, LogrosAvancesForm, LogroFormSet
 from django.views.generic.edit import CreateView
 from django.views.generic.list import ListView
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 from django.urls import reverse_lazy
 from django.db.utils import IntegrityError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -15,14 +16,19 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from reporteAcercamientos.models import Reporte, DatosQuienReporta
+from reporteAcercamientos.forms import ReporteForm, DatosQuienReportaForm
+from reporteProgramas.models import Resultado
+from reporteProgramas.models import Municipio
 
 
-class ReporteAvancesCreateView(LoginRequiredMixin,CreateView):
-    model = ReporteAvances
-    form_class = ReporteAvancesForm
+class ReporteProgramaCreateView(LoginRequiredMixin,CreateView):
+    model = Reporte
+    form_class = ReporteForm
     template_name = 'reporteProgramas/crear_reporte_avances.html'
     def form_valid(self, form):
         form.instance.usuario = self.request.user
+        form.instance.tipo = 2
         try:
             # Intentar guardar el formulario
             response = super().form_valid(form)
@@ -40,18 +46,18 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     template_name = 'reporteProgramas/crear_datos_quien_reporta.html'
     
     def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
        
-        if reporte.estado == ReporteAvances.ESTADO_DATOS_COOPERANTE:
+        if reporte.avance == 1:
             return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_LOGROS_AVANCES:
+        elif reporte.avance == 2:
             return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_FINALIZADO:
+        elif reporte.avance == 3:
             return redirect('reporteProgramas:index')
         return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
+        form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         
         try:
             response = super().form_valid(form)
@@ -60,7 +66,7 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
             return self.form_invalid(form)
         
         reporte = form.instance.reporte
-        reporte.estado = ReporteAvances.ESTADO_DATOS_COOPERANTE
+        reporte.avance = 1
         reporte.save()
         
         return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=self.kwargs['reporte_id'])
@@ -74,21 +80,21 @@ class DatosCooperanteCreateView(LoginRequiredMixin,CreateView):
     template_name = 'reporteProgramas/crear_datos_cooperante.html'
     
     def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
+        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
        
-        if reporte.estado == ReporteAvances.ESTADO_DATOS_QUIEN_REPORTA:
+        if reporte.avance == 0:
             return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_LOGROS_AVANCES:
+        elif reporte.avance == 2:
             return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_FINALIZADO:
+        elif reporte.avance == 3:
             return redirect('reporteProgramas:index')
         return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
+        form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         response = super().form_valid(form)
         reporte = form.instance.reporte
-        reporte.estado = ReporteAvances.ESTADO_LOGROS_AVANCES
+        reporte.avance = 2
         reporte.save()
         
         return redirect('reporteProgramas:crear_logros_avances', reporte_id=self.kwargs['reporte_id'])
@@ -97,100 +103,74 @@ class DatosCooperanteCreateView(LoginRequiredMixin,CreateView):
         return reverse_lazy('reporteProgramas:crear_logros_avances', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
 
-class LogrosAvancesCreateView(LoginRequiredMixin,CreateView):
-    model = LogrosAvances
-    form_class = LogrosAvancesForm  # Usa form_class en lugar de fields
-    template_name = 'reporteProgramas/crear_logros_avances.html'
-    
-    def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-       
-        if reporte.estado == ReporteAvances.ESTADO_DATOS_QUIEN_REPORTA:
-            return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_DATOS_COOPERANTE:
-            return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
-        elif reporte.estado == ReporteAvances.ESTADO_FINALIZADO:
-            return redirect('reporteProgramas:index')
-        return super().dispatch(request, *args, **kwargs)
-    
-    def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-        response = super().form_valid(form)
-        reporte = form.instance.reporte
-        reporte.estado = ReporteAvances.ESTADO_FINALIZADO
-        reporte.save()
+@login_required
+def crear_reporte_logros(request, reporte_id):
+    # Obtén el reporte basado en el ID
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    resultados = Resultado.objects.all()  # Obtén todos los resultados
+
+    if request.method == 'POST':
+        form_logros_avances = LogrosAvancesForm(request.POST)
+        formset_logro = LogroFormSet(request.POST, request.FILES)
+
+        if form_logros_avances.is_valid() and formset_logro.is_valid():
+            logros_avances = form_logros_avances.save(commit=False)
+            logros_avances.reporte = reporte  # Asociar el reporte
+            logros_avances.save()
+            reporte.avance = 3  # Marcar el reporte como completado
+            reporte.save()  # No olvides guardar el reporte después de actualizar
+
+            for logro in formset_logro:
+                if logro.cleaned_data:  # Solo guarda si hay datos limpios
+                    nuevo_logro = logro.save(commit=False)
+                    nuevo_logro.logros_avances = logros_avances  # Asociar el logro
+                    nuevo_logro.save()
+
+            return redirect('reporteProgramas:index')  # Redirige a donde desees
         
-        return redirect('reporteProgramas:index')
-    
-    def get_success_url(self):
-        return reverse_lazy('reporteProgramas:index')
-    
+        if not form_logros_avances.is_valid():
+          print(form_logros_avances.errors)  # Para depuración
 
-class ApoyoEventosCreateView(LoginRequiredMixin,CreateView):
-    model = ApoyoEventos
-    form_class = ApoyoEventosForm
-    template_name = 'reporteProgramas/crear_apoyo_eventos.html'
+        if not formset_logro.is_valid():
+          print(formset_logro.errors)  # Para depuración
+
+    else:
+        form_logros_avances = LogrosAvancesForm()
+        formset_logro = LogroFormSet(queryset=Logro.objects.none())
+
+    context = {
+        'form_logros_avances': form_logros_avances,
+        'formset_logro': formset_logro,
+        'reporte': reporte,  # Pasa el reporte al contexto si lo necesitas
+        'resultados': resultados,  # Pasa los resultados al contexto
+    }
     
-    def form_valid(self, form):
-        form.instance.reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-        response = super().form_valid(form)
-        reporte = form.instance.reporte
-        reporte.save()
-        
-        return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=self.kwargs['reporte_id'])
-    
-    def get_success_url(self):
-        return reverse_lazy('reporteProgramas:crear_datos_quien_reporta', kwargs={'reporte_id': self.kwargs['reporte_id']})
+    return render(request, 'reporteProgramas/crear_logros_avances.html', context)
 
 
-class ListarReportesView(LoginRequiredMixin,ListView):
-    model = ReporteAvances
-    template_name = 'reporteProgramas/listar_reportes_avances.html'
-    context_object_name = 'reportes'
-    paginate_by = 10
-    
-    
-# Vistas para ver la información de los informes
-
-from django.views.generic.detail import DetailView
-
-class DatosQuienReportaDetailView(LoginRequiredMixin,DetailView):
-    model = DatosQuienReporta
-    template_name = 'reporteProgramas/ver_datos_quien_reporta.html'
-    context_object_name = 'datos_quien_reporta'
-
-    def get_object(self):
-        
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-        return get_object_or_404(DatosQuienReporta, reporte=reporte)
 
     
-class DatosCooperanteDetailView(LoginRequiredMixin,DetailView):
-    model = DatosCooperante
-    template_name = 'reporteProgramas/ver_datos_cooperante.html'
-    context_object_name = 'datos_cooperante'
-    def get_object(self):
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-        return get_object_or_404(DatosCooperante, reporte=reporte)
 
-class LogrosAvancesDetailView(LoginRequiredMixin,DetailView):
-    model = LogrosAvances
-    template_name = 'reporteProgramas/ver_logros_avances.html'
-    context_object_name = 'logros_avances'
-    def get_object(self):
-        reporte = get_object_or_404(ReporteAvances, id=self.kwargs['reporte_id'])
-        return get_object_or_404(LogrosAvances, reporte=reporte)    
+@login_required
+def get_municipios(request, departamento_id):
+    municipios = Municipio.objects.filter(departamento_id=departamento_id).values('id', 'nombre')
+    return JsonResponse({'municipios': list(municipios)})
+
+
+class ReporteProgramasListView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        reportes = Reporte.objects.filter(tipo=2)
+        return render(request, 'reporteProgramas/listar_reportes_avances.html', {'reportes': reportes})
     
     
-    
-    
+
 @login_required
 def generar_pdf_reporte_avances(request, reporte_id):
     # Obtener el reporte
-    reporte = get_object_or_404(ReporteAvances, id=reporte_id)
+    reporte = get_object_or_404(Reporte, id=reporte_id)
     usuario = reporte.datosquienreporta
     cooperante = reporte.datoscooperante
-    logros = reporte.logrosavances
+    logros_avances = reporte.logrosavances  # Acceder al objeto LogrosAvances
     reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
     reporte_hasta = reporte.hasta.strftime('%Y-%m-%d')
     reporte_desde = reporte.desde.strftime('%Y-%m-%d')
@@ -215,12 +195,12 @@ def generar_pdf_reporte_avances(request, reporte_id):
         [Paragraph('''Informar los avances y actividades realizadas en el trimestre, del proyecto de cooperación que se ejecuta entre la Unidad Administrativa Especial de Gestión de Restitución de Tierras''', styles['ObjectiveContent'])],
         [Paragraph("2. DATOS DEL INFORME", styles['TableHeader'])],
         [Paragraph("Fecha de elaboración del reporte:", styles['TableContent']), Paragraph(reporte_fecha, styles['TableContent'])],
-        [Paragraph("Periodo", styles['TableContent']), Paragraph(reporte.periodo, styles['TableContent'])],
+        [Paragraph("Periodo", styles['TableContent']), Paragraph(str(reporte.periodo), styles['TableContent'])],
         [Paragraph("Desde:", styles['RightAligned']), Paragraph(reporte_desde, styles['TableContent']), Paragraph("Hasta:", styles['RightAligned']), Paragraph(reporte_hasta, styles['TableContent'])],
         [Paragraph("3. DATOS DE QUIÉN REPORTA", styles['TableHeader'])],
         [Paragraph("Nombre y apellidos"), Paragraph(usuario.nombre_completo)],
-        [Paragraph("Rol"), Paragraph(usuario.rol)],
-        [Paragraph("Dependencia"), Paragraph(usuario.dependencia)],
+        [Paragraph("Rol"), Paragraph(usuario.rol.nombre)],
+        [Paragraph("Dependencia"), Paragraph(usuario.dependencia.nombre)],
         [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico)],
         [Paragraph("4. DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN", styles['TableHeader'])],
         [Paragraph("NOMBRE DEL COOPERANTE"), Paragraph(cooperante.nombre_cooperante)],
@@ -229,17 +209,24 @@ def generar_pdf_reporte_avances(request, reporte_id):
         [Paragraph("LÍNEA DE ACCIÓN / COMPONENTE: "), Paragraph(cooperante.linea_accion)],
         [Paragraph("ROL DE QUIEN REPORTA: "), Paragraph(cooperante.rol_quien_reporta)],
         [Paragraph("5. RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS", styles['TableHeader'])],
-        [Paragraph("Resultados/Productos Esperados"), Paragraph("Logros y/o avances"), Paragraph("Adjunto")],
-        [Paragraph(logros.resultado_1), Paragraph(logros.logros_avances_1), Paragraph(logros.adjunto_1.url) ],
-        [Paragraph(logros.resultado_2), Paragraph(logros.logros_avances_2), Paragraph(logros.adjunto_2.url) ],
-        [Paragraph(logros.resultado_3), Paragraph(logros.logros_avances_3), Paragraph(logros.adjunto_3.url) ],
-        [Paragraph("", styles['TableHeader'])],
-        [Paragraph("¿Algún aspecto a resaltar como un logro significativo en este período?"), Paragraph(logros.logros_significativos)],
-        [Paragraph("Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:"), Paragraph(logros.dificultades)],
-        [Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros.detalle_riesgo if logros.detalle_riesgo else '')],
-        [Paragraph("Observaciones y comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes, etc.)"), Paragraph(logros.observaciones_generales)],
-       
+        [Paragraph("Resultados/Productos Esperados"), Paragraph("Logros y/o avances"), Paragraph("Adjunto")]
     ]
+    
+   
+
+    for logro in logros_avances.logros.all():  # Usamos related_name 'logros'
+        data.append([
+            Paragraph(logro.resultado.nombre, styles['TableContent']), 
+            Paragraph(logro.logros_avances_texto, styles['TableContent']), 
+            Paragraph(logro.adjunto.url if logro.adjunto else "", styles['TableContent'])
+        ])
+    
+        data.append([Paragraph("", styles['TableHeader'])])
+        data.append([Paragraph("¿Algún aspecto a resaltar como un logro significativo en este período?"), Paragraph(logros_avances.logros_significativos)])
+        data.append([Paragraph("Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:"), Paragraph(logros_avances.dificultades)])
+        data.append([Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros_avances.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros_avances.detalle_riesgo if logros_avances.detalle_riesgo else '')])
+        data.append([Paragraph("Observaciones y comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes, etc.)"), Paragraph(logros_avances.observaciones_generales)])
+       
     
     
 
@@ -303,8 +290,8 @@ def generar_pdf_reporte_avances(request, reporte_id):
         Paragraph("Firma", styles['LeftAligned']),
         Spacer(1, 12),
         Paragraph(usuario.nombre_completo.upper(), styles['Bold']),
-        Paragraph(usuario.get_rol_display(), styles['LeftAligned']),
-        Paragraph(usuario.dependencia, styles['LeftAligned'])]
+        Paragraph(usuario.rol.nombre, styles['LeftAligned']),
+        Paragraph(usuario.dependencia.nombre, styles['LeftAligned'])]
     
     doc.build(elements)
 
