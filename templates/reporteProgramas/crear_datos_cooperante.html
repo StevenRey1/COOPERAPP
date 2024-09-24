@@ -56,9 +56,7 @@
           <label for="linea_accion">Línea de Acción</label>
           <select id="linea_accion" name="linea_accion" class="form-control" required>
               <option value="">Seleccione una línea de acción</option>
-              <option value="linea1">Línea 1</option>
-              <option value="linea2">Línea 2</option>
-              <option value="linea3">Línea 3</option>
+             
           </select>
       </div>
 
@@ -72,7 +70,8 @@
           </select>
       </div>
 
-      <button type="submit" class="btn btn-primary">Registrar</button>
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
   </form>
 </div>
 

@@ -1,4 +1,4 @@
-from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador
+from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador, LineaAccion
 from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet
 from django.views.generic.edit import CreateView
 from django.shortcuts import get_object_or_404, redirect, render
@@ -39,6 +39,7 @@ class ReporteProgramaCreateView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
         return reverse_lazy('reporteProgramas:crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
 
+
 class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     model = DatosQuienReporta
     form_class = DatosQuienReportaForm
@@ -46,11 +47,13 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     
     def dispatch(self, request, *args, **kwargs):
         reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
+        
        
         if reporte.avance == 1:
             return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
         elif reporte.avance == 2:
-            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id)
+            linea_accion_id = reporte.datoscooperante.linea_accion
+            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id, linea_accion_id=linea_accion_id)
         elif reporte.avance == 3:
             return redirect('accounts:listar_reportes')
         return super().dispatch(request, *args, **kwargs)
@@ -73,26 +76,30 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
         return reverse_lazy('reporteProgramas:crear_datos_cooperante', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
-
-
-
+@login_required
 def obtener_cooperantes(request):
     if request.method == 'GET':
         cooperantes = list(Cooperante.objects.values('id', 'nombre'))
         return JsonResponse({'cooperantes': cooperantes})
 
-
+@login_required
 def obtener_identificaciones_por_cooperante(request, cooperante_id):
     if request.method == 'GET':
+       
         # Filtrar las identificaciones según el cooperante seleccionado
-        acuerdos = AcuerdoCooperacion.objects.filter(cooperante_id=cooperante_id)
+        acuerdos = AcuerdoCooperacion.objects.filter(cooperante=cooperante_id)
+        
+
       
         identificaciones = [
             {'id': acuerdo.acuerdo.id, 'identificacion': acuerdo.acuerdo.identificacion}
             for acuerdo in acuerdos
         ]
+
+        
         return JsonResponse({'identificaciones': identificaciones})
-    
+
+@login_required    
 def obtener_operadores_por_identificacion(request, identificacion_id):
     if request.method == 'GET':
         # Filtrar los acuerdos que coinciden con la identificación seleccionada
@@ -113,7 +120,8 @@ def obtener_operadores_por_identificacion(request, identificacion_id):
         ]
         
         return JsonResponse({'operadores': operadores_data})
-    
+
+@login_required   
 def obtener_proyectos_plan(request, cooperante_id, identificacion_id, operador_id):
     if request.method == 'GET':
         # Filtrar acuerdos por la identificación seleccionada
@@ -137,6 +145,7 @@ def obtener_proyectos_plan(request, cooperante_id, identificacion_id, operador_i
         
         return JsonResponse({'proyectos_plan': proyectos_plan_data})
 
+@login_required
 def obtener_lineas_accion(request, cooperante_id, identificacion_id, operador_id, proyecto_plan_id):
     if request.method == 'GET':
         # Filtrar acuerdos por la identificación seleccionada
@@ -163,9 +172,20 @@ def obtener_lineas_accion(request, cooperante_id, identificacion_id, operador_id
         # Retornar la respuesta en formato JSON
         return JsonResponse({'lineas_accion': lineas_accion_data})
 
+@login_required
 def crear_datos_cooperante(request,reporte_id):
 
     reporte = get_object_or_404(Reporte, id=reporte_id)
+
+    # Verificar el avance del reporte
+    if reporte.avance == 0:
+        # Redirigir a la vista para crear datos de quien reporta
+        return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte_id)
+    
+    if reporte.avance == 2:
+        linea_accion_id = reporte.datoscooperante.linea_accion
+        return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id, linea_accion_id=linea_accion_id)
+
 
     if request.method == 'POST':
         cooperante = request.POST.get('cooperante')
@@ -175,7 +195,7 @@ def crear_datos_cooperante(request,reporte_id):
         linea_accion = request.POST.get('linea_accion')
         rol = request.POST.get('rol')
         
-        # Validaciones adicionales (si es necesario)
+       
 
         try:
             # Guardar los datos en la base de datos
@@ -188,10 +208,11 @@ def crear_datos_cooperante(request,reporte_id):
                 linea_accion=linea_accion,
                 rol=rol
             )
+            
             reporte.avance = 2
             reporte.save()
             messages.success(request, 'Datos guardados correctamente.')
-            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id)
+            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id, linea_accion_id=linea_accion)
         except Exception as e:
             messages.error(request, f'Ocurrió un error al guardar los datos: {str(e)}')
 
@@ -199,52 +220,63 @@ def crear_datos_cooperante(request,reporte_id):
 
 
 @login_required
-def crear_reporte_logros(request, reporte_id):
+def crear_reporte_logros(request, reporte_id, linea_accion_id):
     # Obtén el reporte basado en el ID
     reporte = get_object_or_404(Reporte, id=reporte_id)
-    resultados = Resultado.objects.all()  # Obtén todos los resultados
+
+    # Verificar el avance del reporte
+    if reporte.avance == 0:
+        # Redirigir a la vista para crear datos de quien reporta
+        return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte_id)
+    
+    if reporte.avance == 1:
+        
+        return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
+
+
+    # Filtrar resultados según la línea de acción
+    resultados = Resultado.objects.filter(linea_accion=linea_accion_id)
+    extra_forms = resultados.count()
 
     if request.method == 'POST':
         form_logros_avances = LogrosAvancesForm(request.POST)
-        formset_logro = LogroFormSet(request.POST, request.FILES)
+        formset_logro = LogroFormSet(request.POST, request.FILES, form_kwargs={'linea_accion_id': linea_accion_id})
 
         if form_logros_avances.is_valid() and formset_logro.is_valid():
             logros_avances = form_logros_avances.save(commit=False)
-            logros_avances.reporte = reporte  # Asociar el reporte
+            logros_avances.reporte = reporte
             logros_avances.save()
-            reporte.avance = 3  # Marcar el reporte como completado
-            reporte.save()  # No olvides guardar el reporte después de actualizar
+            reporte.avance = 3
+            reporte.save()
 
             for logro in formset_logro:
-                if logro.cleaned_data:  # Solo guarda si hay datos limpios
+                if logro.cleaned_data:
                     nuevo_logro = logro.save(commit=False)
-                    nuevo_logro.logros_avances = logros_avances  # Asociar el logro
+                    nuevo_logro.logros_avances = logros_avances
                     nuevo_logro.save()
 
-            return redirect('accounts:listar_reportes')  # Redirige a donde desees
-        
-        if not form_logros_avances.is_valid():
-          print(form_logros_avances.errors)  # Para depuración
+            return redirect('accounts:listar_reportes')
 
-        if not formset_logro.is_valid():
-          print(formset_logro.errors)  # Para depuración
+        # Manejo de errores
+        print(form_logros_avances.errors)  # Para depuración
+        print(formset_logro.errors)  # Para depuración
 
     else:
         form_logros_avances = LogrosAvancesForm()
-        formset_logro = LogroFormSet(queryset=Logro.objects.none())
+        formset_logro = LogroFormSet(queryset=Logro.objects.none(), form_kwargs={'linea_accion_id': linea_accion_id})
+        formset_logro.extra = extra_forms
+        
 
     context = {
         'form_logros_avances': form_logros_avances,
         'formset_logro': formset_logro,
-        'reporte': reporte,  # Pasa el reporte al contexto si lo necesitas
-        'resultados': resultados,  # Pasa los resultados al contexto
+        'reporte': reporte,
+        'resultados': resultados,
     }
-    
+
     return render(request, 'reporteProgramas/crear_logros_avances.html', context)
 
-
-
-    
+   
 
 @login_required
 def get_municipios(request, departamento_id):
@@ -263,8 +295,12 @@ class ReporteProgramasListView(LoginRequiredMixin, View):
 def generar_pdf_reporte_avances(request, reporte_id):
     # Obtener el reporte
     reporte = get_object_or_404(Reporte, id=reporte_id)
-    usuario = reporte.datosquienreporta
-    cooperante = reporte.datoscooperante
+    usuario = get_object_or_404(DatosQuienReporta,reporte=reporte_id)
+    acuerdo = get_object_or_404(Acuerdo, id=reporte.datoscooperante.identificacion)
+    cooperante = get_object_or_404(Cooperante, id=reporte.datoscooperante.cooperante)
+    operante = get_object_or_404(Operador, id=reporte.datoscooperante.operador)
+    linea_accion = get_object_or_404(LineaAccion, id = reporte.datoscooperante.linea_accion) 
+    
     logros_avances = reporte.logrosavances  # Acceder al objeto LogrosAvances
     reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
     reporte_hasta = reporte.hasta.strftime('%Y-%m-%d')
@@ -298,11 +334,11 @@ def generar_pdf_reporte_avances(request, reporte_id):
         [Paragraph("Dependencia"), Paragraph(usuario.dependencia.nombre)],
         [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico)],
         [Paragraph("4. DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN", styles['TableHeader'])],
-        [Paragraph("NOMBRE DEL COOPERANTE"), Paragraph(cooperante.nombre_cooperante)],
-        [Paragraph("IDENTIFICACIÓN:"), Paragraph( cooperante.identificacion)],
-        [Paragraph("NOMBRE DEL IMPLEMENTADOR U OPERADOR: "), Paragraph(cooperante.nombre_implementador)],
-        [Paragraph("LÍNEA DE ACCIÓN / COMPONENTE: "), Paragraph(cooperante.linea_accion)],
-        [Paragraph("ROL DE QUIEN REPORTA: "), Paragraph(cooperante.rol_quien_reporta)],
+        [Paragraph("NOMBRE DEL COOPERANTE"), Paragraph(cooperante.nombre)],
+        [Paragraph("IDENTIFICACIÓN:"), Paragraph(acuerdo.identificacion )],
+        [Paragraph("NOMBRE DEL IMPLEMENTADOR U OPERADOR: "), Paragraph(operante.nombre)],
+        [Paragraph("LÍNEA DE ACCIÓN / COMPONENTE: "), Paragraph(linea_accion.nombre)],
+        [Paragraph("ROL DE QUIEN REPORTA: "), Paragraph(reporte.datoscooperante.rol)],
         [Paragraph("5. RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS", styles['TableHeader'])],
         [Paragraph("Resultados/Productos Esperados"), Paragraph("Logros y/o avances"), Paragraph("Adjunto")]
     ]
@@ -316,21 +352,20 @@ def generar_pdf_reporte_avances(request, reporte_id):
             Paragraph(logro.adjunto.url if logro.adjunto else "", styles['TableContent'])
         ])
     
-        data.append([Paragraph("", styles['TableHeader'])])
-        data.append([Paragraph("¿Algún aspecto a resaltar como un logro significativo en este período?"), Paragraph(logros_avances.logros_significativos)])
-        data.append([Paragraph("Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:"), Paragraph(logros_avances.dificultades)])
-        data.append([Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros_avances.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros_avances.detalle_riesgo if logros_avances.detalle_riesgo else '')])
-        data.append([Paragraph("Observaciones y comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes, etc.)"), Paragraph(logros_avances.observaciones_generales)])
-       
+    data2 =[
+        [Paragraph("", styles['TableHeader'])],
+        [Paragraph("¿Algún aspecto a resaltar como un logro significativo en este período?"), Paragraph(logros_avances.logros_significativos)],
+        [Paragraph("Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:"), Paragraph(logros_avances.dificultades)],
+        [Paragraph("¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?"), Paragraph('SI' if logros_avances.detalle_riesgo else 'NO'), Paragraph("Explique detalladamente"), Paragraph(logros_avances.detalle_riesgo if logros_avances.detalle_riesgo else '')],
+        [Paragraph("Observaciones y comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes, etc.)"), Paragraph(logros_avances.observaciones_generales)],
+    ]
     
-    
-
     # Definir estilo de la tabla
     table_style = TableStyle([
         ('SPAN', (0, 0), (-1, 0)), 
         ('SPAN', (0, 1), (-1, 1)),  
         ('SPAN', (0, 2), (-1, 2)),
-        ('SPAN', (1, 3), (-1, 3)),  # Combinar solo las celdas de contenido en la fila "Fecha"
+        ('SPAN', (1, 3), (-1, 3)),  
         ('SPAN', (1, 4), (-1, 4)),
         ('SPAN', (0, 6), (-1, 6)),
         ('SPAN', (1, 7), (-1, 7)),
@@ -344,20 +379,14 @@ def generar_pdf_reporte_avances(request, reporte_id):
         ('SPAN', (1, 15), (-1, 15)),
         ('SPAN', (1, 16), (-1, 16)),
         ('SPAN', (0, 17), (-1, 17)),
-        ('SPAN', (2, 18), (-1, 18)),
-        ('SPAN', (2, 19), (-1, 19)),
-        ('SPAN', (2, 20), (-1, 20)),
-        ('SPAN', (2, 21), (-1, 21)),
-        ('SPAN', (0, 22), (-1, 22)),
-        ('SPAN', (1, 23), (-1, 23)),
-        ('SPAN', (1, 24), (-1, 24)),
-        ('SPAN', (1, 26), (-1, 26)),
+     
+        
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey), 
         ('BACKGROUND', (0, 2), (-1, 2), colors.lightgrey),
         ('BACKGROUND', (0, 6), (-1, 6), colors.lightgrey),
         ('BACKGROUND', (0, 11), (-1, 11), colors.lightgrey),
         ('BACKGROUND', (0, 17), (-1, 17), colors.lightgrey),
-        ('BACKGROUND', (0, 22), (-1, 22), colors.lightgrey),
+       
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),  
         ('ALIGN', (0, 2), (-1, 2), 'CENTER'),  
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  
@@ -368,9 +397,29 @@ def generar_pdf_reporte_avances(request, reporte_id):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), 
     ])
 
+    table2_style = TableStyle([
+        ('SPAN', (0, 0), (-1, 0)),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('SPAN', (2, 1), (-1, 1)) ,
+        ('SPAN', (2, 2), (-1, 2)) ,
+        ('SPAN', (2, 4), (-1, 4)) ,
+       
+        
+        ('SPAN', (2, 1), (-1, 1)),
+        ('SPAN', (2, 2), (-1, 2)),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Agrega esta línea para las líneas de la tabla
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),     
+
+    ])
+
     
     table = Table(data, colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25, doc.width * 0.25])
+    table2 = Table(data2,colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25, doc.width * 0.25] )
     table.setStyle(table_style)
+
+    table2.setStyle(table2_style)
     # Construir el documento
     elements = [
         Paragraph("UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS DESPOJADAS", styles['CenteredHeading']),
@@ -380,13 +429,14 @@ def generar_pdf_reporte_avances(request, reporte_id):
         Paragraph("REPORTE DE COOPERACIÓN INTERNACIONAL", styles['CenteredHeading']),
         Spacer(1, 20),
         table,
+        table2,
         Spacer(1, 25),  # Espacio después de la tabla
         Paragraph("______________________________", styles['LeftAligned']),
         Paragraph("Firma", styles['LeftAligned']),
         Spacer(1, 12),
-        Paragraph(usuario.nombre_completo.upper(), styles['Bold']),
-        Paragraph(usuario.rol.nombre, styles['LeftAligned']),
-        Paragraph(usuario.dependencia.nombre, styles['LeftAligned'])]
+        Paragraph('usuario', styles['Bold']),
+        Paragraph('usuario', styles['LeftAligned']),
+        Paragraph('usuario', styles['LeftAligned'])]
     
     doc.build(elements)
 

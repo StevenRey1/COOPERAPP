@@ -20,16 +20,12 @@
           </tr>
         </thead>
         <tbody>
-          {% for resultado in resultados %}
+          
           {{ formset_logro.management_form }}
           {% for form in formset_logro %}
           <tr>
             <td>
-              <select name="{{ form.resultado.html_name }}" id="{{ form.resultado.id_for_label }}" >
-                
-                  <option value="{{ resultado.id }}">{{ resultado.nombre }}</option>
-               
-              </select>
+              {{form.resultado}}
             </td>
             <td>{{ form.logros_avances_texto }}</td>
             <td>{{ form.departamento }}</td>
@@ -37,7 +33,7 @@
             <td>{{ form.adjunto }}</td>
           </tr>
           {% endfor %}
-          {% endfor %}
+          
         </tbody>
       </table>
     </div>
@@ -70,7 +66,7 @@
             <label class="form-check-label" for="riesgo_si">Sí</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="riesgo_relacionamiento" value="No" id="riesgo_no">
+            <input class="form-check-input" type="radio" name="riesgo_relacionamiento" value="No" id="riesgo_no" checked>
             <label class="form-check-label" for="riesgo_no">No</label>
           </div>
         </div>
@@ -79,7 +75,7 @@
       <div class="row mb-3" id="id_detalle_riesgo" style="display: none;">
         <label for="{{ form_logros_avances.detalle_riesgo.id_for_label }}" class="form-label">Explique detalladamente:</label>
         <div class="col-12">
-          {{ form_logros_avances.detalle_riesgo }}
+          {{ form_logros_avances.detalle_riesgo}}
           <small class="text-muted" id="count_detalle_riesgo">0 palabras</small>
           <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
         </div>
@@ -112,6 +108,32 @@
       detalleRiesgoField.style.display = document.querySelector('input[name="riesgo_relacionamiento"]:checked').value === "Sí" ? 'block' : 'none';
     });
   });
+
+  // Contadores de palabras y validación
+const textareas = document.querySelectorAll('textarea[id="id_logros_significativos"], textarea[id="id_dificultades"], textarea[id="id_detalle_riesgo"], textarea[id="id_observaciones_generales"]');
+const MAX_WORDS = 50;
+
+textareas.forEach(textarea => {
+  const countId = `count_${textarea.id.replace('id_', '').replace('-', '_')}`;
+  const countElement = document.getElementById(countId);
+
+  function updateWordCount() {
+    const words = textarea.value.trim().split(/\s+/).length;
+    countElement.textContent = `${words-1} palabra${words !== 1 ? 's' : ''}`;
+
+    if (words > MAX_WORDS) {
+      textarea.classList.add('is-invalid');
+      countElement.classList.add('text-danger');
+    } else {
+      textarea.classList.remove('is-invalid');
+      countElement.classList.remove('text-danger');
+    }
+  }
+
+  textarea.addEventListener('input', updateWordCount);
+  updateWordCount(); // Invocar al inicio para mostrar el conteo inicial
+});
+
 
   // Filtrar municipios al seleccionar departamento
 const departamentoSelects = document.querySelectorAll('[id^="id_form-"][id$="-departamento"]');

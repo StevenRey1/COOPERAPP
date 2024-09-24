@@ -5,7 +5,7 @@ from reporteAcercamientos.models import Reporte
 
 
 class Acuerdo(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     identificacion = models.CharField(max_length=100, unique=True)
     pais = models.CharField(max_length=100)  # Nuevo atributo
     tipo_cooperacion = models.CharField(max_length=100)  # Nuevo atributo
@@ -18,17 +18,17 @@ class Acuerdo(models.Model):
 
 
 class Cooperante(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    nombre_corto = models.CharField(max_length=10, unique=True)
-    tipo = models.CharField(max_length=10, unique=True)
+    nombre = models.CharField(max_length=100)
+    nombre_corto = models.CharField(max_length=10)
+    tipo = models.CharField(max_length=10)
 
     class Meta:
         db_table = 'cooperante'
 
 
 class Operador(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    nombre_corto = models.CharField(max_length=10, unique=True)
+    nombre = models.CharField(max_length=100)
+    nombre_corto = models.CharField(max_length=10)
 
     class Meta:
         db_table = 'operador'
@@ -54,7 +54,6 @@ class LineaAccion(models.Model):
     rol = models.CharField(max_length=100)  # Nuevo atributo
     nombre_supervisor = models.CharField(max_length=100)  # Nuevo atributo
     formularios = models.TextField()  # Nuevo atributo
-    resultados = models.TextField()  # Nuevo atributo
     observaciones = models.TextField()  # Nuevo atributo
 
     class Meta:
@@ -90,12 +89,6 @@ class DatosCooperante(models.Model):
 
 
 
-
-
-
-
-
-
 class Departamento(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
 
@@ -120,7 +113,8 @@ class Municipio(models.Model):
         return self.nombre
 
 class Resultado(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
+    linea_accion = models.ForeignKey(LineaAccion, related_name='resultados', on_delete=models.CASCADE)  # Relación muchos a uno
 
     class Meta:
         db_table = "resultado"
