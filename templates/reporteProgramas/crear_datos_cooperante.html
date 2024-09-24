@@ -1,139 +1,242 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      
-      <form method="POST">
-        {% csrf_token %}
-        <div class="card">
-          <div class="card-header">
-            <h5 class="card-title">DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN</h5>
-        </div>
 
-        <div class="card-body">
-       
-        <!-- Campo Nombre del Cooperante -->
-        <div class="row">
-        <label for="nombre_cooperante" class="form-label">Nombre del cooperante:</label>
-        {{ form.nombre_cooperante }}
-        </div>
-
-
-
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Formulario de Registro</h1>
   
-
-      <div class="row" id="id_cual_nombre_cooperante" style="display: none;">
-        <label for="cual_cooperante" class="form-label">Especifique otro:</label>
-        {{ form.cual_cooperante }}
-      </div>
-
-    
-
-    <div class = "row mb-3"> 
-      <!-- Campo Identificación del Cooperante -->
-      
-        <label for="identificacion" class="form-label">Identificación del cooperante:</label>
-        {{ form.identificacion }}
-      
-    </div>
-
-    <div class = "row mb-3">
-      <!-- Nombre del implementador u operador (readonly) -->
-      
-        <label for="nombre_implementador" class="form-label">Nombre del implementador u operador:</label>
-        {{ form.nombre_implementador }}
-     
-    </div>
-
-    
-      <!-- Campo Programa / Proyecto o plan -->
-    <div class = "row">
-     
-        <label for="programa_proyecto_plan" class="form-label">Programa / proyecto o plan:</label>
-        {{ form.programa_proyecto_plan }}
-     
-    </div>
-
-      <div class="row" id="id_cual_programa_proyecto" style="display: none;">
-        <label for="cual_programa" class="form-label">Especifique otro:</label>
-        {{ form.cual_programa }}
-      </div>
-    
-
-    <!-- Campo Línea de acción / componente -->
-
+  <!-- Alert messages -->
+  {% if messages %}
     <div class="row">
-      
-        <label for="linea_accion" class="form-label">Línea de acción / componente:</label>
-        {{ form.linea_accion }}
-      
-    </div>
-   
-      <div class="row" id="id_cual_linea_accion" style="display: none;">
-        <label for="cual_linea_accion" class="form-label">Especifique otro:</label>
-        {{ form.cual_linea_accion }}
+      <div class="col-md-12">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
       </div>
-    
+    </div>
+  {% endif %}
+  
+  <form method="POST" action="{% url 'reporteProgramas:crear_datos_cooperante' reporte_id=reporte.id%}">
+      {% csrf_token %}
+      <div class="form-group">
+          <label for="cooperante">Cooperante</label>
+          <select id="cooperante" name="cooperante" class="form-control" required>
+              <option value="">Seleccione un cooperante</option>
+              <!-- Las opciones se llenarán dinámicamente -->
+          </select>
+      </div>
 
-    
-      <!-- Campo Rol de quien reporta -->
-      <div class="row">
-      
-        <label for="rol_quien_reporta" class="form-label">Rol de quien reporta:</label>
-        {{ form.rol_quien_reporta }}
-      
+      <div class="form-group">
+          <label for="identificacion">Identificación</label>
+          <select id="identificacion" name="identificacion" class="form-control" required>
+              <option value="">Seleccione una identificación</option>
+          </select>
       </div>
-      
-      <div class="row" id="id_cual_rol_quien_reporta" style="display: none;">
-        <label for="cual_rol_reporta" class="form-label">Especifique otro:</label>
-        {{ form.cual_rol_reporta }}
+
+      <div class="form-group">
+          <label for="operador">Operador</label>
+          <select id="operador" name="operador" class="form-control" required>
+              <option value="">Seleccione un operador</option>
+          </select>
       </div>
-        </div>
-        <div class="card-footer text-center">
-          <button type="submit" class="btn btn-primary">Guardar</button>
-          <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+
+      <div class="form-group">
+          <label for="proyecto_plan">Proyecto/Plan</label>
+          <select id="proyecto_plan" name="proyecto_plan" class="form-control" required>
+              <option value="">Seleccione un proyecto/plan</option>
+          </select>
       </div>
-    </div>  
-    </form>
-    </div>
-  </div>
+
+      <div class="form-group">
+          <label for="linea_accion">Línea de Acción</label>
+          <select id="linea_accion" name="linea_accion" class="form-control" required>
+              <option value="">Seleccione una línea de acción</option>
+              <option value="linea1">Línea 1</option>
+              <option value="linea2">Línea 2</option>
+              <option value="linea3">Línea 3</option>
+          </select>
+      </div>
+
+      <div class="form-group">
+          <label for="rol">Rol</label>
+          <select id="rol" name="rol" class="form-control" required>
+              <option value="">Seleccione un rol</option>
+              <option value="rol1">Rol 1</option>
+              <option value="rol2">Rol 2</option>
+              <option value="rol3">Rol 3</option>
+          </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Registrar</button>
+  </form>
+</div>
 
 {% endblock %}
-    
+
 {% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const url = `{% url 'reporteProgramas:obtener_cooperantes' %}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const cooperanteSelect = document.getElementById('cooperante');
+            data.cooperantes.forEach(cooperante => {
+                const option = document.createElement('option');
+                option.value = cooperante.id;
+                option.textContent = cooperante.nombre;
+                cooperanteSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error al cargar cooperantes:', error));
+});
 
-  <script>
-    // Función para activar/desactivar el campo "Cual" y hacerlo requerido
-    function toggleCualField(selectElement, cualFieldId, cualFieldName) {
-      const cualField = document.getElementById(cualFieldId);
-      const cualFieldInput = document.getElementsByName(cualFieldName)[0];
-      if (selectElement.value === 'otro') {
-        cualField.style.display = 'block';
-        cualFieldInput.setAttribute('required', 'true');
-      } else {
-        cualField.style.display = 'none';
-        cualFieldInput.value = '';  // Borrar el valor del campo "Cual"
-        cualFieldInput.removeAttribute('required');
-      }
+document.getElementById('cooperante').addEventListener('change', function() {
+    const cooperanteId = this.value;
+    const identificacionSelect = document.getElementById('identificacion');
+    
+    // Limpiar identificaciones anteriores y establecer el valor a vacío
+    identificacionSelect.innerHTML = '<option value="">Seleccione una identificación</option>';
+    identificacionSelect.value = ''; // Limpiar valor seleccionado
+  
+    const operadorSelect = document.getElementById('operador');
+    operadorSelect.innerHTML = '<option value="">Seleccione un operador</option>'; // Limpiar operadores anteriores
+    operadorSelect.value = ''; // Limpiar valor seleccionado
+  
+    const proyectoPlanSelect = document.getElementById('proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar proyectos/planes anteriores
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+  
+    const lineaAccionSelect = document.getElementById('linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
+
+    if (cooperanteId) {
+        const identificacionUrl = `{% url 'reporteProgramas:obtener_identificaciones' 0 %}`.replace('0', cooperanteId);
+
+        fetch(identificacionUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data.identificaciones.forEach(identificacion => {
+                    const option = document.createElement('option');
+                    option.value = identificacion.id;
+                    option.textContent = identificacion.identificacion;
+                    identificacionSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar identificaciones:', error));
     }
+});
 
-    // Agregar eventos de escucha a los campos select
-    document.getElementById('{{ form.nombre_cooperante.id_for_label }}').addEventListener('change', function() {
-      toggleCualField(this, 'id_cual_nombre_cooperante', 'cual_cooperante');
-    });
+document.getElementById('identificacion').addEventListener('change', function() {
+    const identificacionId = this.value;
+    console.log(identificacionId);
+    const operadorSelect = document.getElementById('operador');
 
-    document.getElementById('{{ form.programa_proyecto_plan.id_for_label }}').addEventListener('change', function() {
-      toggleCualField(this, 'id_cual_programa_proyecto', 'cual_programa');
-    });
+    // Limpiar operadores anteriores
+    operadorSelect.innerHTML = '<option value="">Seleccione un operador</option>';
 
-    document.getElementById('{{ form.linea_accion.id_for_label }}').addEventListener('change', function() {
-      toggleCualField(this, 'id_cual_linea_accion', 'cual_linea_accion');
-    });
+    const proyectoPlanSelect = document.getElementById('proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar proyectos/planes anteriores
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+  
+    const lineaAccionSelect = document.getElementById('linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
 
-    document.getElementById('{{ form.rol_quien_reporta.id_for_label }}').addEventListener('change', function() {
-      toggleCualField(this, 'id_cual_rol_quien_reporta', 'cual_rol_reporta');
-    });
-  </script>
+    if (identificacionId) {
+        const operadorUrl = `{% url 'reporteProgramas:obtener_operadores' 0 %}`.replace('0', identificacionId);
+
+        fetch(operadorUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data.operadores.forEach(operador => {
+                    const option = document.createElement('option');
+                    option.value = operador.id;
+                    option.textContent = operador.nombre;
+                    operadorSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar operadores:', error));
+    }
+});
+
+document.getElementById('operador').addEventListener('change', function() {
+    const cooperanteId = document.getElementById('cooperante').value;
+    const identificacionId = document.getElementById('identificacion').value;
+    const operadorId = this.value; // Obtener el valor directamente de 'this'
+
+    // Limpiar proyectos/planes anteriores y establecer el valor a vacío
+    const proyectoPlanSelect = document.getElementById('proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>';
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+
+    const lineaAccionSelect = document.getElementById('linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
+
+    if (cooperanteId && identificacionId && operadorId) {
+        let url = "{% url 'reporteProgramas:obtener_proyectos_plan' 0 0 0 %}"
+            .replace('0', cooperanteId)
+            .replace('0', identificacionId)
+            .replace('0', operadorId);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar opciones anteriores
+                data.proyectos_plan.forEach(proyecto => {
+                    const option = document.createElement('option');
+                    option.value = proyecto.id;
+                    option.textContent = proyecto.nombre;
+                    proyectoPlanSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar los proyectos plan:', error));
+    }
+});
+
+document.getElementById('proyecto_plan').addEventListener('change', function() {
+    const cooperanteId = document.getElementById('cooperante').value;
+    const identificacionId = document.getElementById('identificacion').value;
+    const operadorId = document.getElementById('operador').value;
+    const proyectoId = this.value;  // Obtener el ID del proyecto/plan seleccionado
+
+    const lineaAccionSelect = document.getElementById('linea_accion');
+
+    // Limpiar líneas de acción anteriores
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>';
+
+    if (cooperanteId && identificacionId && operadorId && proyectoId) {
+        // Generar la URL para obtener las líneas de acción
+        const lineasAccionUrl = `{% url 'reporteProgramas:obtener_lineas_accion' 0 0 0 0 %}`
+            .replace('0', cooperanteId)
+            .replace('0', identificacionId)
+            .replace('0', operadorId)
+            .replace('0', proyectoId);
+
+        fetch(lineasAccionUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Para depuración
+                data.lineas_accion.forEach(linea => {
+                    const option = document.createElement('option');
+                    option.value = linea.id;
+                    option.textContent = linea.nombre;
+                    lineaAccionSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar líneas de acción:', error));
+    }
+});
+
+</script>
 {% endblock %}

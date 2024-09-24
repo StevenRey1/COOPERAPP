@@ -141,6 +141,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-LOGIN_REDIRECT_URL = 'login'
+
 LOGIN_REDIRECT_URL = 'accounts:listar_reportes'
-LOGIN_URL = 'login'
+LOGIN_URL = 'accounts:login'

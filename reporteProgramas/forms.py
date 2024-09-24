@@ -1,5 +1,5 @@
-from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea
-from reporteProgramas.models import  LogrosAvances, Logro, Departamento, Municipio,Resultado
+
+from reporteProgramas.models import  LogrosAvances, Logro
 from django import forms
 from reporteAcercamientos.models import Reporte, DatosQuienReporta
 import datetime
@@ -55,8 +55,10 @@ class DatosQuienReportaForm(forms.ModelForm):
         # Pre-llenar el correo electrónico del usuario
         if user:
             self.fields['correo_electronico'].initial = 'EXAMPLE@GMAIL.COM'
-            
 
+
+    
+        
 
 
 class LogrosAvancesForm(forms.ModelForm):

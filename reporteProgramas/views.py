@@ -1,7 +1,6 @@
-from reporteProgramas.models import  LogrosAvances, Logro
+from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador
 from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet
 from django.views.generic.edit import CreateView
-from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.urls import reverse_lazy
@@ -18,8 +17,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from reporteAcercamientos.models import Reporte, DatosQuienReporta
 from reporteAcercamientos.forms import ReporteForm, DatosQuienReportaForm
-from reporteProgramas.models import Resultado
-from reporteProgramas.models import Municipio
+from reporteProgramas.models import Resultado, DatosCooperante, Municipio
+
 
 
 class ReporteProgramaCreateView(LoginRequiredMixin,CreateView):
@@ -74,6 +73,130 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
         return reverse_lazy('reporteProgramas:crear_datos_cooperante', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
+
+
+
+def obtener_cooperantes(request):
+    if request.method == 'GET':
+        cooperantes = list(Cooperante.objects.values('id', 'nombre'))
+        return JsonResponse({'cooperantes': cooperantes})
+
+
+def obtener_identificaciones_por_cooperante(request, cooperante_id):
+    if request.method == 'GET':
+        # Filtrar las identificaciones según el cooperante seleccionado
+        acuerdos = AcuerdoCooperacion.objects.filter(cooperante_id=cooperante_id)
+      
+        identificaciones = [
+            {'id': acuerdo.acuerdo.id, 'identificacion': acuerdo.acuerdo.identificacion}
+            for acuerdo in acuerdos
+        ]
+        return JsonResponse({'identificaciones': identificaciones})
+    
+def obtener_operadores_por_identificacion(request, identificacion_id):
+    if request.method == 'GET':
+        # Filtrar los acuerdos que coinciden con la identificación seleccionada
+        acuerdos = Acuerdo.objects.filter(id=identificacion_id).distinct()
+    
+        print(identificacion_id)
+        
+        # Obtener los operadores relacionados a esos acuerdos a través del modelo AcuerdoCooperacion
+        acuerdos_cooperacion = AcuerdoCooperacion.objects.filter(acuerdo__in=acuerdos).distinct()
+
+        # Extraer los operadores de los acuerdos de cooperación
+        operadores = [acuerdo_cooperacion.operador for acuerdo_cooperacion in acuerdos_cooperacion]
+
+        # Construir la respuesta en formato JSON
+        operadores_data = [
+            {'id': operador.id, 'nombre': operador.nombre}
+            for operador in operadores
+        ]
+        
+        return JsonResponse({'operadores': operadores_data})
+    
+def obtener_proyectos_plan(request, cooperante_id, identificacion_id, operador_id):
+    if request.method == 'GET':
+        # Filtrar acuerdos por la identificación seleccionada
+        acuerdos = Acuerdo.objects.filter(id=identificacion_id).distinct()
+
+        # Filtrar los acuerdos de cooperación que coinciden con el cooperante, identificación y operador
+        acuerdos_cooperacion = AcuerdoCooperacion.objects.filter(
+            acuerdo__in=acuerdos,
+            cooperante_id=cooperante_id,
+            operador_id=operador_id
+        ).distinct()
+
+        # Extraer los proyectos plan relacionados a los acuerdos de cooperación
+        proyectos_plan = [acuerdo_cooperacion.proyecto_plan for acuerdo_cooperacion in acuerdos_cooperacion]
+
+        # Construir la respuesta en formato JSON
+        proyectos_plan_data = [
+            {'id': proyecto_plan.id, 'nombre': proyecto_plan.nombre}
+            for proyecto_plan in proyectos_plan
+        ]
+        
+        return JsonResponse({'proyectos_plan': proyectos_plan_data})
+
+def obtener_lineas_accion(request, cooperante_id, identificacion_id, operador_id, proyecto_plan_id):
+    if request.method == 'GET':
+        # Filtrar acuerdos por la identificación seleccionada
+        acuerdos = Acuerdo.objects.filter(id=identificacion_id).distinct()
+
+        # Filtrar los acuerdos de cooperación que coinciden con el cooperante, identificación y operador
+        acuerdos_cooperacion = AcuerdoCooperacion.objects.filter(
+            acuerdo__in=acuerdos,
+            cooperante_id=cooperante_id,
+            operador_id=operador_id,
+            proyecto_plan_id=proyecto_plan_id
+        ).distinct()
+
+        # Iterar sobre los acuerdos de cooperación y obtener las líneas de acción relacionadas
+        lineas_accion_data = []
+        for acuerdo_cooperacion in acuerdos_cooperacion:
+            # Asumimos que lineas_accion es un ManyToManyField
+            for linea_accion in acuerdo_cooperacion.lineas_accion.all():
+                lineas_accion_data.append({
+                    'id': linea_accion.id,
+                    'nombre': linea_accion.nombre
+                })
+
+        # Retornar la respuesta en formato JSON
+        return JsonResponse({'lineas_accion': lineas_accion_data})
+
+def crear_datos_cooperante(request,reporte_id):
+
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+
+    if request.method == 'POST':
+        cooperante = request.POST.get('cooperante')
+        identificacion = request.POST.get('identificacion')
+        operador = request.POST.get('operador')
+        proyecto_plan = request.POST.get('proyecto_plan')
+        linea_accion = request.POST.get('linea_accion')
+        rol = request.POST.get('rol')
+        
+        # Validaciones adicionales (si es necesario)
+
+        try:
+            # Guardar los datos en la base de datos
+            DatosCooperante.objects.create(
+                reporte = reporte,
+                cooperante=cooperante,
+                identificacion=identificacion,
+                operador=operador,
+                proyecto_plan=proyecto_plan,
+                linea_accion=linea_accion,
+                rol=rol
+            )
+            reporte.avance = 2
+            reporte.save()
+            messages.success(request, 'Datos guardados correctamente.')
+            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id)
+        except Exception as e:
+            messages.error(request, f'Ocurrió un error al guardar los datos: {str(e)}')
+
+    return render(request, 'reporteProgramas/crear_datos_cooperante.html', {'reporte': reporte})
+
 
 @login_required
 def crear_reporte_logros(request, reporte_id):

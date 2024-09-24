@@ -73,6 +73,24 @@ class AcuerdoCooperacion(models.Model):
 
 
 
+class DatosCooperante(models.Model):
+    
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE)
+    cooperante = models.CharField(max_length=100)
+    identificacion = models.CharField(max_length=100)
+    operador = models.CharField(max_length=100)
+    proyecto_plan = models.CharField(max_length=100)
+    linea_accion = models.CharField(max_length=100)
+    rol = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'datos_cooperante'
+
+
+
+
+
+
 
 
 
