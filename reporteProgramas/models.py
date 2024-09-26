@@ -47,11 +47,16 @@ class ProyectoPlan(models.Model):
     class Meta:
         db_table = 'proyecto_plan'
 
+class rol_linea_accion(models.Model):
+    nombre = models.CharField(max_length=100)
+    
+    class Meta:
+        db_table = 'rol_linea_accion'
 
 class LineaAccion(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     responsable = models.CharField(max_length=100)  # Nuevo atributo
-    rol = models.CharField(max_length=100)  # Nuevo atributo
+    rol = models.ForeignKey(rol_linea_accion, on_delete=models.CASCADE)  # Nuevo atributo
     nombre_supervisor = models.CharField(max_length=100)  # Nuevo atributo
     formularios = models.TextField()  # Nuevo atributo
     observaciones = models.TextField()  # Nuevo atributo
@@ -65,7 +70,7 @@ class AcuerdoCooperacion(models.Model):
     cooperante = models.ForeignKey(Cooperante, on_delete=models.CASCADE)
     operador = models.ForeignKey(Operador, on_delete=models.CASCADE)
     proyecto_plan = models.ForeignKey(ProyectoPlan, on_delete=models.CASCADE)
-    lineas_accion = models.ManyToManyField(LineaAccion)
+    lineas_accion = models.ForeignKey(LineaAccion, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'acuerdo_cooperacion'
@@ -80,7 +85,7 @@ class DatosCooperante(models.Model):
     operador = models.CharField(max_length=100)
     proyecto_plan = models.CharField(max_length=100)
     linea_accion = models.CharField(max_length=100)
-    rol = models.CharField(max_length=100)
+    
 
     class Meta:
         db_table = 'datos_cooperante'

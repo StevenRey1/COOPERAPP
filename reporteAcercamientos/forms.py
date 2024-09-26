@@ -62,10 +62,7 @@ class DatosQuienReportaForm(forms.ModelForm):
             queryset=Dependencia.objects.all(),
             empty_label="Selecciona una dependencia"
         )
-
-        
-
-
+      
 class AcercamientoForm(forms.ModelForm):
     class Meta:
         model = AcercamientoCooperacion
@@ -80,8 +77,6 @@ class AcercamientoForm(forms.ModelForm):
         # Asegurando que los campos sean requeridos
         self.fields['entidad'].required = True
         self.fields['temas_perspectivas'].required = True
-
-
 
 class NecesidadesForm(ModelForm):
     class Meta:
