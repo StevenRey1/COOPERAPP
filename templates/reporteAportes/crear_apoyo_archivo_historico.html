@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para la gestión del archivo histórico de restitución de tierras</h1>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">Indique el tipo de acciones para las cuales ha recibido apoyo de este proyecto / cooperante en función del fortalecimiento del sistema documental:</label>
+      <div class="row">
+        {% for checkbox in form.acciones %}
+          <div class="col-sm-4">
+            <div class="form-check">
+              {{ checkbox }}
+              <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                {{ checkbox.choice_label }}
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <div class="row">
+        <div class="col-sm-3">
+          <label for="id_cuales_acciones" class="form-label">Cuales:</label>
+        </div>
+        <div class="col-sm-9">
+          {{ form.cuales_acciones }}
+          <div class="invalid-feedback">
+            Por favor, especifique otras acciones.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_comentarios" class="form-label">¿Qué resaltaría o que comentarios tiene sobre el apoyo recibido para la gestión documental?</label>
+      {{ form.comentarios }} <span class="text-muted">(Máximo 100 palabras)</span>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

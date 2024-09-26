@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Apoyo del Proyecto - Acceso a Territorios o Comunidades</h1>
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <div class="card mb-4 shadow-sm p-4">
+      <h5 class="card-title">Información del Territorio</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Departamento</th>
+              <th>Municipio</th>
+              <th>Vereda / Territorio</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="field-container">
+            <tr class="field-group">
+              <td>
+                {{ form.departamento }}
+              </td>
+              <td>
+                {{ form.municipio }}
+              </td>
+              <td>
+                {{ form.vereda }}
+              </td>
+              <td>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-grid gap-2 col-3 mx-auto">
+        <button type="button" class="btn btn-success" id="add-more">Click para adicionar otra ubicación</span></button>
+      </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm p-4">
+      <h5 class="card-title">Detalles del Apoyo</h5>
+
+      <div class="mb-3">
+        <label for="id_apoyo_recibido" class="form-label">Apoyo recibido: <span class="text-muted">(Máximo 50 palabras)</span></label>
+        {{ form.apoyo_recibido }}
+        <small class="text-muted" id="count_apoyo_recibido">0 palabras</small>
+        <div class="invalid-feedback">El texto no puede superar las 50 palabras.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="id_tipo_visitas" class="form-label">Tipo de visitas / actividades: <span class="text-muted">(Máximo 100 palabras)</span></label>
+        {{ form.tipo_visitas }}
+        <small class="text-muted" id="count_tipo_visitas">0 palabras</small>
+        <div class="invalid-feedback">El texto no puede superar las 100 palabras.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="id_cantidad_visitas" class="form-label">Número de visitas apoyadas:</label>
+        <div class="input-group">
+          {{ form.cantidad_visitas }}
+          <span class="input-group-text">/ 999</span>
+        </div>
+        <div class="invalid-feedback" id="error_cantidad_visitas">
+          Por favor, ingrese un número entre 0 y 999.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="id_resaltar_apoyo" class="form-label">Aspectos destacados del apoyo: <span class="text-muted">(Máximo 100 palabras)</span></label>
+        {{ form.resaltar_apoyo }}
+        <small class="text-muted" id="count_resaltar_apoyo">0 palabras</small>
+        <div class="invalid-feedback">El texto no puede superar las 100 palabras.</div>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary" id="submit-button">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+// Función para actualizar los municipios en base al departamento
+function actualizarMunicipios(departamentoSelect, municipioSelect) {
+    const departamentoId = departamentoSelect.value;
+
+    // Habilitar el campo de municipio
+    municipioSelect.disabled = false;
+
+    // Generar la URL usando el ID del departamento
+    const url = `{% url 'reporteProgramas:get_municipios' 0 %}`.replace('0', departamentoId);
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Limpiar municipios actuales
+            municipioSelect.innerHTML = '';
+
+            // Agregar opciones de municipios
+            data.municipios.forEach(municipio => {
+                const option = document.createElement('option');
+                option.value = municipio.id;
+                option.textContent = municipio.nombre;
+                municipioSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+ // Función para contar palabras y validar
+ function contarPalabrasYValidar(textarea, contadorId, errorId, maxPalabras) {
+    const words = textarea.value.trim().split(/\s+/).length;
+    document.getElementById(contadorId).textContent = `${words} palabra${words !== 1 ? 's' : ''}`;
+    
+    if (words > maxPalabras) {
+      textarea.classList.add('is-invalid');
+      document.getElementById(errorId).style.display = 'block';
+      return false; // No válido
+    } else {
+      textarea.classList.remove('is-invalid');
+      document.getElementById(errorId).style.display = 'none';
+      return true; // Válido
+    }
+  }
+
+  // Agregar evento input a los textareas para contar palabras
+  const apoyoRecibidoTextarea = document.getElementById('id_apoyo_recibido');
+  apoyoRecibidoTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_apoyo_recibido', 'error_apoyo_recibido', 50);
+  });
+
+  const tipoVisitasTextarea = document.getElementById('id_tipo_visitas');
+  tipoVisitasTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_tipo_visitas', 'error_tipo_visitas', 100);
+  });
+
+  const resaltarApoyoTextarea = document.getElementById('id_resaltar_apoyo');
+  resaltarApoyoTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_resaltar_apoyo', 'error_resaltar_apoyo', 100);
+  });
+
+  // Validar al enviar el formulario
+  document.getElementById('submit-button').addEventListener('click', function(event) {
+    let valido = true;
+
+    // Validar número de visitas
+    const cantidadVisitasInput = document.getElementById('id_cantidad_visitas');
+    const cantidadVisitas = parseInt(cantidadVisitasInput.value);
+    if (cantidadVisitas < 0 || cantidadVisitas > 999) {
+      cantidadVisitasInput.classList.add('is-invalid');
+      document.getElementById('error_cantidad_visitas').style.display = 'block';
+      valido = false;
+    } else {
+      cantidadVisitasInput.classList.remove('is-invalid');
+      document.getElementById('error_cantidad_visitas').style.display = 'none';
+    }
+    
+   // Validar textareas
+    valido = contarPalabrasYValidar(apoyoRecibidoTextarea, 'count_apoyo_recibido', 'error_apoyo_recibido', 50) && valido;
+    valido = contarPalabrasYValidar(tipoVisitasTextarea, 'count_tipo_visitas', 'error_tipo_visitas', 100) && valido;
+    valido = contarPalabrasYValidar(resaltarApoyoTextarea, 'count_resaltar_apoyo', 'error_resaltar_apoyo', 100) && valido;
+
+    if (!valido) {
+      event.preventDefault(); // Evitar envío del formulario si no es válido
+    }
+  });
+
+document.getElementById('add-more').addEventListener('click', function() {
+    const container = document.getElementById('field-container');
+    const newFieldGroup = container.querySelector('.field-group').cloneNode(true);
+
+    // ... (código para limpiar valores y habilitar selects)
+
+    // Agregar botón de eliminar a la última celda (TD)
+    const lastCell = newFieldGroup.querySelector('td:last-child'); // Seleccionar la última celda
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'mt-2'); // Ajustar estilos si es necesario
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.addEventListener('click', function() {
+        newFieldGroup.remove();
+    });
+    lastCell.appendChild(deleteButton);
+
+  // Actualizar IDs para que sean únicos
+  const lastGroupIndex = container.querySelectorAll('.field-group').length; 
+  newFieldGroup.querySelectorAll('select, input, label').forEach(element => {
+    const oldId = element.id;
+    if (oldId) {
+      const newId = oldId.replace(/-\d+$/, `-${lastGroupIndex}`);
+      element.id = newId;
+      // Actualizar el atributo 'for' de las etiquetas
+      if (element.tagName === 'LABEL') {
+        element.setAttribute('for', newId);
+      }
+    }
+  });
+
+  // Agregar el nuevo grupo de campos al contenedor
+  container.appendChild(newFieldGroup);
+
+  // Agregar evento change al nuevo select de departamento
+  const newDepartamentoSelect = newFieldGroup.querySelector('[id^="id_departamento"]');
+  const newMunicipioSelect = newFieldGroup.querySelector('[id^="id_municipio"]');
+  newDepartamentoSelect.addEventListener('change', function() {
+    actualizarMunicipios(this, newMunicipioSelect);
+  });
+});
+
+// Agregar evento change a los selects de departamento existentes
+const departamentoSelects = document.querySelectorAll('[id^="id_departamento"]');
+const municipioSelects = document.querySelectorAll('[id^="id_municipio"]');
+
+departamentoSelects.forEach((departamentoSelect, index) => {
+  departamentoSelect.addEventListener('change', function() {
+    actualizarMunicipios(this, municipioSelects[index]);
+  });
+});
+
+</script>
+{% endblock %}

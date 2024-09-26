@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para proyectos de seguridad alimentaria y proyectos productivos</h1>
+  <p>Indique en este periodo, para cuántos proyectos ha recibido apoyo por parte de este proyecto / cooperante:</p>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Cantidad proyectos</th>
+          <th>Cantidad familias beneficiarias</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+          <tr>
+            <td>
+              {% for tipo in tipos_proyecto %}
+                    {% if tipo.id == form.tipo_proyecto.value %}
+                        {{ tipo.nombre }}  <!-- Access the name directly -->
+                    {% endif %}
+              {% endfor %}
+              
+
+              {% if forloop.last %}
+                {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
+              {% endif %}
+            </td>
+            <td>{{ form.cantidad_proyectos }}</td>
+            <td>{{ form.cantidad_familias }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="mb-3">
+      <label class="form-label">Indique el tipo de apoyo recibido para los proyectos de seguridad alimentaria o productivos en este periodo:</label>
+      <div class="row">
+        {% for checkbox in formset.0.tipo_apoyo %}
+          <div class="col-sm-6">
+            <div class="form-check">
+              {{ checkbox }}
+              <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                {{ checkbox.choice_label }}
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="form-check">
+            {{ formset.0.otro_apoyo }}
+            <label class="form-check-label" for="id_form-0-otro_apoyo">Otro</label>
+          </div>
+        </div>
+        <div class="col-sm-9">
+          {{ formset.0.cual }}
+          <div class="invalid-feedback">
+            Por favor, especifique otro tipo de apoyo.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con seguridad alimentaria o proyectos productivos por parte de este proyecto / cooperante?</label>
+      {{ formset.0.resaltar_apoyo }}
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

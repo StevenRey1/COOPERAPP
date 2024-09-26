@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para el litigio de casos</h1>
+  <p>Indique la información sobre el tipo, nombre de casos y cantidad de IDs, del apoyo que haya recibido para el litigio de casos en el periodo:</p>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Tipo de casos</th>
+          <th>Nombre de los casos</th>
+          <th>Cantidad de IDs <br> (000 - 999)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+          <tr>
+            <td>
+               
+              <!-- Iterar sobre tipos_caso y comparar el valor del tipo_caso del formulario -->
+              {% for tipo in tipos_caso %}
+                  
+                
+                  {% if tipo.id == form.tipo_caso.value %}
+                      {{ tipo.nombre }}
+                  {% endif %}
+              {% endfor %}
+    
+              <!-- Mostrar el campo 'otro_tipo' si es el último formulario en el formset -->
+              {% if forloop.last %}
+                {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
+              {% endif %}
+            </td>
+            <td>
+              <!-- Mostrar 'N/A' si es el primer formulario, de lo contrario mostrar 'nombre_caso' -->
+              {% if forloop.first %}
+                N/A <span class="text-muted">(automático)</span>
+              {% else %}
+                {{ form.nombre_caso }}
+              {% endif %}
+            </td>
+            <td>{{ form.cantidad_ids }}</td>
+          </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+
+    <div class="mb-3">
+      <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con el litigio de casos por parte de este cooperante o, alguna observación al respecto de este tipo de apoyo recibido?</label>
+      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 150 palabras)</span>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

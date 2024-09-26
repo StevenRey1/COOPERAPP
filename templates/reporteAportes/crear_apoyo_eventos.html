@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card">
+    <div class="card-header text-center">
+        <h5 class="card-title">Apoyo a eventos</h5>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+        
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Seleccionamos el textarea de objetivo principal
+    const objetivoPrincipalField = document.querySelector('textarea[name="objetivo_principal"]');
+
+    // Creamos el span para el contador de palabras
+    const wordCountDisplay = document.createElement('span');
+    wordCountDisplay.id = 'wordCount';
+    wordCountDisplay.className = 'text-muted';  // Agregamos clase para estilo
+    wordCountDisplay.textContent = '0/120';  // Valor inicial
+
+    // Insertamos el span después del textarea
+    objetivoPrincipalField.parentNode.insertBefore(wordCountDisplay, objetivoPrincipalField.nextSibling);
+
+    // Contador de palabras para el campo "objetivo_principal"
+    objetivoPrincipalField.addEventListener('input', function() {
+        const text = this.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0; // Divide por espacios y cuenta
+        wordCountDisplay.textContent = `${wordCount}/120`; // Actualiza el span con el número de palabras
+    });
+
+    // Función para habilitar o deshabilitar el campo "cual_publico" basado en "otro_publico"
+    const otroPublicoCheckbox = document.querySelector('.otro-publico-checkbox');
+    if (otroPublicoCheckbox) { // Aseguramos que el elemento exista
+        otroPublicoCheckbox.addEventListener('change', function() {
+            var cualPublicoField = document.querySelector('input[name="cual_publico"]');
+            if (this.checked) {
+                cualPublicoField.disabled = false;
+            } else {
+                cualPublicoField.disabled = true;
+                cualPublicoField.value = '';  // Limpia el campo si se desactiva
+            }
+        });
+    }
+</script>
+{% endblock %}

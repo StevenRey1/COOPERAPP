@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante a través de contratación de personal</h1>
+  <p>Indique la cantidad de personas y el tiempo de servicio, para las cuales obtuvo apoyo de este proyecto / cooperante:</p>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Cantidad de personas<br>(000 - 999)</th>
+          <th>Tiempo de servicio en meses<br>(00 - 99)</th>
+          <th>Área profesional</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr>
+            <td>
+                {% for tipo in tipos_personal %}
+                    {% if tipo.id == form.tipo_personal.value %}
+                        {{ tipo.nombre }}  <!-- Access the name directly -->
+                    {% endif %}
+                {% endfor %}
+                {% if forloop.last %}
+                    {{ form.otro_tipo }} 
+                {% endif %}
+            </td>
+            <td>{{ form.cantidad_personas }}</td>
+            <td>{{ form.tiempo_servicio }}</td>
+            <td>{{ form.area_profesional }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+
+    <div class="mb-3">
+      <label for="id_objetivo_contratos" class="form-label">¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?</label>
+      {{ formset.0.objetivo_contratos }} <span class="text-muted">(Máximo 120 palabras)</span>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?</label>
+      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 100 palabras)</span>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+  
+  {% if formset.non_field_errors %}
+  <div class="alert alert-danger mt-3">
+    <strong>Por favor corrige los siguientes errores:</strong>
+    <ul>
+      {% for error in formset.non_field_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

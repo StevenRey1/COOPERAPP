@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Otro tipo de apoyos de este proyecto / cooperante en el periodo</h1>
+  <form method="POST" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_descripcion" class="form-label">Realice una breve descripción de algún otro tipo de apoyo recibido por este proyecto / cooperante, si no pudo registrarlo en las anteriores preguntas:</label>
+        {{ form.descripcion }} <span class="text-muted">(Texto máximo 150 palabras)</span>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary">Continuar</button>
+        <button type="button" class="btn btn-warning">Modificar</button>
+        <button type="button" class="btn btn-danger" >Salir</button>
+      </div>
+  </form>
+</div>
+{% endblock %}

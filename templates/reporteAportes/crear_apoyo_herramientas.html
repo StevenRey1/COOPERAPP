@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo recibido de este proyecto / cooperante a través de herramientas y/o equipos tecnológicos en este periodo</h1>
+  <p>Indique que herramienta y/o equipo tecnológico recibió su dependencia de parte de este proyecto / cooperante en este periodo:</p>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Tipo de herramienta / equipo</th>
+          <th>Cantidad recibida <br> (000 - 999)</th>
+          <th>Descripción <br> (Texto máx. 20 palabras)</th>
+          <th>Observaciones / detalle <br> (Texto máx. 20 palabras)</th>
+        </tr>
+      </thead>
+
+    
+      <tbody>
+        {% for form in formset %}
+          <tr>
+            <td>
+              {% for tipo in tipos_herramienta %}
+                   {% if tipo.id == form.tipo_herramienta.value %}
+                       {{tipo.nombre}}
+                    {% endif %}
+              {% endfor %}
+
+                {% if forloop.last %}
+                  {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
+                {% endif %}
+            </td>
+            <td>{{ form.cantidad_recibida }}</td>
+            <td>{{ form.descripcion }}</td>
+            <td>{{ form.observaciones }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

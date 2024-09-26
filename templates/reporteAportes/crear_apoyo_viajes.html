@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h5 class="text-center mb-4">Apoyo de este proyecto / cooperante para la realización de viajes</h5>
+
+    <form method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <!-- Cantidad de viajes locales/regionales -->
+        <div class="mb-3">
+            <label for="id_cantidad_locales" class="form-label">Cantidad de viajes locales / regionales:</label>
+            {{ form.cantidad_locales }} <span class="text-muted">/ 999</span>
+        </div>
+
+        <!-- Cantidad de viajes nacionales -->
+        <div class="mb-3">
+            <label for="id_cantidad_nacionales" class="form-label">Cantidad de viajes nacionales:</label>
+            {{ form.cantidad_nacionales }} <span class="text-muted">/ 999</span>
+        </div>
+
+        <!-- Cantidad de viajes internacionales -->
+        <div class="mb-3">
+            <label for="id_cantidad_internacionales" class="form-label">Cantidad de viajes internacionales:</label>
+            {{ form.cantidad_internacionales }} <span class="text-muted">/ 999</span>
+        </div>
+
+        <!-- Suma total de viajes (calculado automáticamente) -->
+        <div class="mb-3">
+            <label class="form-label">Cantidad de viajes apoyados por la entidad de Cooperación Internacional en el periodo:</label>
+            <input type="text" class="form-control" readonly value="{{ form.instance.suma_viajes }}">
+        </div>
+
+        <!-- Objeto de los viajes (Checkboxes) -->
+        <div class="mb-3">
+            <label class="form-label">Objeto de los viajes:</label>
+            {{ form.objetivo_viajes }}
+        </div>
+
+        <!-- Otros viajes -->
+        <div class="mb-3">
+            <label for="id_cuales_otros" class="form-label">Cuales (se activa cuando selecciona la opción otros):</label>
+            {{ form.cuales_otros }}
+        </div>
+
+        <!-- Resaltado del apoyo -->
+        <div class="mb-3">
+            <label for="id_resaltado_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con viajes por parte de este proyecto / cooperante?</label>
+            {{ form.resaltado_apoyo }}
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="reset" class="btn btn-secondary">Limpiar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

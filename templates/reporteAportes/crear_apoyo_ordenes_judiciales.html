@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales (diferente a seg. alimentaria y proyectos productivos)</h1>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="id_tipo_apoyo" class="form-label">Indique el tipo de apoyo que ha recibido de este proyecto / cooperante para el cumplimiento de órdenes judiciales:</label>
+      {{ form.tipo_apoyo }} <span class="text-muted">(Máximo 120 palabras)</span>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_tipo_ordenes" class="form-label">¿Para qué tipo de órdenes judiciales recibió el apoyo?</label>
+      {{ form.tipo_ordenes }} <span class="text-muted">(Máximo 120 palabras)</span>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_cantidad_sentencias" class="form-label">Indique, si es posible, para cuántas sentencias ha contribuido el apoyo recibido de este proyecto / cooperante:</label>
+      <div class="input-group">
+        {{ form.cantidad_sentencias }}
+        <span class="input-group-text">/ 999</span>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_cantidad_ordenes" class="form-label">Indique, si es posible, para cuántas órdenes ha contribuido el apoyo recibido de este proyecto / cooperante:</label>
+      <div class="input-group">
+        {{ form.cantidad_ordenes }}
+        <span class="input-group-text">/ 999</span>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

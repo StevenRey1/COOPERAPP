@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h1>
+  <p>Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo:</p>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Título material</th>
+          <th>Objetivo principal</th>
+          <th>Público destinatario</th>
+          <th>Tipo de material</th>
+          <th>Cantidad originales</th>
+          <th>Cantidad reproducciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr>
+          <td>{{ form.titulo_material }}</td>
+          <td>{{ form.objetivo_principal }}</td>
+          <td>{{ form.publico_destinatario }}</td>
+          <td>{{ form.tipo_material }}</td>
+          <td>{{ form.cantidad_originales }}</td>
+          <td>{{ form.cantidad_reproducciones }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="mb-3">
+      <label for="id_resaltar_apoyo" class="form-label">Que resaltaría de este apoyo a través de la producción de materiales:</label>
+      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 100 palabras)</span>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

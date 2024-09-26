@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Estimación económica del aporte de este proyecto / cooperante durante el periodo</h1>
+
+  <form method="POST" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="id_valor_economico" class="form-label">Si tiene un valor económico del presupuesto destinado desde el proyecto / cooperante para el aporte a su dependencia durante este periodo, por favor indíquelo:</label>
+      <div class="input-group">
+        {{ form.valor_economico }}
+        {{ form.moneda }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_obtencion_valor" class="form-label">Indique por favor como obtuvo este valor reportado: (Ej: presupuesto aprobado por cooperante, presupuesto ejecutado, costo de personal o materiales, etc.), estimativo según costos de lo entregado, cotizaciones, etc.</label>
+      {{ form.obtencion_valor }}
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="button" class="btn btn-secondary">Continuar</button>
+      <button type="button" class="btn btn-warning">Modificar</button>
+      <button type="button" class="btn btn-danger">Salir</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
