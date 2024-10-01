@@ -2,58 +2,197 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h5 class="text-center mb-4">Apoyo de este proyecto / cooperante para la realización de viajes</h5>
+    <div class="form-container">
+            <div class="form-container">
+                <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la realización de viajes</h5>
+                <form method="POST">
+                    {% csrf_token %}
 
-    <form method="POST" class="needs-validation" novalidate>
-        {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_cantidad_locales" class="form-label">Cantidad de viajes locales / regionales:</label>
+                            <div class="input-group">
+                                {{ form.cantidad_locales }}
+                                <span class="input-group-text">/999</span>
+                                <div class="invalid-feedback">
+                                    La cantidad de viajes locales no puede ser negativa o mayor a 999.
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_cantidad_nacionales" class="form-label">Cantidad de viajes nacionales:</label>
+                            <div class="input-group">
+                                {{ form.cantidad_nacionales }}
+                                <span class="input-group-text">/999</span>
+                                <div class="invalid-feedback">
+                                    La cantidad de viajes locales no puede ser negativa o mayor a 999.
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
 
-        <!-- Cantidad de viajes locales/regionales -->
-        <div class="mb-3">
-            <label for="id_cantidad_locales" class="form-label">Cantidad de viajes locales / regionales:</label>
-            {{ form.cantidad_locales }} <span class="text-muted">/ 999</span>
-        </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_cantidad_internacionales" class="form-label">Cantidad de viajes internacionales:</label>
+                            <div class="input-group">
+                                {{ form.cantidad_internacionales }}
+                                <span class="input-group-text">/999</span>
+                                <div class="invalid-feedback">
+                                    La cantidad de viajes locales no puede ser negativa o mayor a 999.
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cantidad de viajes apoyados:</label>
+                            <input type="text" class="form-control" readonly value="{{ form.instance.suma_viajes }}">
+                        </div>
+                    </div>
 
-        <!-- Cantidad de viajes nacionales -->
-        <div class="mb-3">
-            <label for="id_cantidad_nacionales" class="form-label">Cantidad de viajes nacionales:</label>
-            {{ form.cantidad_nacionales }} <span class="text-muted">/ 999</span>
-        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Objeto de los viajes:</label>
+                        <div>
+                            {% for choice in form.objetivo_viajes %}
+                                <div class="form-check me-3">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                        {{ choice.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            <div class="form-check me-3"> 
+                                {{form.otros_viajes}}
+                                <label> Otros </label>
+                            </div>
+                            
+                        </div>
+                    </div>
 
-        <!-- Cantidad de viajes internacionales -->
-        <div class="mb-3">
-            <label for="id_cantidad_internacionales" class="form-label">Cantidad de viajes internacionales:</label>
-            {{ form.cantidad_internacionales }} <span class="text-muted">/ 999</span>
-        </div>
 
-        <!-- Suma total de viajes (calculado automáticamente) -->
-        <div class="mb-3">
-            <label class="form-label">Cantidad de viajes apoyados por la entidad de Cooperación Internacional en el periodo:</label>
-            <input type="text" class="form-control" readonly value="{{ form.instance.suma_viajes }}">
-        </div>
+                    <div class="mb-3">
+                        <label for="id_cuales_otros" class="form-label">Cuales (se activa cuando selecciona la opción otros):</label>
+                        {{ form.cuales_otros }}
+                    </div>
 
-        <!-- Objeto de los viajes (Checkboxes) -->
-        <div class="mb-3">
-            <label class="form-label">Objeto de los viajes:</label>
-            {{ form.objetivo_viajes }}
-        </div>
+                    <div class="mb-3">
+                        <label for="id_resaltado_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con viajes por parte de este proyecto / cooperante?</label>
+                        {{ form.resaltado_apoyo }}
+                        <div class="invalid-feedback">
+                            El campo no puede tener más de 100 palabras.
+                        </div>
+                    </div>
 
-        <!-- Otros viajes -->
-        <div class="mb-3">
-            <label for="id_cuales_otros" class="form-label">Cuales (se activa cuando selecciona la opción otros):</label>
-            {{ form.cuales_otros }}
-        </div>
-
-        <!-- Resaltado del apoyo -->
-        <div class="mb-3">
-            <label for="id_resaltado_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con viajes por parte de este proyecto / cooperante?</label>
-            {{ form.resaltado_apoyo }}
-        </div>
-
-        <!-- Botones de acción -->
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <button type="submit" class="btn btn-primary">Guardar</button>
-            <button type="reset" class="btn btn-secondary">Limpiar</button>
-        </div>
-    </form>
+                    <div class="d-grid gap-2 d-md-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+                    </div>
+                </form>
+            </div>
+    </div>
 </div>
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-title {
+        background-color: #f0f4c3;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+
+// si se da clic en otros viajes se activa cuales 
+const otros_viajes = document.getElementById('id_otros_viajes');
+const cuales_otros = document.getElementById('id_cuales_otros');
+
+otros_viajes.addEventListener('change', () => {
+    if (otros_viajes.checked) {
+        cuales_otros.removeAttribute('disabled');
+        //hacer cuales otros requerido
+        cuales_otros.required = true;
+    } else {
+        cuales_otros.setAttribute('disabled', 'disabled');
+        //hacer cuales otros no requerido
+        cuales_otros.required = false;
+    }
+});
+
+const cantidad_locales = document.getElementById('id_cantidad_locales');
+const cantidad_nacionales = document.getElementById('id_cantidad_nacionales');
+const cantidad_internacionales = document.getElementById('id_cantidad_internacionales');
+const suma_viajes = document.querySelector('input[readonly]');
+
+function updateSumaViajes() {
+    const locales = parseInt(cantidad_locales.value) || 0;
+    const nacionales = parseInt(cantidad_nacionales.value) || 0;
+    const internacionales = parseInt(cantidad_internacionales.value) || 0;
+    suma_viajes.value = locales + nacionales + internacionales;
+}
+
+updateSumaViajes();
+
+cantidad_locales.addEventListener('input', updateSumaViajes);
+cantidad_nacionales.addEventListener('input', updateSumaViajes);
+cantidad_internacionales.addEventListener('input', updateSumaViajes);
+
+const submitButton = document.querySelector('button[type="submit"]');
+
+// Función para habilitar o deshabilitar el botón de enviar
+function toggleSubmitButton() {
+    const hasInvalidFields = document.querySelectorAll('.is-invalid').length > 0;
+    submitButton.disabled = hasInvalidFields; // Deshabilita el botón si hay campos inválidos
+}
+
+// Validación de los campos
+function validateField(field) {
+    const value = parseInt(field.value);
+    if (value < 0 || value > 999 || isNaN(value)) {
+        field.classList.add('is-invalid');
+    } else {
+        field.classList.remove('is-invalid');
+    }
+    toggleSubmitButton(); // Verifica el estado del botón después de validar
+}
+
+cantidad_locales.addEventListener('input', () => {
+    validateField(cantidad_locales);
+});
+
+cantidad_nacionales.addEventListener('input', () => {
+    validateField(cantidad_nacionales);
+});
+
+cantidad_internacionales.addEventListener('input', () => {
+    validateField(cantidad_internacionales);
+});
+
+// contador de palabras
+const resaltado_apoyo = document.getElementById('id_resaltado_apoyo');
+const counter = document.createElement('div');
+counter.classList.add('form-text', 'text-end');
+resaltado_apoyo.insertAdjacentElement('afterend', counter);
+
+resaltado_apoyo.addEventListener('input', () => {
+    const words = resaltado_apoyo.value.trim().split(/\s+/).length;
+    counter.textContent = `${words} palabras`;
+    if (words > 100) {
+        resaltado_apoyo.classList.add('is-invalid');
+    } else {
+        resaltado_apoyo.classList.remove('is-invalid');
+    }
+    toggleSubmitButton(); // Verifica el estado del botón después de contar palabras
+});
+</script>
 {% endblock %}

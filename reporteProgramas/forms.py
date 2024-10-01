@@ -1,9 +1,19 @@
 
-from reporteProgramas.models import  LogrosAvances, Logro, Resultado
+from typing import Any
+from reporteProgramas.models import  LogrosAvances, Logro
 from django import forms
 from reporteAcercamientos.models import Reporte, DatosQuienReporta
 import datetime
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, inlineformset_factory
+from django.core.exceptions import ValidationError
+
+def validar_max_palabras(value, max_palabras=5):
+    if not value:
+        return
+    num_palabras = len(value.split())
+    if num_palabras > max_palabras:
+        raise ValidationError(f'El texto no puede exceder las {max_palabras} palabras. Actualmente tienes {num_palabras} palabras.')
+    
 
 class ReporteAvancesForm(forms.ModelForm):
     class Meta:
@@ -56,28 +66,29 @@ class DatosQuienReportaForm(forms.ModelForm):
         if user:
             self.fields['correo_electronico'].initial = 'EXAMPLE@GMAIL.COM'
 
-
-    
-        
-
-
 class LogrosAvancesForm(forms.ModelForm):
     class Meta:
         model = LogrosAvances
-        fields = [
-            'riesgo_relacionamiento',
-            'logros_significativos',
-            'dificultades',
-            'detalle_riesgo',
-            'observaciones_generales',
-        ]
-        
+        exclude = ['reporte']
         widgets = {
-            'logros_significativos': forms.Textarea(attrs={'rows': 4, 'cols': 180, 'placeholder': 'Máximo 50 palabras'}),
-            'dificultades': forms.Textarea(attrs={'rows': 4, 'cols': 180, 'placeholder': 'Máximo 50 palabras'}),
-            'detalle_riesgo': forms.Textarea(attrs={'rows': 4, 'cols': 180, 'placeholder': 'Máximo 50 palabras'}),
-            'observaciones_generales': forms.Textarea(attrs={'rows': 4, 'cols': 180, 'placeholder': 'Máximo 50 palabras'}),
+            'logros_significativos': forms.Textarea(attrs={'class':'form-control','rows':1, 'placeholder': 'Máximo 50 palabras'}),
+            'dificultades': forms.Textarea(attrs={'class':'form-control', 'rows':1, 'placeholder': 'Máximo 50 palabras'}),
+            'detalle_riesgo': forms.Textarea(attrs={'class':'form-control','rows':1, 'placeholder': 'Máximo 50 palabras'}),
+            'observaciones_generales': forms.Textarea(attrs={'class':'form-control','rows':1, 'placeholder': 'Máximo 50 palabras'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        logros_significativos = cleaned_data.get('logros_significativos')
+        dificultades = cleaned_data.get('dificultades')
+        observaciones_generales = cleaned_data.get('observaciones_generales')
+        detalle_riesgo = cleaned_data.get('detalle_riesgo')
+        validar_max_palabras(detalle_riesgo, max_palabras=50)
+        validar_max_palabras(logros_significativos, max_palabras=50)
+        validar_max_palabras(dificultades, max_palabras=50)
+        validar_max_palabras(observaciones_generales, max_palabras=50)
+
+        return cleaned_data
 
 class LogroForm(forms.ModelForm):
     class Meta:
@@ -90,24 +101,22 @@ class LogroForm(forms.ModelForm):
             'adjunto',
         ]
         widgets = {
-            'municipio': forms.Select(attrs={'disabled': 'disabled'}),
-            'logros_avances_texto': forms.Textarea(attrs={'rows': 3, 'cols': 40, 'placeholder': 'Máximo 50 palabras'})
-
+            'resultado': forms.HiddenInput(),
+            'municipio': forms.Select(attrs={'class':'form-control','disabled': 'disabled', 'required':'required'}),
+            'logros_avances_texto': forms.Textarea(attrs={'required':'required','class':'form-control', 'placeholder': 'Máximo 50 palabras', 'rows': 1}),
+            'departamento': forms.Select(attrs={'class':'form-control', 'required':'required'}),
+            'adjunto': forms.FileInput(attrs={'class':'form-control', 'accept': 'application/pdf,image/*', 'required':'required'}),
         }
+    def clean(self):
+        cleaned_data = super().clean()
+        logros_avances_texto = cleaned_data.get('logros_avances_texto')
+        validar_max_palabras(logros_avances_texto, max_palabras=50)
+        return cleaned_data
 
-    def __init__(self, *args, **kwargs):
-        linea_accion_id = kwargs.pop('linea_accion_id', None)  # Extraer el ID de línea de acción
-        super().__init__(*args, **kwargs)
-        
-
-        # Filtrar resultados solo para la línea de acción dada
-        if linea_accion_id is not None:
-            self.fields['resultado'].queryset = Resultado.objects.filter(linea_accion=linea_accion_id)
-        else:
-            self.fields['resultado'].queryset = Resultado.objects.none()  # Ningún resultado si no hay ID
-        
-LogroFormSet = modelformset_factory(Logro, form=LogroForm, extra=0, can_delete=True)
     
+   
+
+LogroFormSet = inlineformset_factory(LogrosAvances, Logro, form=LogroForm, extra=0)  
 
     
 

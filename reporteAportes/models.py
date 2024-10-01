@@ -18,7 +18,6 @@ class PublicoObjetivo(models.Model):
     nombre = models.CharField(max_length=255,choices=TIPO_PUBLICO, verbose_name="Nombre del público objetivo")
     def __str__(self):
         return self.nombre
-
     
 class ApoyoEventos(models.Model):
 
@@ -38,7 +37,6 @@ class ApoyoEventos(models.Model):
         verbose_name="Cantidad total de participantes en los eventos en este periodo"
     )
 
-
 class ObjetivoViaje(models.Model):
     nombre = models.CharField(max_length=50)
 
@@ -46,15 +44,16 @@ class ObjetivoViaje(models.Model):
         return self.nombre
     
 class ApoyoViajes(models.Model):
-    
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
     cantidad_locales = models.PositiveIntegerField("Cantidad de viajes locales / regionales", default=0)
     cantidad_nacionales = models.PositiveIntegerField("Cantidad de viajes nacionales", default=0)
     cantidad_internacionales = models.PositiveIntegerField("Cantidad de viajes internacionales", default=0)
     suma_viajes = models.PositiveIntegerField("Cantidad total de viajes apoyados", blank=True, null=True)
     objetivo_viajes = models.ManyToManyField(ObjetivoViaje, blank=True)
+    otros_viajes = models.BooleanField("Otros", default=False)
     cuales_otros = models.CharField("Cuales (si selecciona otros)", max_length=255, blank=True, null=True)
 
-    resaltado_apoyo = models.TextField("¿Qué resaltaría de este apoyo?", max_length=100, blank=True)
+    resaltado_apoyo = models.TextField("¿Qué resaltaría de este apoyo?", max_length=100)
 
     def save(self, *args, **kwargs):
         self.suma_viajes = self.cantidad_locales + self.cantidad_nacionales + self.cantidad_internacionales
@@ -63,12 +62,16 @@ class ApoyoViajes(models.Model):
     def __str__(self):
         return f"Viajes Apoyados: {self.suma_viajes}"
     
+class ApoyoTerritorioUbicacion(models.Model):
+    apoyo_territorio = models.ForeignKey('ApoyoTerritorios', on_delete=models.CASCADE)
+    departamento = models.ForeignKey('reporteProgramas.Departamento', on_delete=models.CASCADE)
+    municipio = models.ForeignKey('reporteProgramas.Municipio', on_delete=models.CASCADE)
+    vereda = models.CharField(max_length=255, blank=True, null=True)
 
 class ApoyoTerritorios(models.Model):
-    
-    departamento = models.ForeignKey('reporteProgramas.Departamento', on_delete=models.CASCADE ,verbose_name="Departamento")
-    municipio = models.ForeignKey('reporteProgramas.Municipio', on_delete=models.CASCADE, verbose_name="Municipio")
-    vereda = models.CharField(max_length=255, verbose_name="Vereda / territorio / cabildo")
+
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
+    ubicaciones = models.ManyToManyField('reporteProgramas.Departamento', through='ApoyoTerritorioUbicacion', verbose_name="Departamentos")
     apoyo_recibido = models.TextField(max_length=255, verbose_name="En qué consistió el apoyo recibido")
     tipo_visitas = models.TextField(max_length=255, verbose_name="Indique para qué tipo de visitas / actividades tuvo el acompañamiento o apoyo en cuanto al acceso")
     cantidad_visitas = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(999)], verbose_name="¿Para cuántas visitas obtuvo apoyo de este cooperante para el acceso a territorios en este periodo?")
@@ -81,7 +84,6 @@ class ApoyoTerritorios(models.Model):
     def __str__(self):
         return f"Apoyo a Territorios para el reporte {self.reporte}"
     
-
 class TipoPersonal(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Personal")
 
@@ -95,29 +97,26 @@ class AreaProfesional(models.Model):
         return self.nombre
 
 class ApoyoContratacion(models.Model):
-    
-    tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE)
-    cantidad_personas = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(999)],
-        verbose_name="Cantidad de personas"
-    )
-    tiempo_servicio = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(99)],
-        verbose_name="Tiempo de servicio en meses"
-    )
-    area_profesional = models.ForeignKey(AreaProfesional, on_delete=models.SET_NULL, null=True, blank=True)
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
+    tipo_personal = models.ManyToManyField(TipoPersonal, through='ContratacionDetalle')
+    area_profesional = models.ManyToManyField(AreaProfesional, through='ContratacionDetalle')
     otro_tipo = models.CharField(max_length=255, blank=True, null=True, verbose_name="Otro, ¿Cúales?")
-    objetivo_contratos = models.TextField(max_length=255, verbose_name="¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?")
+    objetivo_principal = models.TextField(max_length=255, verbose_name="¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?")
     resaltar_apoyo = models.TextField(max_length=255, verbose_name="¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?")
-
-    class Meta:
-        verbose_name = "Apoyo de Contratación"
-        verbose_name_plural = "Apoyo de Contratación"
 
     def __str__(self):
         return f"Apoyo de Contratación para el reporte {self.reporte}"
-    
 
+class ContratacionDetalle(models.Model):
+    apoyo_contratacion = models.ForeignKey(ApoyoContratacion, on_delete=models.CASCADE)
+    tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE)
+    area_profesional = models.ForeignKey(AreaProfesional, on_delete=models.CASCADE)
+    cantidad_personas = models.PositiveIntegerField(verbose_name="Cantidad de personas", validators=[MinValueValidator(0), MaxValueValidator(999)], default=0)
+    tiempo_servicio = models.PositiveIntegerField(verbose_name="Tiempo de servicio en meses", validators=[MinValueValidator(0), MaxValueValidator(99)], default=0)
+
+    class Meta:
+        unique_together = ('apoyo_contratacion', 'tipo_personal', 'area_profesional') # Asegura que no haya combinaciones duplicadas
+    
 class TipoMaterial(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Material")
 
@@ -125,7 +124,7 @@ class TipoMaterial(models.Model):
         return self.nombre
 
 class ApoyoMaterial(models.Model):
-    
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
     titulo_material = models.CharField(max_length=255, verbose_name="Título material")
     objetivo_principal = models.TextField(verbose_name="Objetivo principal")
     publico_destinatario = models.CharField(max_length=255, verbose_name="Público destinatario")
@@ -141,7 +140,6 @@ class ApoyoMaterial(models.Model):
     def __str__(self):
         return f"Apoyo en materiales para el reporte {self.reporte}"
 
-
 class TipoHerramienta(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Herramienta / Equipo")
 
@@ -149,11 +147,11 @@ class TipoHerramienta(models.Model):
         return self.nombre
 
 class ApoyoHerramientas(models.Model):
-    
+    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
     tipo_herramienta = models.ForeignKey(TipoHerramienta, on_delete=models.CASCADE)
     cantidad_recibida = models.PositiveIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(999)],
-        verbose_name="Cantidad recibida"
+        verbose_name="Cantidad recibida",default=0
     )
     descripcion = models.CharField(max_length=255, verbose_name="Descripción")
     observaciones = models.CharField(max_length=255, verbose_name="Observaciones / detalle")
@@ -165,7 +163,6 @@ class ApoyoHerramientas(models.Model):
     def __str__(self):
         return f"Apoyo de Herramientas para el reporte {self.reporte}"
     
-
 class TipoCaso(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Caso")
 
@@ -177,7 +174,7 @@ class ApoyoLitigio(models.Model):
     tipo_caso = models.ForeignKey(TipoCaso, on_delete=models.CASCADE)
     nombre_caso = models.CharField(max_length=255, blank=True, verbose_name="Nombre de los casos")
     cantidad_ids = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(999)],
+        validators=[MinValueValidator(0), MaxValueValidator(999)], default=0,
         verbose_name="Cantidad de IDs"
     )
     otro_tipo = models.CharField(max_length=255, blank=True, null=True, verbose_name="Otro, ¿Cúales?")
@@ -225,12 +222,13 @@ class ApoyoOrdenesJudiciales(models.Model):
     cantidad_sentencias = models.PositiveIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(999)],
         verbose_name="Indique, si es posible, para cuántas sentencias ha contribuido el apoyo recibido de este proyecto / cooperante:",
-        blank=True, null=True
+        default=0
+        
     )
     cantidad_ordenes = models.PositiveIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(999)],
         verbose_name="Indique, si es posible, para cuántas órdenes ha contribuido el apoyo recibido de este proyecto / cooperante:",
-        blank=True, null=True
+        default=0 
     )
 
     class Meta:
@@ -240,7 +238,6 @@ class ApoyoOrdenesJudiciales(models.Model):
     def __str__(self):
         return f"Apoyo para Órdenes Judiciales del reporte {self.reporte}"
     
-
 class AccionArchivo(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Acción")
 
@@ -260,7 +257,6 @@ class ApoyoArchivoHistorico(models.Model):
     def __str__(self):
         return f"Apoyo en Gestión del Archivo Histórico para el reporte {self.reporte}"
     
-
 class OtrosApoyos(models.Model):
     
     descripcion = models.TextField(max_length=255, verbose_name="Realice una breve descripción de algún otro tipo de apoyo recibido por este proyecto / cooperante, si no pudo registrarlo en las anteriores preguntas:")
@@ -271,9 +267,10 @@ class OtrosApoyos(models.Model):
 
     def __str__(self):
         return f"Otros Apoyos para el reporte {self.reporte}"
+
     
 class EstimacionEconomica(models.Model):
-    
+    reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
     valor_economico = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True, verbose_name="Si tiene un valor económico del presupuesto destinado desde el proyecto / cooperante para el aporte a su dependencia durante este periodo, por favor indíquelo:")
     moneda = models.CharField(max_length=100, verbose_name="Moneda", blank=True, null=True)
     obtencion_valor = models.TextField(blank=True, null=True, verbose_name="Indique por favor como obtuvo este valor reportado: (Ej: presupuesto aprobado por cooperante, presupuesto ejecutado, costo de personal o materiales, etc.), estimativo según costos de lo entregado, cotizaciones, etc.")

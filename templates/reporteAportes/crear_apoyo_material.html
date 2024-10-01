@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h1>
+  <div class="form-container">
+
+ <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h5>
   <p>Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo:</p>
 
   <form method="POST" class="needs-validation" novalidate>
     {% csrf_token %}
+    <div class="table-responsive mb-3">
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -30,18 +33,45 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
 
     <div class="mb-3">
       <label for="id_resaltar_apoyo" class="form-label">Que resaltaría de este apoyo a través de la producción de materiales:</label>
-      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 100 palabras)</span>
+      {{ formset.0.resaltar_apoyo }} <small class="form-text text-muted">Texto máximo 100 palabras</small>
     </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <div class="d-grid gap-2 d-md-flex justify-content-center">
       <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
     </div>
   </form>
+  </div>
 </div>
+<style>
+  body {
+      background-color: #e8f5e9;
+  }
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+
+</style>
 {% endblock %}

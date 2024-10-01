@@ -1,68 +1,212 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante a través de contratación de personal</h1>
-  <p>Indique la cantidad de personas y el tiempo de servicio, para las cuales obtuvo apoyo de este proyecto / cooperante:</p>
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante a través de contratación de personal</h5>
+    <form method="POST">
+      {% csrf_token %}
 
-  <form method="POST" class="needs-validation" novalidate>
-    {% csrf_token %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Cantidad de personas<br>(000 - 999)</th>
-          <th>Tiempo de servicio en meses<br>(00 - 99)</th>
-          <th>Área profesional</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in formset %}
-        <tr>
-            <td>
+      <p>Indique la cantidad de personas y el tiempo de servicio, para las cuales obtuvo apoyo de este proyecto / cooperante:</p>
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Cantidad de personas</th>
+              <th>Tiempo de servicio en meses</th>
+              <th>Área profesional</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ formset.management_form }}
+            {% for detalle_form in formset %}
+            <tr>
+              <td>
+                {{ detalle_form.tipo_personal }}
                 {% for tipo in tipos_personal %}
-                    {% if tipo.id == form.tipo_personal.value %}
-                        {{ tipo.nombre }}  <!-- Access the name directly -->
-                    {% endif %}
-                {% endfor %}
-                {% if forloop.last %}
-                    {{ form.otro_tipo }} 
+                {% if detalle_form.tipo_personal.value == tipo.id %}
+                {{ tipo.nombre }}
                 {% endif %}
-            </td>
-            <td>{{ form.cantidad_personas }}</td>
-            <td>{{ form.tiempo_servicio }}</td>
-            <td>{{ form.area_profesional }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    </table>
+                {% endfor %}
+              </td>
+              <td>
+                <div class="input-group">
+                  {{ detalle_form.cantidad_personas }}
+                  <span class="input-group-text">/999</span>
+                  <div class="invalid-feedback">El campo debe contener un máximo de 999.</div>
+                </div>
+              </td>
+              <td>
+                <div class="input-group">
+                  {{ detalle_form.tiempo_servicio }}
+                  <span class="input-group-text">/99</span>
+                  <div class="invalid-feedback">El campo debe contener un máximo de 99.</div>
+                </div>
+              </td>
+              <td>
+                {{ detalle_form.area_profesional }}
+              </td>
+            </tr>
+            {% endfor %}
+            <tr>
+              <td colspan="4">
+                Otro, ¿Cuáles? <small class="form-text text-muted">(Texto máximo 5 palabras)</small>
+                {{ form.otro_tipo }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <div class="mb-3">
-      <label for="id_objetivo_contratos" class="form-label">¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?</label>
-      {{ formset.0.objetivo_contratos }} <span class="text-muted">(Máximo 120 palabras)</span>
-    </div>
+      <div class="mb-3">
+        <label for="{{ form.objetivo_principal.id_for_label }}" class="form-label">¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?</label>
+        {{ form.objetivo_principal }}
+        <div id="objetivoWordCount" class="form-text text-muted">0/120 palabras</div>
+        <div class="invalid-feedback">El campo debe contener un máximo de 120 palabras.</div>
+      </div>
 
-    <div class="mb-3">
-      <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?</label>
-      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 100 palabras)</span>
-    </div>
+      <div class="mb-3">
+        <label for="{{ form.resaltar_apoyo.id_for_label }}" class="form-label">¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?</label>
+        {{ form.resaltar_apoyo }}
+        <div id="resaltarWordCount" class="form-text text-muted">0/100 palabras</div>
+        <div class="invalid-feedback">El campo debe contener un máximo de 100 palabras.</div>
+      </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
-    </div>
-  </form>
-  
-  {% if formset.non_field_errors %}
-  <div class="alert alert-danger mt-3">
-    <strong>Por favor corrige los siguientes errores:</strong>
-    <ul>
-      {% for error in formset.non_field_errors %}
-        <li>{{ error }}</li>
-      {% endfor %}
-    </ul>
+      <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
   </div>
-  {% endif %}
 </div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table th,
+  .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table input,
+  .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+  .invalid-feedback {
+    display: none;
+  }
+
+  .is-invalid + .invalid-feedback {
+    display: block;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para contar palabras
+const countWords = (text) => text.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+// Referencias a los elementos del DOM
+const objetivoPrincipal = document.getElementById('id_objetivo_principal');
+const resaltarApoyo = document.getElementById('id_resaltar_apoyo');
+const buttonSubmit = document.querySelector('button[type="submit"]');
+
+// Función para contar palabras y actualizar el contador
+function updateWordCount(textarea, maxWords, wordCountDisplay) {
+  const wordCount = countWords(textarea.value);
+  wordCountDisplay.textContent = `${wordCount}/${maxWords} palabras`;
+
+  if (wordCount > maxWords) {
+    textarea.classList.add('is-invalid');
+  } else {
+    textarea.classList.remove('is-invalid');
+  }
+
+  checkFormValidity(); // Revisar la validez del formulario cada vez que se actualiza un campo
+}
+
+// Validación de cantidad_personas y tiempo_servicio
+document.querySelectorAll('[id$=cantidad_personas]').forEach(element => {
+  element.addEventListener('input', function () {
+    if (parseInt(element.value) > 999 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+document.querySelectorAll('[id$=tiempo_servicio]').forEach(element => {
+  element.addEventListener('input', function () {
+    if (parseInt(element.value) > 99 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+// Función que revisa si el formulario es válido
+function checkFormValidity() {
+  let isFormValid = true;
+
+  // Verifica si hay algún campo con la clase 'is-invalid'
+  document.querySelectorAll('.is-invalid').forEach(field => {
+    if (field.classList.contains('is-invalid')) {
+      isFormValid = false;
+    }
+  });
+
+  // Verifica si las áreas de texto tienen más palabras de lo permitido
+  const objetivoWordCount = countWords(objetivoPrincipal.value);
+  const resaltarWordCount = countWords(resaltarApoyo.value);
+
+  if (objetivoWordCount > 120 || resaltarWordCount > 100) {
+    isFormValid = false;
+  }
+
+  // Habilitar o deshabilitar el botón de submit
+  buttonSubmit.disabled = !isFormValid;
+}
+
+// Escuchando cambios en los campos de texto
+objetivoPrincipal.addEventListener('input', function () {
+  updateWordCount(objetivoPrincipal, 120, document.getElementById('objetivoWordCount'));
+});
+
+resaltarApoyo.addEventListener('input', function () {
+  updateWordCount(resaltarApoyo, 100, document.getElementById('resaltarWordCount'));
+});
+
+// Inicializa el estado del formulario al cargar la página
+checkFormValidity();
+
+
+</script>
 {% endblock %}

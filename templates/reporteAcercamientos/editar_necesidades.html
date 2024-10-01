@@ -35,7 +35,7 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Guardar cambios</button>
-    <a href="{% url 'reporteAcercamientos:ver_necesidades' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
+    <a href="{% url 'reporteAcercamientos:editar_reporte' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
   </form>
 
 {% endblock %}

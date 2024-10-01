@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h5 class="mb-3">Formularios completados para editar</h5>
+
+    {% if reporte.avance == 3 %}
+    
+    <!-- Editar formulario de acercamiento -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6>Editar Datos de Quien Reporta</h6>
+            <a href="{% url 'reporteAcercamientos:editar_datos_quien_reporta' reporte.id %}" class="btn btn-primary">Editar Datos</a>
+        </div>
+    </div>
+
+    <!-- Iterar sobre los acercamientos -->
+    {% for acercamiento in reporte.acercamientos.all %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6>Editar Acercamiento {{ forloop.counter }}</h6>
+            <a href="{% url 'reporteAcercamientos:editar_datos_acercamiento' acercamiento.id %}" class="btn btn-primary">Editar Acercamiento</a>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Editar formulario de necesidades -->
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h6>Editar Necesidades</h6>
+            <a href="{% url 'reporteAcercamientos:editar_necesidades' reporte.id %}" class="btn btn-primary">Editar Necesidades</a>
+        </div>
+    </div>
+
+
+
+    {% endif %}
+</div>
+
+<a href="{% url 'accounts:listar_reportes' %}" class="btn btn-secondary">Volver</a>
+
+{% endblock %}
+
+
+
+

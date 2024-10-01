@@ -85,7 +85,7 @@ class DatosCooperante(models.Model):
     operador = models.CharField(max_length=100)
     proyecto_plan = models.CharField(max_length=100)
     linea_accion = models.CharField(max_length=100)
-    
+    rol = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'datos_cooperante'

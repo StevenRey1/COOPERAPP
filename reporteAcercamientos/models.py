@@ -74,7 +74,7 @@ class DatosQuienReporta(models.Model):
 
     
 class AcercamientoCooperacion(models.Model):
-    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE)
+    reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE,  related_name='acercamientos')
     entidad = models.CharField(max_length=200, blank=True, null=True)
     temas_perspectivas = models.TextField(max_length=500, blank=True, null=True)
     

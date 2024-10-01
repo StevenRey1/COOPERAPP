@@ -2,9 +2,10 @@
 
 {% block content %}
 
-<div class="container mt-4">
-  <h1 class="text-center mb-4">Formulario de Registro</h1>
+<div class="container w-lg-50 w-md-50 w-100 mt-4">
   
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Datos del cooperante y programa, proyecto o plan</h5>
   <!-- Alert messages -->
   {% if messages %}
     <div class="row">
@@ -70,10 +71,32 @@
           </select>
       </div>
 
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      <div class="d-flex justify-content-center mt-3"> 
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+
+      
   </form>
 </div>
+</div>
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-title {
+        background-color: #f0f4c3;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
 
 {% endblock %}
 

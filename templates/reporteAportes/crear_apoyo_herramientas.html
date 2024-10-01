@@ -1,50 +1,122 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo recibido de este proyecto / cooperante a través de herramientas y/o equipos tecnológicos en este periodo</h1>
-  <p>Indique que herramienta y/o equipo tecnológico recibió su dependencia de parte de este proyecto / cooperante en este periodo:</p>
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo recibido de este proyecto / cooperante a través de herramientas y/o equipos tecnológicos en este periodo</h5>
+    <p>Indique qué herramienta y/o equipo tecnológico recibió su dependencia de parte de este proyecto / cooperante en este periodo:</p>
 
-  <form method="POST" class="needs-validation" novalidate>
-    {% csrf_token %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Tipo de herramienta / equipo</th>
-          <th>Cantidad recibida <br> (000 - 999)</th>
-          <th>Descripción <br> (Texto máx. 20 palabras)</th>
-          <th>Observaciones / detalle <br> (Texto máx. 20 palabras)</th>
-        </tr>
-      </thead>
-
-    
-      <tbody>
-        {% for form in formset %}
-          <tr>
-            <td>
-              {% for tipo in tipos_herramienta %}
-                   {% if tipo.id == form.tipo_herramienta.value %}
-                       {{tipo.nombre}}
+    <form method="POST">
+      {% csrf_token %}
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Tipo de herramienta / equipo</th>
+              <th>Cantidad recibida <br> (000 - 999)</th>
+              <th>Descripción <br> (Texto máx. 20 palabras)</th>
+              <th>Observaciones / detalle <br> (Texto máx. 20 palabras)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ formset.management_form }}
+            {% for form in formset %}
+              <tr>
+                <td>
+                  {{ form.tipo_herramienta }}
+                  {% for tipo in tipos_herramienta %}
+                    {% if tipo.id == form.tipo_herramienta.value %}
+                      {{ tipo.nombre }}
                     {% endif %}
-              {% endfor %}
-
-                {% if forloop.last %}
-                  {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
-                {% endif %}
-            </td>
-            <td>{{ form.cantidad_recibida }}</td>
-            <td>{{ form.descripcion }}</td>
-            <td>{{ form.observaciones }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
-    </div>
-  </form>
+                  {% endfor %}
+                  {% if forloop.last %}
+                    {{ form.otro_tipo }} 
+                  {% endif %}
+                </td>
+                <td>{{ form.cantidad_recibida }}</td>
+                <td>{{ form.descripcion }}</td>
+                <td>{{ form.observaciones }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="d-grid gap-2 d-md-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
+  </div>
 </div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  .table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+  .table input, .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Validar cantidad recibida
+document.querySelectorAll('input[type="number"][id$="-cantidad_recibida"]').forEach(input => {
+  input.addEventListener('input', function() {
+    // Limitar el valor entre 0 y 999
+    this.value = Math.max(0, Math.min(999, this.value));
+    checkInvalidFields();
+  });
+});
+
+// Ajustar altura de textarea dinámicamente
+document.querySelectorAll('textarea').forEach(textarea => {
+  textarea.addEventListener('input', function() {
+    this.style.height = 'auto'; // Resetear altura para ajustar
+    this.style.height = this.scrollHeight + 'px'; // Ajustar a contenido
+  });
+  
+  // Contador de palabras
+  const contador = document.createElement('span');
+  contador.classList.add('text-muted');
+  contador.style.fontSize = '12px';
+  contador.style.float = 'right';
+  contador.style.marginTop = '5px';
+  contador.textContent = '0/20'; // Inicializar contador
+  textarea.parentElement.appendChild(contador);
+
+  textarea.addEventListener('input', function() {
+    const palabras = this.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
+    contador.textContent = `${palabras.length}/20`; // Actualizar contador
+    this.classList.toggle('is-invalid', palabras.length > 20); // Añadir clase de invalidación si supera el límite
+    checkInvalidFields();
+  });
+});
+
+// validar si hay clases 'is-invalid' en los campos
+function checkInvalidFields() {
+  const invalidFields = document.querySelectorAll('.is-invalid');
+  const buttonSubmit = document.querySelector('button[type="submit"]');
+  buttonSubmit.disabled = invalidFields.length > 0;
+}
+
+
+</script>
 {% endblock %}

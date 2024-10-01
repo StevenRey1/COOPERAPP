@@ -1,4 +1,4 @@
-from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador, LineaAccion
+from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador, LineaAccion, LogrosAvances
 from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet
 from django.views.generic.edit import CreateView
 from django.shortcuts import get_object_or_404, redirect, render
@@ -55,7 +55,12 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
             linea_accion_id = reporte.datoscooperante.linea_accion
             return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id, linea_accion_id=linea_accion_id)
         elif reporte.avance == 3:
-            return redirect('accounts:listar_reportes')
+            return redirect('reporteAportes:crear_apoyo_eventos', reporte_id=reporte.id)
+        elif reporte.avance == 4:
+            return redirect('reporteAportes:crear_apoyo_viajes', reporte_id=reporte.id)
+        elif reporte.avance == 5:
+            return redirect('reporteAportes:crear_apoyo_territorios', reporte_id=reporte.id)
+        
         return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -159,15 +164,15 @@ def obtener_lineas_accion(request, cooperante_id, identificacion_id, operador_id
             proyecto_plan_id=proyecto_plan_id
         ).distinct()
 
-        # Iterar sobre los acuerdos de cooperación y obtener las líneas de acción relacionadas
+        # Obtener las líneas de acción relacionadas a los acuerdos de cooperación
         lineas_accion_data = []
         for acuerdo_cooperacion in acuerdos_cooperacion:
-            # Asumimos que lineas_accion es un ManyToManyField
-            for linea_accion in acuerdo_cooperacion.lineas_accion.all():
-                lineas_accion_data.append({
-                    'id': linea_accion.id,
-                    'nombre': linea_accion.nombre
-                })
+            # Como lineas_accion es un ForeignKey, podemos acceder directamente
+            linea_accion = acuerdo_cooperacion.lineas_accion
+            lineas_accion_data.append({
+                'id': linea_accion.id,
+                'nombre': linea_accion.nombre
+            })
 
         # Retornar la respuesta en formato JSON
         return JsonResponse({'lineas_accion': lineas_accion_data})
@@ -195,8 +200,6 @@ def crear_datos_cooperante(request,reporte_id):
         linea_accion = request.POST.get('linea_accion')
         rol = request.POST.get('rol')
         
-       
-
         try:
             # Guardar los datos en la base de datos
             DatosCooperante.objects.create(
@@ -232,6 +235,10 @@ def crear_reporte_logros(request, reporte_id, linea_accion_id):
     if reporte.avance == 1:
         
         return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
+    
+
+    if reporte.avance == 3:
+        return redirect('reporteAportes:crear_apoyo_eventos', reporte_id=reporte.id)
 
 
     # Filtrar resultados según la línea de acción
@@ -239,31 +246,30 @@ def crear_reporte_logros(request, reporte_id, linea_accion_id):
     extra_forms = resultados.count()
 
     if request.method == 'POST':
+        print(request.POST)
         form_logros_avances = LogrosAvancesForm(request.POST)
-        formset_logro = LogroFormSet(request.POST, request.FILES, form_kwargs={'linea_accion_id': linea_accion_id})
+        formset_logro = LogroFormSet(request.POST, request.FILES )
 
         if form_logros_avances.is_valid() and formset_logro.is_valid():
-            logros_avances = form_logros_avances.save(commit=False)
-            logros_avances.reporte = reporte
-            logros_avances.save()
-            reporte.avance = 3
-            reporte.save()
+             logros_avances = form_logros_avances.save(commit=False)
+             logros_avances.reporte = reporte
+             logros_avances.save()
+             
+             formset_logro.instance = logros_avances
+             formset_logro.save()
+     
+             reporte.avance = 3  
+             reporte.save()
 
-            for logro in formset_logro:
-                if logro.cleaned_data:
-                    nuevo_logro = logro.save(commit=False)
-                    nuevo_logro.logros_avances = logros_avances
-                    nuevo_logro.save()
+             return redirect('reporteAportes:crear_apoyo_eventos', reporte_id=reporte_id)
 
-            return redirect('accounts:listar_reportes')
-
-        # Manejo de errores
-        print(form_logros_avances.errors)  # Para depuración
-        print(formset_logro.errors)  # Para depuración
+        else:
+            print("Form errors:", form_logros_avances.errors)       
+            print("Formset errors:", formset_logro.errors)
 
     else:
         form_logros_avances = LogrosAvancesForm()
-        formset_logro = LogroFormSet(queryset=Logro.objects.none(), form_kwargs={'linea_accion_id': linea_accion_id})
+        formset_logro = LogroFormSet(queryset=Logro.objects.none(), initial=[{'resultado': resultado.id} for resultado in resultados])
         formset_logro.extra = extra_forms
         
 

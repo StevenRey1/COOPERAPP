@@ -1,19 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales (diferente a seg. alimentaria y proyectos productivos)</h1>
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales (diferente a seg. alimentaria y proyectos productivos)</h5>
 
   <form method="POST" class="needs-validation" novalidate>
     {% csrf_token %}
 
     <div class="mb-3">
       <label for="id_tipo_apoyo" class="form-label">Indique el tipo de apoyo que ha recibido de este proyecto / cooperante para el cumplimiento de órdenes judiciales:</label>
-      {{ form.tipo_apoyo }} <span class="text-muted">(Máximo 120 palabras)</span>
+      {{ form.tipo_apoyo }} 
+      <small class="form-text text-muted">(Máximo 120 palabras)</small>
     </div>
 
     <div class="mb-3">
       <label for="id_tipo_ordenes" class="form-label">¿Para qué tipo de órdenes judiciales recibió el apoyo?</label>
-      {{ form.tipo_ordenes }} <span class="text-muted">(Máximo 120 palabras)</span>
+      {{ form.tipo_ordenes }} 
+      <small class="form-text text-muted">(Máximo 120 palabras)</small>
     </div>
 
     <div class="mb-3">
@@ -32,12 +35,40 @@
       </div>
     </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <div class="d-grid gap-2 d-md-flex justify-content-center">
       <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
     </div>
   </form>
 </div>
+</div>
+<style>
+  body {
+    background-color: #e8f5e9;
+}
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+ 
+
+
+</style>
 {% endblock %}

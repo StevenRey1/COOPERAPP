@@ -170,7 +170,7 @@ def generar_pdf_reporte(request, reporte_id):
     reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
     reporte_hasta = reporte.hasta.strftime('%Y-%m-%d')
     reporte_desde = reporte.desde.strftime('%Y-%m-%d')
-    acercamientos = reporte.acercamientocooperacion_set.all()
+    acercamientos = reporte.acercamientos.all()
     # Crear una lista para almacenar los nombres de las entidades con índices
     entidades = [f'{i+1}. {acercamiento.entidad}' for i, acercamiento in enumerate(acercamientos)]
     temas_perspectivas = [f'{i+1}. {acercamiento.temas_perspectivas}' for i, acercamiento in enumerate(acercamientos)]
@@ -310,3 +310,51 @@ class SaltarAcercamientoView(View):
 
         # Redirige al paso de necesidades
         return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
+    
+@login_required
+
+def editar_reporte(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+
+    return render(request, 'reporteAcercamientos/editar_reporte.html', {'reporte_id': reporte_id, 'reporte': reporte})
+
+
+# Vistar para editar 
+
+class DatosQuienReportaUpdateView(LoginRequiredMixin, UpdateView):
+    model = DatosQuienReporta
+    form_class = DatosQuienReportaForm
+    template_name = 'reporteAcercamientos/editar_datos_quien_reporta.html'
+
+    def get_object(self, queryset=None):
+        # Buscamos el objeto DatosQuienReporta relacionado al reporte_id
+        reporte_id = self.kwargs.get('reporte_id')
+        return get_object_or_404(DatosQuienReporta, reporte_id=reporte_id)
+    
+    def get_success_url(self):
+        return reverse_lazy('reporteAcercamientos:editar_reporte', kwargs={'reporte_id': self.object.reporte.id})
+    
+
+class AcercamientoUpdateView(LoginRequiredMixin, UpdateView):
+    model = AcercamientoCooperacion
+    form_class = AcercamientoForm
+    template_name = 'reporteAcercamientos/editar_acercamiento.html'
+    def get_success_url(self):
+        return reverse_lazy('reporteAcercamientos:editar_reporte', kwargs={'reporte_id': self.object.reporte.id})
+
+
+class NecesidadesUpdateView(LoginRequiredMixin, UpdateView):
+    model = NecesidadesCooperacion
+    form_class = NecesidadesForm
+    template_name = 'reporteAcercamientos/editar_necesidades.html'
+
+    def get_object(self, queryset=None):
+        # Buscamos el objeto NecesidadesCooperacion relacionado al reporte_id
+        reporte_id = self.kwargs.get('reporte_id')
+        return get_object_or_404(NecesidadesCooperacion, reporte_id=reporte_id)
+    
+    def get_success_url(self):
+        return reverse_lazy('reporteAcercamientos:editar_reporte', kwargs={'reporte_id': self.object.reporte.id})
+
+    
+

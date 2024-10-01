@@ -1,63 +1,153 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para el litigio de casos</h1>
-  <p>Indique la información sobre el tipo, nombre de casos y cantidad de IDs, del apoyo que haya recibido para el litigio de casos en el periodo:</p>
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para el litigio de casos</h5>
+    <p>Indique la información sobre el tipo, nombre de casos y cantidad de IDs, del apoyo que haya recibido para el litigio de casos en el periodo:</p>
 
-  <form method="POST" class="needs-validation" novalidate>
-    {% csrf_token %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Tipo de casos</th>
-          <th>Nombre de los casos</th>
-          <th>Cantidad de IDs <br> (000 - 999)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in formset %}
-          <tr>
-            <td>
-               
-              <!-- Iterar sobre tipos_caso y comparar el valor del tipo_caso del formulario -->
-              {% for tipo in tipos_caso %}
-                  
-                
-                  {% if tipo.id == form.tipo_caso.value %}
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Tipo de casos</th>
+              <th>Nombre de los casos</th>
+              <th>Cantidad de IDs <br> (000 - 999)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form in formset %}
+              <tr>
+                <td>
+                  {{ form.tipo_caso }}
+                  {% for tipo in tipos_caso %}
+                    {% if tipo.id == form.tipo_caso.value %}
                       {{ tipo.nombre }}
-                  {% endif %}
-              {% endfor %}
-    
-              <!-- Mostrar el campo 'otro_tipo' si es el último formulario en el formset -->
-              {% if forloop.last %}
-                {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
-              {% endif %}
-            </td>
-            <td>
-              <!-- Mostrar 'N/A' si es el primer formulario, de lo contrario mostrar 'nombre_caso' -->
-              {% if forloop.first %}
-                N/A <span class="text-muted">(automático)</span>
-              {% else %}
-                {{ form.nombre_caso }}
-              {% endif %}
-            </td>
-            <td>{{ form.cantidad_ids }}</td>
-          </tr>
-        {% endfor %}
-    </tbody>
-    </table>
+                    {% endif %}
+                  {% endfor %}
+                  
+                </td>
+                <td>
+                  {{form.nombre_caso}}
+                  <div class="invalid-feedback">Máximo 5 palabras</div>
+                </td>
+                <td>{{ form.cantidad_ids }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+                    
+                 
+      </div>
+      
 
-    <div class="mb-3">
-      <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con el litigio de casos por parte de este cooperante o, alguna observación al respecto de este tipo de apoyo recibido?</label>
-      {{ formset.0.resaltar_apoyo }} <span class="text-muted">(Máximo 150 palabras)</span>
-    </div>
+      <!-- Campo resaltar_apoyo -->
+      <div class="mb-3">
+        <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con el litigio de casos por parte de este cooperante o, alguna observación al respecto de este tipo de apoyo recibido?</label>
+        {{ formset.0.resaltar_apoyo }} 
+        <div class="invalid-feedback">Máximo 100 palabras</div>
+      </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
-    </div>
-  </form>
+      <div class="d-grid gap-2 d-md-flex justify-content-center">
+        <button type="submit" class="btn btn-primary" disabled>Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
+  </div>
 </div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  .table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+  .table input, .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Limitar el valor de los campos de cantidad de IDs entre 0 y 999
+  document.querySelectorAll('input[type="number"][id$="-cantidad_ids"]').forEach(input => {
+    input.addEventListener('input', function() {
+      this.value = Math.max(0, Math.min(999, this.value));
+      checkInvalidFields();
+    });
+  });
+
+  document.querySelectorAll('textarea[id$="-nombre_caso"]').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto'; // Resetear altura para ajustar
+      this.style.height = this.scrollHeight + 'px'; // Ajustar a contenido
+    });
+    
+    // Contador de palabras
+    const contador = document.createElement('span');
+    contador.classList.add('text-muted');
+    contador.style.fontSize = '12px';
+    contador.style.float = 'right';
+    contador.style.marginTop = '5px';
+    contador.textContent = '0/5'; // Inicializar contador
+    textarea.parentElement.appendChild(contador);
+
+    textarea.addEventListener('input', function() {
+      const palabras = this.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
+      contador.textContent = `${palabras.length}/5`; // Actualizar contador
+      this.classList.toggle('is-invalid', palabras.length > 5); // Añadir clase de invalidación si supera el límite
+      checkInvalidFields();
+    });
+  });
+
+  // Contador para el campo resaltar_apoyo
+  const resaltar_apoyo = document.querySelector('textarea[id$="-resaltar_apoyo"]');
+  const contadorResaltar = document.createElement('span');
+  contadorResaltar.classList.add('text-muted');
+  contadorResaltar.style.fontSize = '12px';
+  contadorResaltar.style.float = 'right';
+  contadorResaltar.style.marginTop = '5px';
+  resaltar_apoyo.parentElement.appendChild(contadorResaltar);
+  contadorResaltar.textContent = '0/100'; // Ajustar a 100 palabras máximo
+
+  resaltar_apoyo.addEventListener('input', function() {
+    this.style.height = 'auto'; // Resetear altura para ajustar
+    this.style.height = this.scrollHeight + 'px'; // Ajustar a contenido
+
+    const palabras = this.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
+    contadorResaltar.textContent = `${palabras.length}/100`; // Actualizar contador
+    this.classList.toggle('is-invalid', palabras.length > 100); // Añadir clase de invalidación si supera el límite
+    checkInvalidFields();
+  });
+
+  // Validar si hay campos inválidos y desactivar botón de envío si es necesario
+  function checkInvalidFields() {
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    const buttonSubmit = document.querySelector('button[type="submit"]');
+    buttonSubmit.disabled = invalidFields.length > 0;
+  }
+
+  // Llamar a la función para asegurar que el botón esté correctamente deshabilitado al cargar la página
+  checkInvalidFields();
+</script>
 {% endblock %}

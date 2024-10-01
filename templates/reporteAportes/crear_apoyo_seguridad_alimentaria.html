@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Apoyo de este proyecto / cooperante para proyectos de seguridad alimentaria y proyectos productivos</h1>
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para proyectos de seguridad alimentaria y proyectos productivos</h5>
   <p>Indique en este periodo, para cuántos proyectos ha recibido apoyo por parte de este proyecto / cooperante:</p>
 
-  <form method="POST" class="needs-validation" novalidate>
+  <form method="POST" >
     {% csrf_token %}
+    <div class="table-responsive mb-3">
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -26,7 +28,7 @@
               
 
               {% if forloop.last %}
-                {{ form.otro_tipo }} <span class="text-muted">(Texto máximo 5 palabras)</span>
+                {{ form.otro_tipo }} <small class="text-muted">(Texto máximo 5 palabras)</small>
               {% endif %}
             </td>
             <td>{{ form.cantidad_proyectos }}</td>
@@ -35,7 +37,7 @@
         {% endfor %}
       </tbody>
     </table>
-
+  </div>
     <div class="mb-3">
       <label class="form-label">Indique el tipo de apoyo recibido para los proyectos de seguridad alimentaria o productivos en este periodo:</label>
       <div class="row">
@@ -43,8 +45,7 @@
           <div class="col-sm-6">
             <div class="form-check">
               {{ checkbox }}
-              <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                {{ checkbox.choice_label }}
+              
               </label>
             </div>
           </div>
@@ -74,12 +75,39 @@
       {{ formset.0.resaltar_apoyo }}
     </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <div class="d-grid gap-2 d-md-flex justify-content-center">
       <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      
     </div>
   </form>
 </div>
+</div>
+<style>
+  body {
+    background-color: #e8f5e9;
+}
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+
+</style>
 {% endblock %}
