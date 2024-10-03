@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2 class="text-center">PRE-IDENTIFICACIÓN DE NECESIDADES DE COOPERACIÓN INTERNACIONAL</h2>
+
+<div class="container mt-4">
+
+  <div class="form-container"> 
+  <h5 class="text-center mb-4 form-title">PRE-IDENTIFICACIÓN DE NECESIDADES DE COOPERACIÓN INTERNACIONAL</h5>
 
   <form method="POST">
     {% csrf_token %}
@@ -48,6 +52,26 @@
       <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
     </div>
   </form>
+</div>
+</div>
+
+<style>
+  body {
+      background-color: #e8f5e9;
+  }
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+</style>
 {% endblock %}
 
 {% block extra_js %}

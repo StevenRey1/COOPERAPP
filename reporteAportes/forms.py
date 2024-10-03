@@ -1,11 +1,12 @@
 
 from typing import Any
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import inlineformset_factory, modelformset_factory
 from django.core.exceptions import ValidationError
 from .models import ApoyoEventos,ApoyoViajes,ObjetivoViaje, ApoyoTerritorios,ApoyoContratacion,ApoyoMaterial ,\
                     ApoyoHerramientas, ApoyoLitigio, ApoyoSeguridadAlimentaria, ApoyoOrdenesJudiciales, ApoyoArchivoHistorico, \
-                    OtrosApoyos,EstimacionEconomica, ApoyoTerritorioUbicacion, ContratacionDetalle, TipoPersonal
+                    OtrosApoyos,EstimacionEconomica, ApoyoTerritorioUbicacion, ContratacionDetalle, ApoyoSeguridadDetalle, ApoyoLitigioDetalle,\
+                    TipoCaso, TipoProyecto
 
 
 
@@ -36,10 +37,17 @@ class ApoyoEventosForm(forms.ModelForm):
     
     def clean(self) :
         cleaned_data = super().clean()
+        eventos = cleaned_data.get('eventos')
+        publico_objetivo = cleaned_data.get('publico_objetivo')
+
+        if not eventos:
+            raise ValidationError('Debe seleccionar al menos un evento.')
+        if not publico_objetivo:
+            raise ValidationError('Debe seleccionar al menos un publico objetivo.')
+
         objetivo_principal = cleaned_data.get('objetivo_principal')
         validar_max_palabras(objetivo_principal, max_palabras=120)
         return cleaned_data
-
 
 class ApoyoViajesForm(forms.ModelForm):
     objetivo_viajes = forms.ModelMultipleChoiceField(
@@ -53,21 +61,22 @@ class ApoyoViajesForm(forms.ModelForm):
         model = ApoyoViajes
         exclude = ['reporte']
         widgets = {
-         
             'cantidad_locales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
             'cantidad_nacionales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
             'cantidad_internacionales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
-            'cuales_otros': forms.TextInput(attrs={'class': 'form-control w-50', 'disabled': 'disabled', 'placeholder': 'Se activa cuando selecciona otros'}),
-           
+            'cuales_otros': forms.TextInput(attrs={'class': 'form-control ', 'disabled': 'disabled', 'placeholder': 'Se activa cuando selecciona otros'}),
+            'resaltado_apoyo' : forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'cols': 160, 'placeholder': 'Texto máximo de 100 palabras'}),
         }
-
-    resaltado_apoyo = forms.CharField( validators=[lambda value: validar_max_palabras(value, max_palabras=100)],  # Usar la función directamente
-        required=True ,widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'cols': 160, 'placeholder': 'Texto máximo de 100 palabras'}))
 
     def clean(self):
         cleaned_data = super().clean()
         objetivo_viajes = cleaned_data.get('objetivo_viajes')
         cuales_otros = cleaned_data.get('cuales_otros')
+        resaltado_apoyo = cleaned_data.get('resaltado_apoyo')
+        validar_max_palabras(resaltado_apoyo, max_palabras=100)
+
+        if not objetivo_viajes:
+            raise ValidationError('Debe seleccionar al menos un objetivo de los viajes.')
 
         # Validar que "cuales_otros" solo se rellene si se selecciona "otros"
         otros = ObjetivoViaje.objects.filter(nombre='Otros').first()
@@ -121,7 +130,7 @@ class ApoyoContratacionForm(forms.ModelForm):
         model = ApoyoContratacion
         exclude = ['reporte', 'tipo_personal', 'area_profesional']
         widgets = {
-            'otro_tipo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 5 palabras'}),
+            'otro_tipo': forms.Textarea(attrs={'class': 'form-control', 'rows':1, 'placeholder': 'Texto máximo 5 palabras', 'disabled': 'disabled'}),
             'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Texto máximo 120 palabras', 'required': 'required'}),
             'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Texto máximo 100 palabras', 'required': 'required'}),
         }
@@ -144,19 +153,11 @@ class ContratacionDetalleForm(forms.ModelForm):
         fields = ['tipo_personal','area_profesional', 'cantidad_personas', 'tiempo_servicio']
         widgets = {
             'tipo_personal': forms.HiddenInput(),
-            'area_profesional': forms.Select(attrs={'class': 'form-select' , 'required': 'required'}),
+            'area_profesional': forms.Select(attrs={'class': 'form-select' }),
             'cantidad_personas': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
             'tiempo_servicio': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 99, 'required': 'required'}),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        cantidad_personas = cleaned_data.get('cantidad_personas')
-        tiempo_servicio = cleaned_data.get('tiempo_servicio')
-        validar_max_palabras(cantidad_personas, max_palabras=999)
-        validar_max_palabras(tiempo_servicio, max_palabras=99)
-
-        return cleaned_data
 
 
 class ApoyoMaterialForm(forms.ModelForm):
@@ -210,55 +211,82 @@ ApoyoHerramientasFormSet = forms.formset_factory(ApoyoHerramientasForm, extra=0)
 
 
 
+# Formulario para ApoyoLitigio
 class ApoyoLitigioForm(forms.ModelForm):
     class Meta:
         model = ApoyoLitigio
         exclude = ['reporte']
         widgets = {
-            'tipo_caso': forms.HiddenInput(),
-            'nombre_caso': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'placeholder': 'Texto máximo 5 palabras', 'required': 'required'}),
-            'cantidad_ids': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
-            'otro_tipo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 5 palabras'}),
             'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Texto máximo 100 palabras', 'required': 'required'}),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-        nombre_caso = cleaned_data.get('nombre_caso')
-        otro_tipo = cleaned_data.get('otro_tipo')
         resaltar_apoyo = cleaned_data.get('resaltar_apoyo')
-
-        validar_max_palabras(nombre_caso, max_palabras=5)
         validar_max_palabras(resaltar_apoyo, max_palabras=100)
         return cleaned_data
 
+# Formulario para ApoyoLitigioDetalle
+class ApoyoLitigioDetalleForm(forms.ModelForm):
+    class Meta:
+        model = ApoyoLitigioDetalle
+        fields = ['tipo_caso', 'nombre_caso', 'cantidad_ids']
+        widgets = {
+            'tipo_caso': forms.HiddenInput(),
+            'nombre_caso': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'placeholder': 'Texto máximo 5 palabras', 'required': 'required'}),
+            'cantidad_ids': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
+        }
 
-ApoyoLitigioFormSet = forms.formset_factory(ApoyoLitigioForm, extra=0)
+    def clean(self):
+        cleaned_data = super().clean()
+        nombre_caso = cleaned_data.get('nombre_caso')
+        validar_max_palabras(nombre_caso, max_palabras=5)
+        return cleaned_data
 
-
+# Crear el Formset utilizando ApoyoLitigioDetalle
+ApoyoLitigioFormset = forms.modelformset_factory(
+    ApoyoLitigioDetalle,  # Cambia a ApoyoLitigioDetalle
+    form=ApoyoLitigioDetalleForm,
+    extra=TipoCaso.objects.all().count(),  # Ajusta según sea necesario
+    can_delete=False
+)
 
 
 class ApoyoSeguridadAlimentariaForm(forms.ModelForm):
     class Meta:
         model = ApoyoSeguridadAlimentaria
-        exclude = ['reporte']
+        fields = ['tipo_apoyo', 'otro_apoyo', 'resaltar_apoyo']
         widgets = {
-            'tipo_proyecto': forms.HiddenInput(),
-            'cantidad_proyectos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
-            'cantidad_familias': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
             'tipo_apoyo': forms.CheckboxSelectMultiple(),
             'otro_apoyo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Se activa cuando se selecciona la opción otros'}),
-            'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 120 palabras'}),
+            'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Texto máximo 120 palabras'}),
         }
-
-    def clean(self):
+    def clean(self) :
         cleaned_data = super().clean()
+        tipo_apoyo = cleaned_data.get('tipo_apoyo')
         resaltar_apoyo = cleaned_data.get('resaltar_apoyo')
         validar_max_palabras(resaltar_apoyo, max_palabras=120)
-
+        if not tipo_apoyo:
+            raise ValidationError('Debe seleccionar al menos un tipo de apoyo.')
+        
         return cleaned_data
 
-ApoyoSeguridadAlimentariaFormSet = forms.formset_factory(ApoyoSeguridadAlimentariaForm, extra=0)
+class ApoyoDetallesForm(forms.ModelForm):
+    class Meta:
+        model = ApoyoSeguridadDetalle
+        fields = ['tipo_proyecto', 'cantidad_proyectos', 'cantidad_familias']
+        widgets = {
+            'tipo_proyecto': forms.HiddenInput(),
+            'cantidad_proyectos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'cantidad_familias': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+
+ApoyoDetallesFormSet = forms.modelformset_factory(
+    ApoyoSeguridadDetalle,
+    form=ApoyoDetallesForm,
+    extra=TipoProyecto.objects.all().count(),
+    can_delete=False
+)
 
 
 class ApoyoOrdenesJudicialesForm(forms.ModelForm):
@@ -285,13 +313,20 @@ class ApoyoArchivoHistoricoForm(forms.ModelForm):
         exclude = ['reporte']
         widgets = {
             'acciones': forms.CheckboxSelectMultiple(),
-            'cuales_acciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Se activa cuando se selecciona la opción otros'}),
-            'comentarios': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 100 palabras'}),
+            'cuales_acciones': forms.TextInput(attrs={'class': 'form-control','disabled':'disabled', 'placeholder': 'Se activa cuando se selecciona la opción otros'}),
+            'comentarios': forms.Textarea(attrs={'class': 'form-control', 'rows':3, 'placeholder': 'Texto máximo 100 palabras'}),
         }
 
-    comentarios = forms.CharField(label="Comentarios",
-                                  validators=[lambda value: validar_max_palabras(value, max_palabras=100)],
-                                  required=True)
+    def clean(self):
+        cleaned_data = super().clean()
+        acciones = cleaned_data.get('acciones')
+        # Validación para asegurarse de que al menos una acción esté seleccionada
+        if not acciones:
+            raise ValidationError('Debe seleccionar al menos una acción.')
+        comentarios = cleaned_data.get('comentarios')
+        validar_max_palabras(comentarios, max_palabras=100)
+
+        return cleaned_data
 
 class OtrosApoyosForm(forms.ModelForm):
     class Meta:
@@ -301,16 +336,26 @@ class OtrosApoyosForm(forms.ModelForm):
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 150 palabras'}),
         }
 
-    descripcion = forms.CharField(label="Descripción",
-                                  validators=[lambda value: validar_max_palabras(value, max_palabras=150)],
-                                  required=True)
+    def clean(self):
+        cleaned_data = super().clean()
+        descripcion = cleaned_data.get('descripcion')
+        validar_max_palabras(descripcion, max_palabras=150)
+
+        return cleaned_data
 
 class EstimacionEconomicaForm(forms.ModelForm):
     class Meta:
         model = EstimacionEconomica
         exclude = ['reporte']
         widgets = {
-            'valor_economico': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00.000.000.000.000 / 99.999.999.999.999'}),
+            'valor_economico': forms.TextInput(attrs={'class': 'form-control','rows':1,  'required': 'required', 'placeholder': '00.000.000.000.000 / 99.999.999.999.999'}),
             'moneda': forms.Select(attrs={'class': 'form-select'}),
             'obtencion_valor': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        obtencion_valor = cleaned_data.get('obtencion_valor')
+        validar_max_palabras(obtencion_valor, max_palabras=100)
+
+        return cleaned_data

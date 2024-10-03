@@ -1,46 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-  
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <form method="POST">
-                {% csrf_token %}
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Datos de Quien Reporta</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <label class="mb-1 p-0">Nombres y apellidos: </label>
-                            {{ form.nombre_completo }}                    
-                        </div>
-                        <div class="row mb-3">
-                            <label class="mb-1 p-0" >Rol:</label>
-                            {{ form.rol }}
-                        </div>
-                        <div class="row mb-3">
-                            <label class="mb-1 p-0">Dependencia:</label>
-                            {{ form.dependencia }}
-                        </div>
-                        <!-- Añade aquí el resto de los campos del formulario -->
-                        <div class="row mb-3">
-                            <label class="mb-1 p-0">Correo electrónico</label>
-                            {{ form.correo_electronico }}
-                        </div>
-                        <div class="row mb-3  ">
-                            <label class="mb-1 p-0">Su correo electrónico institucional:</label>
-                            {{ form.correo_electronico_institucional }}
-                        </div>
-                    </div>
-                    <div class="card-footer text-center">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
-                    </div>
-                </div>
-            </form>
-        </div>
+<div class="container mt-4">
+    <div class="form-container">
+        <h5 class="text-center mb-4 form-title">DATOS DE QUIEN REPORTA</h5>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.nombre_completo.id_for_label }}" class="form-label">Nombres y apellidos:</label>
+                {{ form.nombre_completo }}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.dependencia.id_for_label }}" class="form-label">Dependencia:</label>
+                {{ form.dependencia }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.rol.id_for_label }}" class="form-label">Rol:</label>
+                {{ form.rol }}
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="{{ form.correo_electronico.id_for_label }}" class="form-label">Correo electrónico:</label>
+                {{ form.correo_electronico }}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.correo_electronico_institucional.id_for_label }}" class="form-label">Su correo electrónico institucional:</label>
+                {{ form.correo_electronico_institucional }}
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                
+                <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+            </div>
+        </form>
     </div>
 </div>
+
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-title {
+        background-color: #c5e1a5;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+  
+    #id_correo_electronico_institucional {
+        background-color: #f0f0f0;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Deshabilitar el campo de correo electrónico institucional
+    document.getElementById('id_correo_electronico_institucional').disabled = true;
+    
+    // Función para actualizar el correo institucional basado en la dependencia
+    function updateInstitutionalEmail() {
+        var dependencia = document.getElementById('id_dependencia').value;
+        var correoInstitucional = document.getElementById('id_correo_electronico_institucional');
+        
+        if (dependencia) {
+            correoInstitucional.value = 'Se activa cuando la opción correo electrónico es de una dependencia';
+        } else {
+            correoInstitucional.value = '';
+        }
+    }
+
+    // Ejecutar la función cuando cambie la dependencia
+    document.getElementById('id_dependencia').addEventListener('change', updateInstitutionalEmail);
+
+    // Ejecutar la función al cargar la página
+    window.onload = updateInstitutionalEmail;
+</script>
 {% endblock %}

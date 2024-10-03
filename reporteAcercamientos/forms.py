@@ -8,9 +8,10 @@ class ReporteForm(forms.ModelForm):
         model = Reporte
         fields = ['fecha_elaboracion', 'periodo', 'desde', 'hasta']
         widgets = {
-            'fecha_elaboracion': forms.DateInput(attrs={'readonly': 'readonly'}),  # Solo lectura
-            'desde': forms.DateInput(format='%d/%m/%Y', attrs={'readonly': 'readonly'}),
-            'hasta': forms.DateInput(format='%d/%m/%Y', attrs={'readonly': 'readonly'}),
+            'fecha_elaboracion': forms.DateInput(attrs={'class':'form-control', 'readonly': 'readonly'}),  # Solo lectura
+            'periodo': forms.Select(attrs={'class':'form-control'}),
+            'desde': forms.DateInput(format='%d/%m/%Y', attrs={'class':'form-control','readonly': 'readonly', }),  # Solo lectura y deshabilitado
+            'hasta': forms.DateInput(format='%d/%m/%Y', attrs={'class':'form-control','readonly': 'readonly', }),  # Solo lectura y deshabilitado
         }
 
     def __init__(self, *args, **kwargs):
@@ -44,25 +45,14 @@ class DatosQuienReportaForm(forms.ModelForm):
     class Meta:
         model = DatosQuienReporta
         exclude = ['reporte']  # Excluimos 'reporte' porque lo asignamos manualmente
+        widgets = {
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
+            'correo_electronico': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
+            'dependencia': forms.Select(attrs={'class': 'form-control'}),
+            'rol': forms.Select(attrs={'class': 'form-control'}),
+            'correo_electronico_institucional': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
+        }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-
-        # Pre-llenar el correo electrónico del usuario
-        if user:
-            self.fields['correo_electronico'].initial = 'EXAMPLE@GMAIL.COM'
-
-        # Asegúrate de que los campos de rol y dependencia se muestren
-        self.fields['rol'] = forms.ModelChoiceField(
-            queryset=Rol.objects.all(),
-            empty_label="Selecciona un rol"
-        )
-        self.fields['dependencia'] = forms.ModelChoiceField(
-            queryset=Dependencia.objects.all(),
-            empty_label="Selecciona una dependencia"
-        )
-      
 class AcercamientoForm(forms.ModelForm):
     class Meta:
         model = AcercamientoCooperacion
@@ -83,7 +73,7 @@ class NecesidadesForm(ModelForm):
         model = NecesidadesCooperacion
         fields = ['necesidad_identificado', 'necesidades_identificadas', 'cooperante_identificado', 'cooperante']
         widgets = {
-            'necesidades_identificadas': Textarea(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 palabras'}),
+            'necesidades_identificadas': Textarea(attrs={'class': 'form-control', 'rows':3, 'placeholder': 'Texto máximo 50 palabras'}),
             'cooperante': TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 15 palabras'}),
         }
 

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-4">
+  
     <h2 class="text-center mb-4">Acercamientos de Cooperación Internacional</h2>
     <p>¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación internacional en este periodo {{reporte.periodo}}?</p>
 
@@ -17,11 +18,12 @@
         </div>
     </div>
 
+    
+    <div class="form-container" id="acercamientoForm" style="display: none;">
     <!-- El formulario, inicialmente oculto si se selecciona 'No' -->
-    <form method="POST" id="acercamientoForm" style="display: none;">
+    <form method="POST" >
         {% csrf_token %}
-        <div class="card">
-            <div class="card-body">
+        <h5 class="text-center mb-4 form-title">ACERCAMIENTOS DE COOPERACIÓN INTERNACIONAL</h5>
                 <fieldset id="acercamientoFormContainer">
                     <div class="acercamiento-form mb-3">
                         <div class="form-group">
@@ -47,14 +49,33 @@
                         <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
                     </div>
                 </fieldset>
-            </div>
-        </div>
+            
+        
     </form>
-
+    </div>
     <fieldset id="continuar_sin_guardar" style="display: block;" class="mt-4">
         <a href="{% url 'reporteAcercamientos:saltar_acercamiento' reporte.id %}" class="btn btn-primary">Continuar</a>
     </fieldset>
+  
 </div>
+
+<style>
+  body {
+      background-color: #e8f5e9;
+  }
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+</style>
 {% endblock %}
 
 {% block extra_js %}

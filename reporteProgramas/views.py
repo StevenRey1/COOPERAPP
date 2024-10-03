@@ -198,7 +198,7 @@ def crear_datos_cooperante(request,reporte_id):
         operador = request.POST.get('operador')
         proyecto_plan = request.POST.get('proyecto_plan')
         linea_accion = request.POST.get('linea_accion')
-        rol = request.POST.get('rol')
+        
         
         try:
             # Guardar los datos en la base de datos
@@ -209,12 +209,11 @@ def crear_datos_cooperante(request,reporte_id):
                 operador=operador,
                 proyecto_plan=proyecto_plan,
                 linea_accion=linea_accion,
-                rol=rol
+                
             )
             
             reporte.avance = 2
             reporte.save()
-            messages.success(request, 'Datos guardados correctamente.')
             return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id, linea_accion_id=linea_accion)
         except Exception as e:
             messages.error(request, f'Ocurrió un error al guardar los datos: {str(e)}')

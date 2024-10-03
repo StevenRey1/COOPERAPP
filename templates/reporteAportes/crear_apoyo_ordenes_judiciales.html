@@ -4,19 +4,19 @@
   <div class="form-container">
     <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales (diferente a seg. alimentaria y proyectos productivos)</h5>
 
-  <form method="POST" class="needs-validation" novalidate>
+  <form method="POST" >
     {% csrf_token %}
 
     <div class="mb-3">
       <label for="id_tipo_apoyo" class="form-label">Indique el tipo de apoyo que ha recibido de este proyecto / cooperante para el cumplimiento de órdenes judiciales:</label>
       {{ form.tipo_apoyo }} 
-      <small class="form-text text-muted">(Máximo 120 palabras)</small>
+      <div class="invalid-feedback">El número de palabras es de máximo 120 palabras</div>
     </div>
 
     <div class="mb-3">
       <label for="id_tipo_ordenes" class="form-label">¿Para qué tipo de órdenes judiciales recibió el apoyo?</label>
       {{ form.tipo_ordenes }} 
-      <small class="form-text text-muted">(Máximo 120 palabras)</small>
+      <div class="invalid-feedback">El número de palabras es de máximo 120 palabras</div>
     </div>
 
     <div class="mb-3">
@@ -71,4 +71,71 @@
 
 
 </style>
+{% endblock %}
+{% block extra_js %}
+<script>
+  // agregar contador de palabras a los campos de texto
+  document.addEventListener('DOMContentLoaded', function() {
+    const tipoApoyo = document.getElementById('id_tipo_apoyo');
+    const tipoApoyoCounter = document.createElement('span');
+    tipoApoyoCounter.textContent = '0/120 palabras';
+    tipoApoyoCounter.style.fontSize = '0.8rem';
+    tipoApoyoCounter.style.color = '#6c757d';
+    tipoApoyo.insertAdjacentElement('afterend', tipoApoyoCounter);
+
+    const tipoOrdenes = document.getElementById('id_tipo_ordenes');
+    const tipoOrdenesCounter = document.createElement('span');
+    tipoOrdenesCounter.textContent = '0/120 palabras';
+    tipoOrdenesCounter.style.fontSize = '0.8rem';
+    tipoOrdenesCounter.style.color = '#6c757d';
+    tipoOrdenes.insertAdjacentElement('afterend', tipoOrdenesCounter);
+
+    // función para contar palabras
+    function contarPalabras(text) {
+      return text.trim().split(/\s+/).length;
+    }
+
+    tipoApoyo.addEventListener('input', function() {
+      const palabras = contarPalabras(this.value);
+      tipoApoyoCounter.textContent = `${palabras}/120 palabras`;
+    });
+
+    tipoOrdenes.addEventListener('input', function() {
+      const palabras = contarPalabras(this.value);
+      tipoOrdenesCounter.textContent = `${palabras}/120 palabras`;
+    });
+
+    // si hay más de 120 palabras, mostrar class invalid
+    tipoApoyo.addEventListener('input', function() {
+      if (contarPalabras(this.value) > 120) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+      validateForm();
+    });
+
+    tipoOrdenes.addEventListener('input', function() {
+      if (contarPalabras(this.value) > 120) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+      validateForm();
+    });
+    
+  });
+
+  //validar formulario que no hayan class is-invalid en los campos de texto
+
+  const submitButton = document.querySelector('button[type="submit"]');
+  function validateForm() {
+    const form = document.querySelector('form');
+    if (form.querySelector('.is-invalid')) {
+      submitButton.disabled = true;
+    } else {
+      submitButton.disabled = false;
+    }
+  }
+</script>
 {% endblock %}

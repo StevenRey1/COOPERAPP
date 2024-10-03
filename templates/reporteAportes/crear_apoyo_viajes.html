@@ -2,6 +2,13 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if form.errors %}
+        <div class="alert alert-danger" role="alert" >
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.7rem;"></button>
+            {{form.errors}}
+            
+        </div>
+    {% endif %}
     <div class="form-container">
             <div class="form-container">
                 <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la realización de viajes</h5>
@@ -183,6 +190,7 @@ const resaltado_apoyo = document.getElementById('id_resaltado_apoyo');
 const counter = document.createElement('div');
 counter.classList.add('form-text', 'text-end');
 resaltado_apoyo.insertAdjacentElement('afterend', counter);
+counter.textContent = '0/100 palabras';
 
 resaltado_apoyo.addEventListener('input', () => {
     const words = resaltado_apoyo.value.trim().split(/\s+/).length;

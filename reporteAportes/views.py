@@ -1,10 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden, HttpResponse
 from . forms import ApoyoEventosForm, ApoyoViajesForm, ApoyoMaterialFormSet, ApoyoHerramientasFormSet, \
-                    ApoyoLitigioFormSet, ApoyoSeguridadAlimentariaFormSet, ApoyoOrdenesJudicialesForm, ApoyoArchivoHistoricoForm, OtrosApoyosForm, \
-                    EstimacionEconomicaForm, ApoyoTerritorioUbicacionFormset, ApoyoTerritoriosForm, ApoyoContratacionForm, ContratacionDetalle,  ContratacionDetalleForm
+                    ApoyoLitigioForm, ApoyoOrdenesJudicialesForm, ApoyoArchivoHistoricoForm, OtrosApoyosForm, \
+                    EstimacionEconomicaForm, ApoyoTerritorioUbicacionFormset, ApoyoTerritoriosForm, ApoyoContratacionForm, ContratacionDetalle,  ContratacionDetalleForm, \
+                    ApoyoSeguridadAlimentariaForm, ApoyoDetallesFormSet,ApoyoLitigioFormset
+
 from django.forms.models import inlineformset_factory
-from .models import TipoPersonal, AreaProfesional, TipoMaterial, TipoHerramienta, TipoCaso, TipoProyecto , TipoApoyo, \
-                    ApoyoTerritorios, ApoyoContratacion
+from .models import TipoPersonal, AreaProfesional, TipoMaterial, TipoHerramienta, TipoCaso, TipoProyecto ,ApoyoHerramientas, \
+                    ApoyoTerritorios, ApoyoContratacion, ApoyoSeguridadAlimentaria, ApoyoSeguridadDetalle, ApoyoLitigio, ApoyoLitigioDetalle
+
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib import colors, fonts
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.units import inch
 
 
 from reporteAcercamientos.models import Reporte
@@ -26,7 +37,6 @@ def crear_apoyo_eventos(request, reporte_id):
 
     return render(request, 'reporteAportes/crear_apoyo_eventos.html', {'form': form})
 
-
 def crear_apoyo_viajes(request,reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     if request.method == 'POST':
@@ -41,7 +51,6 @@ def crear_apoyo_viajes(request,reporte_id):
         form = ApoyoViajesForm()
 
     return render(request, 'reporteAportes/crear_apoyo_viajes.html', {'form': form})
-
 
 
 def crear_apoyo_territorios(request, reporte_id):
@@ -78,7 +87,6 @@ def crear_apoyo_territorios(request, reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_territorios.html', context)
 
-
 def crear_apoyo_contratacion(request, reporte_id):
     reporte = get_object_or_404(Reporte, pk=reporte_id)
     tipos_personal = TipoPersonal.objects.all()
@@ -108,18 +116,10 @@ def crear_apoyo_contratacion(request, reporte_id):
             formset.instance = apoyo_contratacion
             formset.save()
 
-            return redirect('reporteAportes:crear_apoyo_material')  # Redirige a una página de éxito
-        else:
-            print("Form errors:", form.errors)
-            print("Formset errors:", formset.errors)
-            context = {
-                'form': form,
-                'formset': formset,
-                'tipos_personal': tipos_personal,
-                'area_profesional': area_profesional,
-            }
-            return render(request, 'reporteAportes/crear_apoyo_contratacion.html', context)  # Renderiza la plantilla con errores
-
+            return redirect('reporteAportes:crear_apoyo_material', reporte_id=reporte_id)  # Redirige a una página de éxito
+        else: 
+            print(form.errors, formset.errors)
+            print(form.non_field_errors())
     else:
         form = ApoyoContratacionForm()
         formset = ContratacionDetalleFormSet(
@@ -136,24 +136,28 @@ def crear_apoyo_contratacion(request, reporte_id):
     return render(request, 'reporteAportes/crear_apoyo_contratacion.html', context)
 
 def crear_apoyo_material(request,reporte_id):
-    
+    reporte = Reporte.objects.get(id=reporte_id)
     tipo_material = TipoMaterial.objects.all()
 
     if request.method == 'POST':
         formset = ApoyoMaterialFormSet(request.POST)
         if formset.is_valid():
-            formset.save()  # Guarda los datos del formset
+            for form in formset:
+                apoyo = form.save(commit=False)
+                apoyo.reporte = reporte
+                apoyo.save() 
+            reporte.avance = 8
+            reporte.save()
                     
             return redirect('reporteAportes:crear_apoyo_herramientas')  # Reemplaza con la URL correcta
     else:
-        formset = ApoyoMaterialFormSet()
+        formset = ApoyoMaterialFormSet(initial=[{'tipo_material': tipo.id} for tipo in tipo_material])
 
     context = {
         'formset': formset,
         'tipo_material': tipo_material,
     }
     return render(request, 'reporteAportes/crear_apoyo_material.html', context)
-
 
 def crear_apoyo_herramientas(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
@@ -168,7 +172,7 @@ def crear_apoyo_herramientas(request, reporte_id):
                 apoyo.save()
             reporte.avance = 9
             reporte.save()   
-            return redirect('reporteAportes:crear_apoyo_litigio')  # Update with the correct URL
+            return redirect('reporteAportes:crear_apoyo_litigio', reporte_id = reporte_id)  # Update with the correct URL
         else:
             print(formset.errors)
     else:
@@ -185,58 +189,103 @@ def crear_apoyo_litigio(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     tipos_caso = TipoCaso.objects.all()
 
+    try:
+        apoyo = ApoyoLitigio.objects.get(reporte=reporte)
+    except ApoyoLitigio.DoesNotExist:
+        apoyo = None
+
     if request.method == 'POST':
-        formset = ApoyoLitigioFormSet(request.POST)
-        if formset.is_valid():
-            for form in formset:
-                apoyo = form.save(commit=False)
-                apoyo.reporte = reporte
-                apoyo.save()
+        form = ApoyoLitigioForm(request.POST, instance=apoyo)
+        formset = ApoyoLitigioFormset(request.POST, queryset=ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo))
+
+        if form.is_valid() and formset.is_valid():
+            # Guarda el ApoyoLitigio
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+
+            # Guarda los detalles del formset
+            detalles = formset.save(commit=False)
+            for detalle in detalles:
+                detalle.apoyo_litigio = apoyo  # Asocia el detalle con el apoyo
+                detalle.save()  # Guarda el detalle
+
+            # Actualiza el avance del reporte
             reporte.avance = 10
             reporte.save()
-            return redirect('reporteAportes:crear_apoyo_seguridad_alimentaria')
+
+            return redirect('reporteAportes:crear_apoyo_seguridad_alimentaria', reporte_id=reporte_id)
         else:
-            print(formset.errors)
+            print("Errores en el formulario:", form.errors)
+            print("Errores en el formset:", formset.errors)
     else:
-        initial_data = [{'tipo_caso': tipo.id} for tipo in tipos_caso]
-        formset = ApoyoLitigioFormSet(initial=initial_data)
+        form = ApoyoLitigioForm(instance=apoyo)
+        formset = ApoyoLitigioFormset(
+            queryset=ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo),
+            initial=[{'tipo_caso': tipo.id} for tipo in tipos_caso]
+        )
+
     context = {
+        'form': form,
         'formset': formset,
         'tipos_caso': tipos_caso,
     }
     return render(request, 'reporteAportes/crear_apoyo_litigio.html', context)
 
-
-
-def crear_apoyo_seguridad_alimentaria(request,reporte_id):
-    
+def crear_apoyo_seguridad_alimentaria(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
     tipos_proyecto = TipoProyecto.objects.all()
-    tipos_apoyo = TipoApoyo.objects.all()
+    
+    try:
+        apoyo = ApoyoSeguridadAlimentaria.objects.get(reporte=reporte)
+    except ApoyoSeguridadAlimentaria.DoesNotExist:
+        apoyo = None
 
     if request.method == 'POST':
-        formset = ApoyoSeguridadAlimentariaFormSet(request.POST)
-        if formset.is_valid():
-            for form in formset:
-                form.save()
-            return redirect('accounts:listar_reportes')  # Reemplaza con la URL adecuada
+        form = ApoyoSeguridadAlimentariaForm(request.POST, instance=apoyo)
+        formset = ApoyoDetallesFormSet(request.POST, queryset=ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo))
+        
+        if form.is_valid() and formset.is_valid():
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+            form.save_m2m()
+
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.apoyoSeguridadAlimentaria = apoyo
+                instance.save()
+
+            reporte.avance = 11  # Asumiendo que este es el paso correcto
+            reporte.save()
+            return redirect('reporteAportes:crear_apoyo_ordenes_judiciales', reporte_id=reporte_id)
+        else:
+            print(form.errors, formset.errors)
     else:
-        initial_data = [{'tipo_proyecto': tipo.id} for tipo in tipos_proyecto]
-        formset = ApoyoSeguridadAlimentariaFormSet(initial=initial_data)
+        form = ApoyoSeguridadAlimentariaForm(instance=apoyo)
+        formset = ApoyoDetallesFormSet(queryset=ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo),
+                                       initial=[{'tipo_proyecto': tipo.id} for tipo in tipos_proyecto])
 
     context = {
+        'form': form,
         'formset': formset,
         'tipos_proyecto': tipos_proyecto,
-        'tipos_apoyo': tipos_apoyo,
     }
+
     return render(request, 'reporteAportes/crear_apoyo_seguridad_alimentaria.html', context)
 
 def crear_apoyo_ordenes_judiciales(request,reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
     
     if request.method == 'POST':
         form = ApoyoOrdenesJudicialesForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('accounts:listar_reportes')  # Reemplaza con la URL correcta
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+            reporte.avance = 12
+            reporte.save()
+            return redirect('reporteAportes:crear_apoyo_archivo_historico', reporte_id = reporte_id)  # Reemplaza con la URL correcta
     else:
         form = ApoyoOrdenesJudicialesForm()
 
@@ -246,13 +295,24 @@ def crear_apoyo_ordenes_judiciales(request,reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_ordenes_judiciales.html', context)
 
-def crear_apoyo_archivo_historico(request,reporte_id):
-    
+def crear_apoyo_archivo_historico(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+
     if request.method == 'POST':
         form = ApoyoArchivoHistoricoForm(request.POST)
         if form.is_valid():
-            form.save_m2m()  # Guarda las relaciones ManyToMany
-            return redirect('accounts:listar_reportes')  # Reemplaza con la URL correcta
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()  # Save the instance first to create the database record
+            
+            # Save the many-to-many relationships
+            form.save_m2m()  # This will save the 'acciones' field
+            
+            reporte.avance = 13
+            reporte.save()
+            return redirect('reporteAportes:crear_otros_apoyos', reporte_id=reporte_id)
+        else:
+            print(form.errors)
     else:
         form = ApoyoArchivoHistoricoForm()
 
@@ -263,12 +323,17 @@ def crear_apoyo_archivo_historico(request,reporte_id):
 
 def crear_otros_apoyos(request,reporte_id):
     
-    
+    reporte = Reporte.objects.get(id=reporte_id)
+
     if request.method == 'POST':
         form = OtrosApoyosForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('accounts:listar_reportes') # Reemplaza con la URL adecuada
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+            reporte.avance = 14
+            reporte.save()
+            return redirect('reporteAportes:crear_estimacion_economica', reporte_id=reporte_id) # Reemplaza con la URL adecuada
     else:
         form = OtrosApoyosForm()
         
@@ -279,12 +344,22 @@ def crear_otros_apoyos(request,reporte_id):
     return render(request, 'reporteAportes/crear_otros_apoyos.html', context)
 
 def crear_estimacion_economica(request,reporte_id):
-    
+
+    reporte = Reporte.objects.get(id=reporte_id)
+
     if request.method == 'POST':
         form = EstimacionEconomicaForm(request.POST)
         if form.is_valid():
-            form.save()
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+            reporte.avance = 15
+            reporte.save()
+
             return redirect('accounts:listar_reportes')  # Reemplaza con la URL correcta
+        else:
+            print(form.errors)
+            print(form.non_field_errors())
     else:
         form = EstimacionEconomicaForm()
 
@@ -293,3 +368,461 @@ def crear_estimacion_economica(request,reporte_id):
         
     }
     return render(request, 'reporteAportes/crear_estimacion_economica.html', context)
+
+def crear_reporte_pdf(request, reporte_id):
+    # generar encabezado 
+    # Logo (You'll need to replace 'path_to_your_logo.png' with the actual path)
+    logo = Image('static/img/image.png', width=0.6*inch, height=1.2*inch) # Ajusta altura
+
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    style_normal = styles['Normal']
+    style_title = ParagraphStyle('CustomTitle', textColor=colors.black, parent=styles['Normal'], alignment=1, spaceAfter=6, fontSize=8)
+    
+    
+    # Header data
+    header_data = [
+        [logo, Paragraph('UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS<br/>DESPOJADAS', style_title), Paragraph('PÁGINA: 1 DE 1', style_title)],
+        ['', Paragraph('PROCESO: GESTIÓN DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('CÓDIGO: CP-FO-04', style_title)],
+        ['', Paragraph('REPORTE DE ACERCAMIENTOS, ACCIONES Y APORTES DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('VERSIÓN: 3', style_title)],
+    ]
+    
+    # Create the header table
+    header_table = Table(header_data, colWidths=[0.7*inch, 5*inch, 1.3*inch]) # Ajusta rowHeights
+    header_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (1,0), (1,-1), 'CENTER'),
+        ('ALIGN', (2,0), (2,-1), 'RIGHT'),
+        ('SPAN', (0,0), (0,2)),  # Combina las celdas de la primera columna
+    ]))
+    
+    elements.append(header_table)
+
+
+    # Obtener el reporte
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+
+    # Verificar si el estado del reporte es FINALIZADO
+    """ if reporte.avance != 3:
+        # Devolver un mensaje de error o redirigir al usuario
+        return HttpResponseForbidden("No se puede generar el PDF hasta que el reporte esté finalizado.") """
+    
+    usuario = reporte.datosquienreporta
+    reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
+    reporte_hasta = reporte.hasta.strftime('%Y-%m-%d')
+    reporte_desde = reporte.desde.strftime('%Y-%m-%d')
+
+    # Extraer las ubicaciones del reporte
+    ubicaciones = reporte.apoyoterritorios.ubicaciones.through.objects.filter(apoyo_territorio=reporte.apoyoterritorios)
+    
+    # Crear la estructura de la tabla
+    tabla_dato_ubicaciones = [['Departamento', 'Municipio', 'Vereda/Territorio/Cabildo']]
+    
+    # Iterar sobre las ubicaciones y agregarlas a la lista de filas
+    for ubicacion in ubicaciones:
+        departamento = ubicacion.departamento.nombre
+        municipio = ubicacion.municipio.nombre
+        vereda = ubicacion.vereda or ''  # Si no hay vereda, mostrar una cadena vacía
+        tabla_dato_ubicaciones.append([departamento, municipio, vereda])
+    
+    # Crear la tabla usando la clase Table de ReportLab
+    tabla_ubicaciones = Table(tabla_dato_ubicaciones)
+
+    # Aplicar estilo a la tabla
+    tabla_ubicaciones.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Encabezado en gris
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Texto del encabezado en blanco
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Alinear el texto al centro
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente del encabezado en negrita
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Espaciado del encabezado
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Fondo de las filas
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Bordes de la tabla
+    ]))
+
+
+    # Obtener detalles de contratación relacionados con el reporte
+    contratacion = reporte.apoyocontratacion
+    detalles = ContratacionDetalle.objects.filter(apoyo_contratacion=contratacion)
+
+    tabla_datos_contratacion = [['Tipo de Personal', 'Cantidad', 'Tiempo de Servicio', 'Area Profesional']]
+    for detalle in detalles:
+        tipo_personal = detalle.tipo_personal.nombre
+        cantidad = detalle.cantidad_personas
+        tiempo_servicio = detalle.tiempo_servicio
+        area_profesional = detalle.area_profesional
+        tabla_datos_contratacion.append([tipo_personal, cantidad, tiempo_servicio, area_profesional])
+    
+    tabla_contratacion = Table(tabla_datos_contratacion)
+      # Aplicar estilo a la tabla
+    tabla_contratacion.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Encabezado en gris
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Texto del encabezado en blanco
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Alinear el texto al centro
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente del encabezado en negrita
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Espaciado del encabezado
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Fondo de las filas
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Bordes de la tabla
+    ]))
+
+
+       # Obtener los apoyos de herramientas relacionados con el reporte
+    apoyos_herramientas = ApoyoHerramientas.objects.filter(reporte=reporte)
+    
+    # Datos de la tabla
+    tabla_datos_herramientas = [
+        ['Tipo de herramienta / equipo', 'Cantidad recibida', 'Descripción', 'Observaciones / detalle']
+    ]
+    
+    # Definir estilos de párrafo para el ajuste de texto
+    styles = getSampleStyleSheet()
+    adjusted_style = ParagraphStyle(
+        name='AdjustedStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        spaceAfter=4
+    )
+    
+    # Añadir filas con datos, ajustando el texto en celdas
+    for apoyo in apoyos_herramientas:
+        tipo_herramienta = Paragraph(apoyo.tipo_herramienta.nombre, adjusted_style)
+        cantidad = Paragraph(str(apoyo.cantidad_recibida), adjusted_style)
+        descripcion = Paragraph(apoyo.descripcion, adjusted_style)
+        observaciones = Paragraph(apoyo.observaciones, adjusted_style)
+        tabla_datos_herramientas.append([tipo_herramienta, cantidad, descripcion, observaciones])
+    
+    # Crear la tabla con tamaños de columna reducidos
+    colWidths = [1.6 * inch, 1 * inch, 1.3* inch, 1.3 * inch]  # Ajustar anchos de columna
+    
+    # Crear la tabla
+    tabla_herramientas = Table(tabla_datos_herramientas, colWidths=colWidths)
+    
+    # Aplicar estilo a la tabla
+    tabla_herramientas.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Encabezado en gris
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Texto del encabezado en blanco
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Alinear el texto al centro
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente del encabezado en negrita
+        ('FONTSIZE', (0, 0), (-1, -1), 8),  # Reducir el tamaño de la fuente
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),  # Reducir espaciado del encabezado
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Fondo de las filas
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Bordes de la tabla, más finos
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding izquierdo
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding derecho
+    ]))
+
+
+
+    # Obtener el apoyo relacionado con el reporte
+    apoyo_litigio = ApoyoLitigio.objects.get(reporte=reporte)  # Asegúrate de que 'reporte' es la instancia correcta
+    apoyos_litigio_detalle = ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo_litigio)
+
+    # Datos de la tabla
+    tabla_datos_detalle = [
+        ['Tipo de Caso', 'Nombre de los Casos', 'Cantidad de IDs']  # Encabezado de la tabla
+    ]
+    
+    # Definir estilos de párrafo para el ajuste de texto
+    styles = getSampleStyleSheet()
+    adjusted_style = ParagraphStyle(
+        name='AdjustedStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        leading=10,
+        spaceAfter=4
+    )
+    
+    # Añadir filas con datos, ajustando el texto en celdas
+    for detalle in apoyos_litigio_detalle:
+        tipo_caso = Paragraph(detalle.tipo_caso.nombre, adjusted_style)
+        nombre_caso = Paragraph(detalle.nombre_caso, adjusted_style)
+        cantidad_ids = Paragraph(str(detalle.cantidad_ids), adjusted_style)
+        
+        tabla_datos_detalle.append([tipo_caso, nombre_caso, cantidad_ids])
+
+    # Crear la tabla con tamaños de columna reducidos
+    colWidths = [2 * inch, 2 * inch, 1 * inch]  # Ajustar anchos de columna
+    
+    # Crear la tabla
+    tabla_detalle_litigio = Table(tabla_datos_detalle, colWidths=colWidths)
+    
+    # Aplicar estilo a la tabla
+    tabla_detalle_litigio.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Encabezado en gris
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Texto del encabezado en blanco
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Alinear el texto al centro
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente del encabezado en negrita
+        ('FONTSIZE', (0, 0), (-1, -1), 8),  # Reducir el tamaño de la fuente
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),  # Reducir espaciado del encabezado
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Fondo de las filas
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Bordes de la tabla, más finos
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding izquierdo
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding derecho
+    ]))
+
+
+    # Obtener el apoyo de seguridad alimentaria relacionado con el reporte
+    apoyo_seguridad = ApoyoSeguridadAlimentaria.objects.get(reporte=reporte)  # Asegúrate de que 'reporte' es la instancia correcta
+    detalles_apoyo = ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo_seguridad)
+
+    # Datos de la tabla
+    tabla_datos_detalle = [
+        ['Tipo de Proyecto', 'Cantidad Proyectos', 'Cantidad Familias Beneficiarias']  # Encabezado de la tabla
+    ]
+    
+
+    
+    # Añadir filas con datos, ajustando el texto en celdas
+    for detalle in detalles_apoyo:
+        tipo_proyecto = Paragraph(detalle.tipo_proyecto.nombre, adjusted_style)  # Asegúrate de que 'nombre' sea el campo correcto
+        cantidad_proyectos = Paragraph(str(detalle.cantidad_proyectos), adjusted_style)
+        cantidad_familias = Paragraph(str(detalle.cantidad_familias), adjusted_style)
+        
+        tabla_datos_detalle.append([tipo_proyecto, cantidad_proyectos, cantidad_familias])
+
+    # Crear la tabla con tamaños de columna reducidos
+    colWidths = [2 * inch, 1.2 * inch, 1.8 * inch]  # Ajustar anchos de columna
+    
+    # Crear la tabla
+    tabla_detalle_seguridad = Table(tabla_datos_detalle, colWidths=colWidths)
+    
+    # Aplicar estilo a la tabla
+    tabla_detalle_seguridad.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Encabezado en gris
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Texto del encabezado en blanco
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Alinear el texto al centro
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Fuente del encabezado en negrita
+        ('FONTSIZE', (0, 0), (-1, -1), 8),  # Reducir el tamaño de la fuente
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),  # Reducir espaciado del encabezado
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Fondo de las filas
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Bordes de la tabla, más finos
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding izquierdo
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),  # Reducir el padding derecho
+    ]))
+
+    
+    
+
+
+    # Definir estilos
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='CenteredHeading', parent=styles['Heading3'], alignment=TA_CENTER, fontSize=10))
+    styles.add(ParagraphStyle(name='LeftAligned', parent=styles['Normal'], alignment=TA_LEFT, fontSize=10))
+    styles.add(ParagraphStyle(name='TableHeader', fontSize=10, alignment=TA_CENTER, fontName='Helvetica-Bold'))
+    styles.add(ParagraphStyle(name='TableContent', fontSize=9, alignment=TA_CENTER, fontName='Helvetica'))
+    styles.add(ParagraphStyle(name='ObjectiveContent', alignment=TA_LEFT, fontSize=9))  # Estilo para el objetivo
+    styles.add(ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT, fontSize=9))  # Estilo alineado a la derecha
+    styles.add(ParagraphStyle(name='Bold', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9))  # Estilo para texto en negrita
+
+
+    # Definir los datos de la tabla
+    data = [
+        [Paragraph("1. OBJETIVO", styles['TableHeader'])], 
+        [Paragraph('''Informar sobre los aportes realizados por el cooperante / proyecto, de cooperación internacional realizados en el 
+                      periodo por el/la Responsable Técnico correspondiente, en función de apoyar los procesos de restitución de tierras y 
+                      territorios.  ''', styles['ObjectiveContent'])],       
+        [Paragraph("2. DATOS DEL INFORME", styles['TableHeader'])],
+        [Paragraph("Fecha de elaboración del reporte:", styles['TableContent']), Paragraph(reporte_fecha, styles['TableContent'])],
+        [Paragraph("Periodo", styles['TableContent']), Paragraph(str(reporte.periodo), styles['TableContent'])],
+        [Paragraph("Desde:", styles['RightAligned']), Paragraph(reporte_desde, styles['TableContent']), Paragraph("Hasta:", styles['RightAligned']), Paragraph(reporte_hasta, styles['TableContent'])],  
+        [Paragraph("3. DATOS DE QUIÉN REPORTA", styles['TableHeader'])],
+        [Paragraph("Nombre y apellidos"), Paragraph(usuario.nombre_completo)],
+        [Paragraph("Rol"), Paragraph(usuario.rol.nombre)],
+        [Paragraph("Dependencia"), Paragraph(usuario.dependencia.nombre)],
+        [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico)],
+        [Paragraph("4. DATOS DEL COOPERANTE / PROGRAMA, PROYECTO O PLAN ", styles['TableHeader'])],
+        [Paragraph("Nombre del Cooperante:"), Paragraph('NOMBRE DE PRUEBA')],
+        [Paragraph("Identificación:"), Paragraph('IDENTIFICACIÓN DE PRUEBA')],
+        [Paragraph("Nombre del Implementador u Operador:"), Paragraph('NOMBRE DE PRUEBA')],
+        [Paragraph("Programa, Proyecto o Plan:"), Paragraph('NOMBRE DE PRUEBA')],
+        [Paragraph("Línea de Acción o Componente:"), Paragraph('NOMBRE DE PRUEBA')],
+        [Paragraph("Rol de Quien Reporta:"), Paragraph('ROL DE PRUEBA')],
+        [Paragraph("Apoyo de este proyecto / cooperante para asistir o realizar eventos, jornadas y otros espacios de información, sensibilización y/o capacitación ", styles['TableHeader'])],
+        [Paragraph("Cantidad de eventos apoyados por este proyecto / cooperante en el periodo reportado:"), Paragraph(str(reporte.apoyoeventos.cantidad_eventos))],
+        [Paragraph("Tipo de eventos apoyados:"), Paragraph(', '.join([str(evento) for evento in reporte.apoyoeventos.eventos.all()]))],
+        [Paragraph("Objetivo principal de los eventos apoyados: "), Paragraph(reporte.apoyoeventos.objetivo_principal)],
+        [Paragraph("Principal público objetivo de los eventos:"), Paragraph(', '.join([str(evento) for evento in reporte.apoyoeventos.publico_objetivo.all()]))],
+        [Paragraph("Cantidad total de participantes en los eventos en este periodo: "), Paragraph(str(reporte.apoyoeventos.cantidad_participantes))], 
+        [Paragraph("Apoyo de este proyecto / cooperante para la realización de viajes", styles['TableHeader'])],
+        [Paragraph("Cantidad de viajes locales / regionales:"), Paragraph(str(reporte.apoyoviajes.cantidad_locales))],
+        [Paragraph("Cantidad de viajes nacionales:"), Paragraph(str(reporte.apoyoviajes.cantidad_nacionales))],
+        [Paragraph("Cantidad de viajes internacionales: "), Paragraph(str(reporte.apoyoviajes.cantidad_internacionales))],
+        [Paragraph("Cantidad total de viajes apoyados por este proyecto /cooperante en el periodo:  "), Paragraph(str(reporte.apoyoviajes.suma_viajes))],
+        [Paragraph("Objeto de los viajes:"), Paragraph(', '.join([str(evento) for evento in reporte.apoyoviajes.objetivo_viajes.all()]))],
+        [Paragraph("¿Qué resaltaría de este apoyo relacionado con viajes por parte de este proyecto / cooperante? :"), Paragraph(reporte.apoyoviajes.resaltado_apoyo)],
+        [Paragraph("Apoyo de este proyecto / cooperante para acceder a territorios o comunidades en este periodo", styles['TableHeader'])],
+        [Paragraph("Indique para qué territorios (municipios, veredas, resguardos, etc.) tuvo acompañamiento o apoyo de este cooperante para el acceso durante este periodo:"), tabla_ubicaciones],
+        [Paragraph("En qué consistió el apoyo recibido: "), Paragraph(reporte.apoyoterritorios.apoyo_recibido)],
+        [Paragraph("Indique para qué tipo de visitas / actividades tuvo el acompañamiento o apoyo en cuanto al acceso:"), Paragraph(reporte.apoyoterritorios.tipo_visitas)],
+        [Paragraph("¿Para cuántas visitas obtuvo apoyo de este cooperante para el acceso a territorios en este periodo? "), Paragraph(str(reporte.apoyoterritorios.cantidad_visitas))],
+        [Paragraph("¿Qué resaltaría de este apoyo relacionado con acceso a los territorios por parte de este cooperante? "), Paragraph(reporte.apoyoterritorios.resaltar_apoyo)],
+        [Paragraph("Apoyo de este proyecto / cooperante a través de contratación de personal ", styles['TableHeader'])],
+        [Paragraph("Indique la cantidad de personas y el tiempo de servicio, para las cuales obtuvo apoyo de este proyecto / cooperante:"), tabla_contratacion],
+        [Paragraph("¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante? "), Paragraph(reporte.apoyocontratacion.objetivo_principal)],
+        [Paragraph("¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?"), Paragraph(reporte.apoyocontratacion.resaltar_apoyo)],
+        [Paragraph("Apoyo de este proyecto / cooperante para la producción de materiales en este periodo", styles['TableHeader'])],
+        [Paragraph("Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo: "), Paragraph('TABLA DE PRUEBA')],
+        [Paragraph("¿Qué resaltaría de este apoyo a través de la producción de materiales?  "), Paragraph('TEXTO DE PRUEBA')],
+        [Paragraph("Apoyo recibido de este proyecto / cooperante a través de herramientas y/o equipos tecnológicos en este periodo  ", styles['TableHeader'])],
+        [Paragraph("Indique qué herramienta y/o equipo tecnológico recibió su dependencia de parte de este proyecto / cooperante en este periodo: "), tabla_herramientas],
+        [Paragraph("Apoyo de este proyecto / cooperante para el litigio de casos ", styles['TableHeader'])],
+        [Paragraph("Indique la información sobre el tipo, nombre de casos y cantidad de IDs, del apoyo que haya recibido para el litigio de casos en el periodo: "), tabla_detalle_litigio],
+        [Paragraph("¿Qué resaltaría de este apoyo relacionado con el litigio de casos por parte de este cooperante o, alguna observación al respecto de este tipo de apoyo recibido? "), Paragraph(apoyo_litigio.resaltar_apoyo)],
+        [Paragraph("Apoyo de este proyecto / cooperante para proyectos de seguridad alimentaria y proyectos productivos ", styles['TableHeader'])],
+        [Paragraph("Indique en este periodo, para cuántos proyectos ha recibido apoyo por parte de este proyecto / cooperante:  "), tabla_detalle_seguridad],
+        [Paragraph("Indique el tipo de apoyo recibido para los proyectos de seguridad alimentaria o productivos en este periodo:"), Paragraph(', '.join([str(evento) for evento in reporte.apoyoseguridadalimentaria.tipo_apoyo.all()]))],
+        [Paragraph("¿Qué resaltaría de este apoyo relacionado con seguridad alimentaria o proyectos productivos por parte de este proyecto / cooperante? "), Paragraph(reporte.apoyoseguridadalimentaria.resaltar_apoyo)],
+        [Paragraph("Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales  (diferente a seguridad alimentaria y proyectos productivos) ", styles['TableHeader'])],
+        [Paragraph("Indique el tipo de apoyo que ha recibido de este proyecto / cooperante para el cumplimiento de órdenes judiciales  "), Paragraph(reporte.apoyoordenesjudiciales.tipo_apoyo)],
+        [Paragraph("¿Para qué tipo de órdenes judiciales recibió el apoyo? "), Paragraph(reporte.apoyoordenesjudiciales.tipo_ordenes)],
+        [Paragraph("Indique, si es posible, para cuántas sentencias ha contribuido el apoyo recibido de este proyecto / cooperante: "), Paragraph(str(reporte.apoyoordenesjudiciales.cantidad_sentencias))],
+        [Paragraph("Indique, si es posible, para cuántas órdenes ha contribuido el apoyo recibido de este proyecto / cooperante: "), Paragraph(str(reporte.apoyoordenesjudiciales.cantidad_ordenes))],
+        [Paragraph("Apoyo de este proyecto / cooperante para la gestión del archivo histórico de restitución de tierras", styles['TableHeader'])],
+        [Paragraph("Indique el tipo de acciones para las cuales ha recibido apoyo de este proyecto / cooperante en función del fortalecimiento del sistema documental: "), Paragraph(', '.join([str(evento) for evento in reporte.apoyoarchivohistorico.acciones.all()]))],
+        [Paragraph("¿Qué resaltaría o qué comentarios tiene sobre el apoyo recibido para la gestión documental?  "), Paragraph(reporte.apoyoarchivohistorico.comentarios)],
+        [Paragraph("Otro tipo de apoyos de este proyecto / cooperante en el período ", styles['TableHeader'])],
+        [Paragraph("Realice una breve descripción de algún otro tipo de apoyo recibido por este proyecto / cooperante, si no pudo registrarlo en las anteriores preguntas: "), Paragraph(reporte.otrosapoyos.descripcion)],
+        [Paragraph("Estimación económica del aporte de este proyecto / cooperante durante el período", styles['TableHeader'])],
+        [Paragraph("Si tiene un valor económico del presupuesto destinado desde el proyecto / cooperante para el aporte a su dependencia durante este período, por favor indíquela:  "), Paragraph('Valor económico:'+str(reporte.estimacioneconomica.valor_economico)+'\n'+'Moneda:'+reporte.estimacioneconomica.moneda.nombre)],
+        [Paragraph("Indique por favor cómo obtuvo este valor reportado: (Ej: presupuesto aprobado por cooperante, presupuesto ejecutado, costo de personal o materiales, estimativo según costos de lo entregado, cotizaciones, etc.) "), Paragraph(reporte.estimacioneconomica.obtencion_valor)],
+        [Paragraph("")]  
+        ]
+
+
+
+
+    
+     # Crear buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=30, bottomMargin=30, leftMargin=40, rightMargin=40)
+    
+    # Definir estilo de la tabla
+
+    table_style = TableStyle([
+        ('SPAN', (0, 0), (-1, 0)), 
+        ('SPAN', (0, 1), (-1, 1)),  
+        ('SPAN', (0, 2), (-1, 2)),
+        ('SPAN', (1, 3), (-1, 3)),  # Combinar solo las celdas de contenido en la fila "Fecha"
+        ('SPAN', (1, 4), (-1, 4)),
+        ('SPAN', (0, 6), (-1, 6)),
+        ('SPAN', (1, 7), (-1, 7)),
+        ('SPAN', (1, 8), (-1, 8)),
+        ('SPAN', (1, 9), (-1, 9)),
+        ('SPAN', (1, 10), (-1, 10)),
+        ('SPAN', (0, 11), (-1, 11)),
+        ('SPAN', (1, 12), (-1, 12)),
+        ('SPAN', (1, 13), (-1, 13)),
+        ('SPAN', (1, 14), (-1, 14)),
+        ('SPAN', (1, 15), (-1, 15)),
+        ('SPAN', (1, 16), (-1, 16)),
+        ('SPAN', (1, 17), (-1, 17)),
+        ('SPAN', (0, 18), (-1, 18)),
+        ('SPAN', (1, 19), (-1, 19)),
+        ('SPAN', (1, 20), (-1, 20)),
+        ('SPAN', (1, 21), (-1, 21)),
+        ('SPAN', (1, 22), (-1, 22)),
+        ('SPAN', (1, 23), (-1, 23)),
+        ('SPAN', (0, 24), (-1, 24)),
+        ('SPAN', (1, 25), (-1, 25)),
+        ('SPAN', (1, 26), (-1, 26)),
+        ('SPAN', (1, 27), (-1, 27)),
+        ('SPAN', (1, 28), (-1, 28)),
+        ('SPAN', (1, 29), (-1, 29)),
+        ('SPAN', (1, 30), (-1, 30)),
+        ('SPAN', (0, 31), (-1, 31)),
+        ('SPAN', (1, 32), (-1, 32)),
+        ('SPAN', (1, 33), (-1, 33)),
+        ('SPAN', (1, 34), (-1, 34)),
+        ('SPAN', (1, 35), (-1, 35)),
+        ('SPAN', (1, 36), (-1, 36)),
+        ('SPAN', (0, 37), (-1, 37)),
+        ('SPAN', (1, 38), (-1, 38)),
+        ('SPAN', (1, 39), (-1, 39)),
+        ('SPAN', (1, 40), (-1, 40)),
+        ('SPAN', (0, 41), (-1, 41)),
+        ('SPAN', (1, 42), (-1, 42)),
+        ('SPAN', (1, 43), (-1, 43)),
+        ('SPAN', (0, 44), (-1, 44)),
+        ('SPAN', (1, 45), (-1, 45)),
+        ('SPAN', (0, 46), (-1, 46)),
+        ('SPAN', (1, 47), (-1, 47)),
+        ('SPAN', (1, 48), (-1, 48)),
+        ('SPAN', (0, 49), (-1, 49)),
+        ('SPAN', (1, 50), (-1, 50)),
+        ('SPAN', (1, 51), (-1, 51)),
+        ('SPAN', (1, 52), (-1, 52)),
+        ('SPAN', (0, 53), (-1, 53)),
+        ('SPAN', (1, 54), (-1, 54)),
+        ('SPAN', (1, 55), (-1, 55)),
+        ('SPAN', (1, 56), (-1, 56)),
+        ('SPAN', (1, 57), (-1, 57)),
+        ('SPAN', (0, 58), (-1, 58)),
+        ('SPAN', (1, 59), (-1, 59)),
+        ('SPAN', (1, 60), (-1, 60)),
+        ('SPAN', (0, 61), (-1, 61)),
+        ('SPAN', (1, 62), (-1, 62)),
+        ('SPAN', (0, 63), (-1, 63)),
+        ('SPAN', (1, 64), (-1, 64)),
+        ('SPAN', (1, 65), (-1, 65)),
+        ('SPAN', (0, 66), (-1, 66)),
+  
+
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey), 
+        ('BACKGROUND', (0, 2), (-1, 2), colors.lightgrey),
+        ('BACKGROUND', (0, 6), (-1, 6), colors.lightgrey),
+        ('BACKGROUND', (0, 11), (-1, 11), colors.lightgrey),
+        ('BACKGROUND', (0, 18), (-1, 18), colors.lightgrey),
+        ('BACKGROUND', (0, 24), (-1, 24), colors.lightgrey),
+        ('BACKGROUND', (0, 31), (-1, 31), colors.lightgrey),
+        ('BACKGROUND', (0, 37), (-1, 37), colors.lightgrey),
+        ('BACKGROUND', (0, 41), (-1, 41), colors.lightgrey),
+        ('BACKGROUND', (0, 44), (-1, 44), colors.lightgrey),
+        ('BACKGROUND', (0, 46), (-1, 46), colors.lightgrey),
+        ('BACKGROUND', (0, 49), (-1, 49), colors.lightgrey),
+        ('BACKGROUND', (0, 53), (-1, 53), colors.lightgrey),
+        ('BACKGROUND', (0, 58), (-1, 58), colors.lightgrey),
+        ('BACKGROUND', (0, 61), (-1, 61), colors.lightgrey),
+        ('BACKGROUND', (0, 63), (-1, 63), colors.lightgrey),
+        ('BACKGROUND', (0, 66), (-1, 66), colors.lightgrey),
+  
+   
+        
+
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),  
+        ('ALIGN', (0, 2), (-1, 2), 'CENTER'),  
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  
+        ('FONTNAME', (0, 2), (-1, 2), 'Helvetica-Bold'),  
+        ('FONTNAME', (0, 3), (-1, -1), 'Helvetica'), 
+        ('FONTSIZE', (0, 0), (-1, -1), 9),  
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')])
+
+    table = Table(data, colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25, doc.width * 0.25])
+    table.setStyle(table_style)
+
+
+    elements = [header_table,
+                Spacer(1, 12),  # Espacio después del encabezado	
+                Paragraph("Clasificación de la Información: Pública ☒ Reservada □ Clasificada □ Fecha de aprobación: 12/03/2024", styles['Normal']),
+                Spacer(1, 12),  # Espacio después del encabezado 
+                table]
+    
+    doc.build(elements)
+
+    # Obtener el PDF
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    # Crear la respuesta HTTP con el PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.id}.pdf"'
+    response.write(pdf)
+
+    return response
+
+
+        

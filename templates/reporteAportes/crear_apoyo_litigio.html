@@ -18,6 +18,7 @@
             </tr>
           </thead>
           <tbody>
+            {{ formset.management_form }}
             {% for form in formset %}
               <tr>
                 <td>
@@ -27,7 +28,6 @@
                       {{ tipo.nombre }}
                     {% endif %}
                   {% endfor %}
-                  
                 </td>
                 <td>
                   {{form.nombre_caso}}
@@ -38,15 +38,12 @@
             {% endfor %}
           </tbody>
         </table>
-                    
-                 
       </div>
-      
 
       <!-- Campo resaltar_apoyo -->
       <div class="mb-3">
         <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con el litigio de casos por parte de este cooperante o, alguna observación al respecto de este tipo de apoyo recibido?</label>
-        {{ formset.0.resaltar_apoyo }} 
+        {{ form.resaltar_apoyo }} 
         <div class="invalid-feedback">Máximo 100 palabras</div>
       </div>
 
@@ -97,54 +94,44 @@
     });
   });
 
+  // contar palabras con id_resaltar_apoyo
+  document.querySelector('textarea[id="id_resaltar_apoyo"]').addEventListener('input', function() {
+    countWords(this); // Contar palabras en cada entrada
+    checkInvalidFields();
+  });
+
   document.querySelectorAll('textarea[id$="-nombre_caso"]').forEach(textarea => {
     textarea.addEventListener('input', function() {
       this.style.height = 'auto'; // Resetear altura para ajustar
       this.style.height = this.scrollHeight + 'px'; // Ajustar a contenido
-    });
-    
-    // Contador de palabras
-    const contador = document.createElement('span');
-    contador.classList.add('text-muted');
-    contador.style.fontSize = '12px';
-    contador.style.float = 'right';
-    contador.style.marginTop = '5px';
-    contador.textContent = '0/5'; // Inicializar contador
-    textarea.parentElement.appendChild(contador);
-
-    textarea.addEventListener('input', function() {
-      const palabras = this.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
-      contador.textContent = `${palabras.length}/5`; // Actualizar contador
-      this.classList.toggle('is-invalid', palabras.length > 5); // Añadir clase de invalidación si supera el límite
+      countWords(this); // Contar palabras en cada entrada
       checkInvalidFields();
     });
   });
 
-  // Contador para el campo resaltar_apoyo
-  const resaltar_apoyo = document.querySelector('textarea[id$="-resaltar_apoyo"]');
-  const contadorResaltar = document.createElement('span');
-  contadorResaltar.classList.add('text-muted');
-  contadorResaltar.style.fontSize = '12px';
-  contadorResaltar.style.float = 'right';
-  contadorResaltar.style.marginTop = '5px';
-  resaltar_apoyo.parentElement.appendChild(contadorResaltar);
-  contadorResaltar.textContent = '0/100'; // Ajustar a 100 palabras máximo
+  // Contar palabras y actualizar el contador
+  function countWords(textarea) {
+    const palabras = textarea.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
+    const maxWords = textarea.id.includes('resaltar_apoyo') ? 100 : 5; // Determinar límite de palabras
+    const contador = textarea.parentElement.querySelector('.text-muted') || document.createElement('span');
+    
+    if (!contador.classList.contains('text-muted')) {
+      contador.classList.add('text-muted');
+      contador.style.fontSize = '12px';
+      contador.style.float = 'right';
+      contador.style.marginTop = '5px';
+      textarea.parentElement.appendChild(contador);
+    }
 
-  resaltar_apoyo.addEventListener('input', function() {
-    this.style.height = 'auto'; // Resetear altura para ajustar
-    this.style.height = this.scrollHeight + 'px'; // Ajustar a contenido
-
-    const palabras = this.value.trim().split(/\s+/).filter(Boolean); // Contar palabras, ignorar espacios vacíos
-    contadorResaltar.textContent = `${palabras.length}/100`; // Actualizar contador
-    this.classList.toggle('is-invalid', palabras.length > 100); // Añadir clase de invalidación si supera el límite
-    checkInvalidFields();
-  });
+    contador.textContent = `${palabras.length}/${maxWords}`; // Actualizar contador
+    textarea.classList.toggle('is-invalid', palabras.length > maxWords); // Añadir clase de invalidación si supera el límite
+  }
 
   // Validar si hay campos inválidos y desactivar botón de envío si es necesario
   function checkInvalidFields() {
     const invalidFields = document.querySelectorAll('.is-invalid');
     const buttonSubmit = document.querySelector('button[type="submit"]');
-    buttonSubmit.disabled = invalidFields.length > 0;
+    buttonSubmit.disabled = invalidFields.length > 0; // Desactivar botón si hay campos inválidos
   }
 
   // Llamar a la función para asegurar que el botón esté correctamente deshabilitado al cargar la página

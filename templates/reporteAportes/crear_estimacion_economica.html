@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h1 class="text-center mb-4">Estimación económica del aporte de este proyecto / cooperante durante el periodo</h1>
+  <div class="form-container">
+  <h5 class="text-center mb-4 form-title">Estimación económica del aporte de este proyecto / cooperante durante el periodo</h5>
 
-  <form method="POST" class="needs-validation" novalidate>
+  <form method="POST">
     {% csrf_token %}
 
     <div class="mb-3">
@@ -17,14 +18,122 @@
     <div class="mb-3">
       <label for="id_obtencion_valor" class="form-label">Indique por favor como obtuvo este valor reportado: (Ej: presupuesto aprobado por cooperante, presupuesto ejecutado, costo de personal o materiales, etc.), estimativo según costos de lo entregado, cotizaciones, etc.</label>
       {{ form.obtencion_valor }}
+      <div class="invalid-feedback">El número de palabras es de máximo 200 palabras</div>
     </div>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
       <button type="submit" class="btn btn-primary">Guardar</button>
-      <button type="button" class="btn btn-secondary">Continuar</button>
-      <button type="button" class="btn btn-warning">Modificar</button>
-      <button type="button" class="btn btn-danger">Salir</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
     </div>
   </form>
 </div>
+</div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+}
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+</style>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+
+// agregar contador de palabras a id_obtencion_valor
+const obtencionValorInput = document.getElementById('id_obtencion_valor');
+const obtencionValorCounter = document.createElement('span');
+obtencionValorCounter.textContent = '0/200';
+obtencionValorCounter.style.fontSize = '0.8rem';
+obtencionValorCounter.style.color = '#6c757d';
+obtencionValorInput.parentElement.appendChild(obtencionValorCounter);
+
+// Actualizar contador de palabras
+obtencionValorInput.addEventListener('input', function() {
+    const wordCount = this.value.trim().split(/\s+/).filter(Boolean).length;
+    obtencionValorCounter.textContent = `${wordCount}/200`;
+    if (wordCount > 200) {
+        this.classList.add('is-invalid');
+    } else {
+        this.classList.remove('is-invalid');
+    }
+    validateForm();
+});
+
+
+// Validar el formulario y eliminar comas del valor económico antes de enviar
+const form = document.querySelector('form');
+
+form.addEventListener('submit', function(event) {
+  // Eliminar las comas del valor económico
+  valorEconomicoInput.value = valorEconomicoInput.value.replace(/,/g, '');
+
+  // Resto de la validación y envío del formulario
+  if (!form.checkValidity()) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  form.classList.add('was-validated');
+});
+
+const valorEconomicoInput = document.getElementById('id_valor_economico');
+
+valorEconomicoInput.addEventListener('keypress', function(event) {
+    // Permitir solo números, comas y puntos
+    const charCode = event.which ? event.which : event.keyCode;
+    if (charCode !== 46 && charCode !== 44 && (charCode < 48 || charCode > 57)) {
+        event.preventDefault();  // Bloquear la entrada de letras y otros caracteres no permitidos
+    }
+});
+
+valorEconomicoInput.addEventListener('input', function() {
+    // Obtener la posición del cursor antes del formateo
+    const cursorPos = this.selectionStart;
+    
+    // Obtener el valor sin las comas y formatearlo
+    let value = this.value.replace(/,/g, '');
+    
+    // Asegurarse de que solo hay números y un punto decimal
+    if (isNaN(value) || value.split('.').length > 2) {
+        return;
+    }
+    
+    // Formatear el número con separadores de miles
+    const parts = value.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    this.value = parts.join('.');
+    
+    // Ajustar la posición del cursor tras el formateo
+    const newCursorPos = cursorPos + (this.value.length - value.length);
+    this.setSelectionRange(newCursorPos, newCursorPos);
+});
+
+// Validar el formulario si hay alguna clase is-invalid
+function validateForm() {
+    const invalidInputs = document.querySelectorAll('.is-invalid');
+    const submitButton = document.querySelector('button[type="submit"]');
+    submitButton.disabled = invalidInputs.length > 0;
+}
+
+</script>
 {% endblock %}

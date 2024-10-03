@@ -4,6 +4,11 @@
 {% block content %}
 <div class="container mt-4">
   <div class="form-container">
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+      {{form.errors}}
+    </div>
+    {% endif %}
     <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante a través de contratación de personal</h5>
     <form method="POST">
       {% csrf_token %}
@@ -15,8 +20,8 @@
           <thead>
             <tr>
               <th></th>
-              <th>Cantidad de personas</th>
-              <th>Tiempo de servicio en meses</th>
+              <th>Cantidad de personas (0-999)</th>
+              <th>Tiempo de servicio en meses (0-99)</th>
               <th>Área profesional</th>
             </tr>
           </thead>
@@ -35,14 +40,13 @@
               <td>
                 <div class="input-group">
                   {{ detalle_form.cantidad_personas }}
-                  <span class="input-group-text">/999</span>
+                  
                   <div class="invalid-feedback">El campo debe contener un máximo de 999.</div>
                 </div>
               </td>
               <td>
                 <div class="input-group">
                   {{ detalle_form.tiempo_servicio }}
-                  <span class="input-group-text">/99</span>
                   <div class="invalid-feedback">El campo debe contener un máximo de 99.</div>
                 </div>
               </td>
@@ -52,11 +56,16 @@
             </tr>
             {% endfor %}
             <tr>
-              <td colspan="4">
-                Otro, ¿Cuáles? <small class="form-text text-muted">(Texto máximo 5 palabras)</small>
-                {{ form.otro_tipo }}
+              <td class="text-start" colspan="4">
+                  <!-- Align text to the start (left) -->
+                  <div class="d-flex align-items-center">
+                      <span>Otro, ¿Cuáles? <small class="form-text text-muted">(Texto máximo 5 palabras)</small></span>
+                      <div class="ms-2">
+                          {{ form.otro_tipo }}
+                      </div>
+                  </div>
               </td>
-            </tr>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -115,13 +124,6 @@
     margin: 0 auto;
   }
 
-  .invalid-feedback {
-    display: none;
-  }
-
-  .is-invalid + .invalid-feedback {
-    display: block;
-  }
 </style>
 {% endblock %}
 
@@ -206,6 +208,61 @@ resaltarApoyo.addEventListener('input', function () {
 
 // Inicializa el estado del formulario al cargar la página
 checkFormValidity();
+
+// si el valor de id_contrataciondetalle_set-3-cantidad_personas es mayor que 0 y menor que 999 se activa el campo  id_otro_tipo
+
+// Validación de cantidad_personas y área_profesional
+document.querySelectorAll('[id^=id_contrataciondetalle_set-][id$=-cantidad_personas]').forEach((element, index) => {
+  element.addEventListener('input', function () {
+    const rowIndex = element.id.match(/id_contrataciondetalle_set-(\d+)-cantidad_personas/)[1];  // Extrae el número de la fila
+    const areaProfesionalField = document.getElementById(`id_contrataciondetalle_set-${rowIndex}-area_profesional`);  // Accede al campo área_profesional correspondiente
+
+    if (parseInt(element.value) > 999 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+
+    // Si la cantidad de personas es 0, hacer obligatorio el campo de Área profesional
+    if (parseInt(element.value) > 0 && parseInt(element.value) < 999) {
+      areaProfesionalField.required = true;
+     
+    } else {
+      areaProfesionalField.required = false;
+      
+    }
+
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+// Referencias a los elementos del DOM
+const otroTipoField = document.getElementById('id_otro_tipo');
+const cantidadPersonasField = document.getElementById('id_contrataciondetalle_set-3-cantidad_personas');
+
+// Función para habilitar o deshabilitar el campo "Otro, ¿Cuáles?"
+function toggleOtroTipoField() {
+  const value = parseInt(cantidadPersonasField.value);
+
+  if (value > 0 && value < 999) {
+    otroTipoField.disabled = false; // Habilitar el campo "Otro, ¿Cuáles?"
+    otroTipoField.required = true;  // Hacer que el campo sea obligatorio
+  } else {
+    otroTipoField.disabled = true;  // Deshabilitar el campo "Otro, ¿Cuáles?"
+    otroTipoField.value = '';        // Limpiar el valor si se deshabilita
+    otroTipoField.required = false;  // Hacer que el campo no sea obligatorio
+  }
+}
+
+// Escuchar cambios en el campo cantidad_personas
+cantidadPersonasField.addEventListener('input', toggleOtroTipoField);
+
+// Inicializar el estado del campo al cargar la página
+toggleOtroTipoField();
+   
+
+
+
 
 
 </script>

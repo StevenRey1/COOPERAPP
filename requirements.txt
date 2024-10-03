@@ -1,2 +1,3 @@
 django
 reportlab
+ldap3

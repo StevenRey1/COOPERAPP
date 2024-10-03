@@ -7,14 +7,17 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseForbidden
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.units import inch
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.forms import formset_factory    
+from django.views.generic import FormView, UpdateView
 
 
 
@@ -31,6 +34,7 @@ class ReporteAcercamientosCreateView(LoginRequiredMixin, CreateView):
             # Intentar guardar el formulario
             response = super().form_valid(form)
             return redirect('reporteAcercamientos:crear_datos_quien_reporta', reporte_id=self.object.id)
+        
         except IntegrityError:
             # Mensaje flash de error si ya existe un reporte para ese período
             messages.error(self.request, 'Ya has creado un reporte para este período.')
@@ -39,7 +43,6 @@ class ReporteAcercamientosCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('reporteAcercamientos:crear_datos_quien_reporta', kwargs={'reporte_id': self.object.id})
     
-
 class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
     model = DatosQuienReporta
     form_class = DatosQuienReportaForm
@@ -76,9 +79,6 @@ class DatosQuienReportaCreateView( LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('reporteAcercamientos:crear_acercamiento', kwargs={'reporte_id': self.kwargs['reporte_id']})
     
-from django.forms import formset_factory    
-from django.views.generic import FormView, UpdateView
-
 class AcercamientoCreateView(LoginRequiredMixin, FormView):
     template_name = 'reporteAcercamientos/crear_acercamiento.html'
     form_class = AcercamientoForm
@@ -157,6 +157,40 @@ class ReporteAcercamientoListView(LoginRequiredMixin, View):
      
 @login_required
 def generar_pdf_reporte(request, reporte_id):
+    # generar encabezado 
+    # Logo (You'll need to replace 'path_to_your_logo.png' with the actual path)
+    logo = Image('static/img/image.png', width=0.6*inch, height=1.2*inch) # Ajusta altura
+
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    style_normal = styles['Normal']
+    style_title = ParagraphStyle('CustomTitle', textColor=colors.black, parent=styles['Normal'], alignment=1, spaceAfter=6, fontSize=8)
+    
+    
+    # Header data
+    header_data = [
+        [logo, Paragraph('UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS<br/>DESPOJADAS', style_title), Paragraph('PÁGINA: 1 DE 1', style_title)],
+        ['', Paragraph('PROCESO: GESTIÓN DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('CÓDIGO: CP-FO-04', style_title)],
+        ['', Paragraph('REPORTE DE ACERCAMIENTOS, ACCIONES Y APORTES DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('VERSIÓN: 3', style_title)],
+    ]
+    
+    # Create the header table
+    header_table = Table(header_data, colWidths=[0.7*inch, 5*inch, 1.3*inch]) # Ajusta rowHeights
+    header_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (1,0), (1,-1), 'CENTER'),
+        ('ALIGN', (2,0), (2,-1), 'RIGHT'),
+        ('SPAN', (0,0), (0,2)),  # Combina las celdas de la primera columna
+    ]))
+    
+    elements.append(header_table)
+
+
+
     # Obtener el reporte
     reporte = get_object_or_404(Reporte, id=reporte_id)
     
@@ -197,8 +231,9 @@ def generar_pdf_reporte(request, reporte_id):
     # Definir los datos de la tabla
     data = [
         [Paragraph("1. OBJETIVO", styles['TableHeader'])], 
-        [Paragraph('''Informar sobre los acercamientos y necesidades de cooperación internacional 
-                      realizados e identificados en el periodo por la dependencia de la Unidad Administrativa Especial de Gestión de Restitución de Tierras.''', styles['ObjectiveContent'])],
+        [Paragraph('''Informar sobre los aportes realizados por el cooperante / proyecto, de cooperación internacional realizados en el 
+                      periodo por el/la Responsable Técnico correspondiente, en función de apoyar los procesos de restitución de tierras y 
+                      territorios.  ''', styles['ObjectiveContent'])],
         [Paragraph("2. DATOS DEL INFORME", styles['TableHeader'])],
         [Paragraph("Fecha de elaboración del reporte:", styles['TableContent']), Paragraph(reporte_fecha, styles['TableContent'])],
         [Paragraph("Periodo", styles['TableContent']), Paragraph(str(reporte.periodo), styles['TableContent'])],
@@ -263,12 +298,9 @@ def generar_pdf_reporte(request, reporte_id):
     table.setStyle(table_style)
     # Construir el documento
     elements = [
-        Paragraph("UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS DESPOJADAS", styles['CenteredHeading']),
-        Spacer(1, 12),
-        Paragraph("PROCESO: GESTIÓN DE TI", styles['CenteredHeading']),
-        Spacer(1, 12),
-        Paragraph("REPORTE DE COOPERACIÓN INTERNACIONAL", styles['CenteredHeading']),
-        Spacer(1, 20),
+        header_table,  # Encabezado
+        Paragraph("Clasificación de la Información: Pública ☒ Reservada ☐ Clasificada ☐ Fecha de aprobación: 12/03/2024 ", styles['Normal'] ),
+        Spacer(1, 12),  # Espacio después del encabezado
         table,
         Spacer(1, 25),  # Espacio después de la tabla
         Paragraph("______________________________", styles['LeftAligned']),

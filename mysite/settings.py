@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+
+LDAP_SERVER = os.getenv('LDAP_SERVER')
+LDAP_PORT = os.getenv('LDAP_PORT')
+LDAP_BASE_DN = os.getenv('LDAP_BASE_DN')
+LDAP_USERNAME_PREFIX = os.getenv('LDAP_USERNAME_PREFIX')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

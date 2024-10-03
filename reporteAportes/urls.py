@@ -1,5 +1,4 @@
 from django.urls import path
-from django.conf.urls.static import static
 from . import views    
 
 app_name = 'reporteAportes'
@@ -17,5 +16,6 @@ urlpatterns = [
     path('crear-apoyo-archivo-historico/<int:reporte_id>/', views.crear_apoyo_archivo_historico, name='crear_apoyo_archivo_historico'),
     path('crear-otros-apoyos/<int:reporte_id>/', views.crear_otros_apoyos, name='crear_otros_apoyos'),
     path('crear-estimacion-economica/<int:reporte_id>/', views.crear_estimacion_economica, name='crear_estimacion_economica'),
+    path('reporte-pdf/<int:reporte_id>/', views.crear_reporte_pdf, name='reporte_pdf'),
 
 ]
