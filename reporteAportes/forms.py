@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from .models import ApoyoEventos,ApoyoViajes,ObjetivoViaje, ApoyoTerritorios,ApoyoContratacion,ApoyoMaterial ,\
                     ApoyoHerramientas, ApoyoLitigio, ApoyoSeguridadAlimentaria, ApoyoOrdenesJudiciales, ApoyoArchivoHistorico, \
                     OtrosApoyos,EstimacionEconomica, ApoyoTerritorioUbicacion, ContratacionDetalle, ApoyoSeguridadDetalle, ApoyoLitigioDetalle,\
-                    TipoCaso, TipoProyecto
+                    TipoCaso, TipoProyecto, ApoyoMaterialDetalle,TipoHerramienta
 
 
 
@@ -163,14 +163,8 @@ class ContratacionDetalleForm(forms.ModelForm):
 class ApoyoMaterialForm(forms.ModelForm):
     class Meta:
         model = ApoyoMaterial
-        exclude = ['reporte']
+        fields = ['resaltar_apoyo']
         widgets = {
-            'titulo_material': forms.TextInput(attrs={'class': 'form-control'}),
-            'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'publico_destinatario': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo_material': forms.Select(attrs={'class': 'form-select'}),
-            'cantidad_originales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
-            'cantidad_reproducciones': forms.NumberInput(attrs={'class': 'form-control', 'min':0, 'max':999}),
             'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 100 palabras'}),
         }
 
@@ -178,11 +172,29 @@ class ApoyoMaterialForm(forms.ModelForm):
         cleaned_data = super().clean()
         resaltar_apoyo = cleaned_data.get('resaltar_apoyo')
         validar_max_palabras(resaltar_apoyo, max_palabras=100)
-
         return cleaned_data
-    
 
-ApoyoMaterialFormSet = forms.formset_factory(ApoyoMaterialForm, extra=3)
+class ApoyoMaterialDetalleForm(forms.ModelForm):
+    class Meta:
+        model = ApoyoMaterialDetalle
+        fields = ['titulo_material', 'objetivo_principal', 'publico_destinatario', 'tipo_material', 'cantidad_originales', 'cantidad_reproducciones']
+        widgets = {
+            'titulo_material': forms.TextInput(attrs={'class': 'form-control', 'required': 'required', 'placeholder': 'Texto máximo 5 palabras'}),		
+            'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'required':'required', 'placeholder': 'Texto máximo 20 palabras'}),
+            'publico_destinatario': forms.Select(attrs={'class': 'form-select'}),
+            'tipo_material': forms.Select(attrs={'class': 'form-select'}),
+            'cantidad_originales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
+            'cantidad_reproducciones': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),    
+        }
+
+# Formset para ApoyoMaterialDetalle
+ApoyoMaterialDetalleFormSet = inlineformset_factory(
+    ApoyoMaterial, 
+    ApoyoMaterialDetalle, 
+    form=ApoyoMaterialDetalleForm, 
+    extra=1,  # Número de formularios vacíos adicionales
+    can_delete=True  # Permitir eliminar detalles
+)
 
 
 
@@ -206,7 +218,7 @@ class ApoyoHerramientasForm(forms.ModelForm):
 
         return cleaned_data
 
-ApoyoHerramientasFormSet = forms.formset_factory(ApoyoHerramientasForm, extra=0)
+ApoyoHerramientasFormSet = modelformset_factory(ApoyoHerramientas,form=ApoyoHerramientasForm, extra=TipoHerramienta.objects.all().count(), can_delete=False)
 
 
 
@@ -333,7 +345,7 @@ class OtrosApoyosForm(forms.ModelForm):
         model = OtrosApoyos
         exclude = ['reporte']
         widgets = {
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 150 palabras'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Texto máximo 150 palabras', 'required': 'required'}),
         }
 
     def clean(self):

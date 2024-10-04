@@ -157,11 +157,15 @@ function actualizarMunicipios(departamentoSelect, municipioSelect) {
 }
 
 
-municipioSelect = document.getElementById('id_apoyoterritorioubicacion_set-0-municipio');
-departamentoSelect=document.getElementById('id_apoyoterritorioubicacion_set-0-departamento');
+// selecctionar todos los selects de municipio y departamento para agregar evento change y actualizar municipios
 
-departamentoSelect.addEventListener('change', function() {
-    actualizarMunicipios(this, municipioSelect);
+const allMunicipios = document.querySelectorAll('select[id^="id_apoyoterritorioubicacion_set-"][id$="-municipio"]');
+const allDepartamentos = document.querySelectorAll('select[id^="id_apoyoterritorioubicacion_set-"][id$="-departamento"]');
+allDepartamentos.forEach((departamentoSelect, index) => {
+    const municipioSelect = allMunicipios[index];
+    departamentoSelect.addEventListener('change', function() {
+        actualizarMunicipios(this, municipioSelect);
+    });
 });
 
 const submitButton = document.getElementById('submit-button');

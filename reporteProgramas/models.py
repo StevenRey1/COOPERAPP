@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from reporteAcercamientos.models import Reporte
 
 
+
 class Acuerdo(models.Model):
     nombre = models.CharField(max_length=100)
     identificacion = models.CharField(max_length=100, unique=True)
@@ -15,6 +16,9 @@ class Acuerdo(models.Model):
 
     class Meta:
         db_table = 'acuerdo'
+    
+    def __str__(self):
+        return self.identificacion
 
 
 class Cooperante(models.Model):
@@ -24,6 +28,9 @@ class Cooperante(models.Model):
 
     class Meta:
         db_table = 'cooperante'
+    
+    def __str__(self):
+        return self.nombre
 
 
 class Operador(models.Model):
@@ -32,6 +39,9 @@ class Operador(models.Model):
 
     class Meta:
         db_table = 'operador'
+    
+    def __str__(self):
+        return self.nombre
 
 
 class ProyectoPlan(models.Model):
@@ -46,6 +56,9 @@ class ProyectoPlan(models.Model):
 
     class Meta:
         db_table = 'proyecto_plan'
+    
+    def __str__(self):
+        return self.nombre
 
 class rol_linea_accion(models.Model):
     nombre = models.CharField(max_length=100)
@@ -63,6 +76,9 @@ class LineaAccion(models.Model):
 
     class Meta:
         db_table = 'linea_accion'
+    
+    def __str__(self):
+        return self.nombre
 
 
 class AcuerdoCooperacion(models.Model):
@@ -80,11 +96,11 @@ class AcuerdoCooperacion(models.Model):
 class DatosCooperante(models.Model):
     
     reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE)
-    cooperante = models.CharField(max_length=100)
-    identificacion = models.CharField(max_length=100)
-    operador = models.CharField(max_length=100)
-    proyecto_plan = models.CharField(max_length=100)
-    linea_accion = models.CharField(max_length=100)
+    cooperante = models.ForeignKey(Cooperante, on_delete=models.CASCADE)
+    identificacion = models.ForeignKey(Acuerdo, on_delete=models.CASCADE)
+    operador = models.ForeignKey(Operador, on_delete=models.CASCADE)
+    proyecto_plan = models.ForeignKey(ProyectoPlan, on_delete=models.CASCADE)
+    linea_accion = models.ForeignKey(LineaAccion, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'datos_cooperante'
@@ -155,6 +171,7 @@ class Logro(models.Model):
 
     class Meta:
         db_table = "logro"
+        unique_together = ('resultado', 'logros_avances')
 
     def __str__(self):
         return f"Logro para {self.resultado.nombre}"

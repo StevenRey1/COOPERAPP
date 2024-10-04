@@ -2,76 +2,193 @@
 {% block content %}
 <div class="container mt-4">
   <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h5>
+    <p>Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo:</p>
 
- <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h5>
-  <p>Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo:</p>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Título material</th>
+              <th>Objetivo principal</th>
+              <th>Público destinatario</th>
+              <th>Tipo de material</th>
+              <th>Cantidad originales</th>
+              <th>Cantidad reproducciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="field-container">
+            {{ formset.management_form }}
+            {% for detalle_form in formset %}
+            <tr class="field-group">
+              <td>{{ detalle_form.titulo_material }}</td>
+              <td>{{ detalle_form.objetivo_principal }}</td>
+              <td>{{ detalle_form.publico_destinatario }}</td>
+              <td>{{ detalle_form.tipo_material }}</td>
+              <td>{{ detalle_form.cantidad_originales }}</td>
+              <td>{{ detalle_form.cantidad_reproducciones }}</td>
+              <td>
+                {% if detalle_form.DELETE %}
+                  <div class="form-check">
+                    {{ detalle_form.DELETE }}
+                    <label class="form-check-label" for="{{ detalle_form.DELETE.id_for_label }}">Eliminar</label>
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-secondary" id="add-material">Agregar Material</button>
+      </div>
 
-  <form method="POST" class="needs-validation" novalidate>
-    {% csrf_token %}
-    <div class="table-responsive mb-3">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Título material</th>
-          <th>Objetivo principal</th>
-          <th>Público destinatario</th>
-          <th>Tipo de material</th>
-          <th>Cantidad originales</th>
-          <th>Cantidad reproducciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in formset %}
-        <tr>
-          <td>{{ form.titulo_material }}</td>
-          <td>{{ form.objetivo_principal }}</td>
-          <td>{{ form.publico_destinatario }}</td>
-          <td>{{ form.tipo_material }}</td>
-          <td>{{ form.cantidad_originales }}</td>
-          <td>{{ form.cantidad_reproducciones }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      <div class="mb-3">
+        <label for="id_resaltar_apoyo" class="form-label">Que resaltaría de este apoyo a través de la producción de materiales:</label>
+        {{ form.resaltar_apoyo }}
+        <div class = "invalid-feedback">
+          El campo no puede tener más de 100 palabras
+        </div>
+      </div>
 
-    <div class="mb-3">
-      <label for="id_resaltar_apoyo" class="form-label">Que resaltaría de este apoyo a través de la producción de materiales:</label>
-      {{ formset.0.resaltar_apoyo }} <small class="form-text text-muted">Texto máximo 100 palabras</small>
-    </div>
-
-    <div class="d-grid gap-2 d-md-flex justify-content-center">
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
-    </div>
-  </form>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
   </div>
 </div>
-<style>
-  body {
-      background-color: #e8f5e9;
-  }
-  .form-container {
-      background-color: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  .form-title {
-      background-color: #f0f4c3;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-  }
-  .table th, .table td {
-      text-align: center;
-      vertical-align: middle;
-  }
-  .table input, .table select {
-      width: 100%;
-      max-width: 150px;
-      margin: 0 auto;
-  }
+{% endblock %}
 
-</style>
+{% block extra_js %}
+<script>
+  const addMaterialButton = document.getElementById('add-material');
+
+  addMaterialButton.addEventListener('click', function () {
+    const container = document.getElementById('field-container');
+    const totalFormsInput = document.querySelector('input[name="apoyomaterialdetalle_set-TOTAL_FORMS"]');
+    const totalForms = parseInt(totalFormsInput.value);
+
+    // Clonar la última fila del formset
+    const lastFieldGroup = container.querySelector('.field-group:last-of-type');
+    const newFieldGroup = lastFieldGroup.cloneNode(true);
+
+    // Limpiar los valores de los nuevos campos
+    newFieldGroup.querySelectorAll('input, select').forEach(input => {
+      if (input.type === 'number') {
+        input.value = 0; // Set number inputs to 0
+      } 
+      input.value = ''; // Set text inputs to empty
+    
+    });
+
+    // Agregar botón de eliminar a la última celda de la nueva fila
+    const lastCell = newFieldGroup.querySelector('td:last-child');
+    lastCell.innerHTML = ''; // Limpiar contenido anterior
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'mt-2');
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.addEventListener('click', function () {
+      newFieldGroup.remove();
+      // Decrementar el contador de formularios
+      totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+    });
+    lastCell.appendChild(deleteButton);
+
+    // Agregar el nuevo grupo al contenedor
+    container.appendChild(newFieldGroup);
+
+    // Actualizar los IDs y nombres de los campos en la nueva fila DESPUÉS de agregarla al DOM
+    // Actualizar los IDs y nombres de los campos en la nueva fila DESPUÉS de agregarla al DOM
+newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element => {
+  const oldId = element.id;
+  if (oldId) {
+    const newId = oldId.replace(/-\d+-/g, `-${totalForms}-`);
+    element.id = newId;
+  }
+  if (element.name) {
+    element.name = element.name.replace(/-\d+-/g, `-${totalForms}-`);
+  }
+  if (element.tagName === 'LABEL') {
+    const oldFor = element.getAttribute('for');
+    if (oldFor) {
+      const newFor = oldFor.replace(/-\d+-/g, `-${totalForms}-`);
+      element.setAttribute('for', newFor);
+    }
+  }
+});
+
+    // Incrementar el contador de formularios
+    totalFormsInput.value = totalForms + 1;
+  });
+
+  // contado de palabaras para resaltar_apoyo
+  const resaltarApoyo = document.getElementById('id_resaltar_apoyo');
+  const resaltarApoyoCounter = document.createElement('p');
+  resaltarApoyoCounter.textContent = '0/100 palabras';
+  resaltarApoyoCounter.style.fontSize = '0.8rem';
+  resaltarApoyoCounter.style.color = '#6c757d';
+  resaltarApoyo.insertAdjacentElement('afterend', resaltarApoyoCounter);
+
+  // Contador de palabras
+  resaltarApoyo.addEventListener('input', function () {
+    //crear una variable que cuenta el numero de palabaras que se ingresan
+    const counter = resaltarApoyo.value.split(/\s+/).length;
+    resaltarApoyoCounter.textContent = ` ${counter}/100 palabras`;
+    if (counter > 100) {
+      resaltarApoyoCounter.style.color = 'red';
+      resaltarApoyo.classList.add('is-invalid');
+    } else {
+      resaltarApoyoCounter.style.color = '#6c757d';
+      resaltarApoyo.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+
+  // Validar que no exista clase is-invalid o se deshabilita el submit
+  const submitButton = document.querySelector('button[type="submit"]');
+  const validarFormulario = () => {
+    if (document.querySelectorAll('.is-invalid').length > 0) {
+      submitButton.disabled = true;
+    } else {
+      submitButton.disabled = false;
+    }
+  };
+
+// si cantidad original o cantidad reproducciones es mayor que 0 y menor que 999 se vuelven requeridos los selects
+const cantidadOriginales = document.querySelectorAll('input[name*="cantidad_originales"]');
+const cantidadReproducciones = document.querySelectorAll('input[name*="cantidad_reproducciones"]');
+
+function actualizarRequeridoTipoMaterial(input) {
+  const row = input.closest('tr'); // Obtener la fila actual
+  const tipoMaterialSelect = row.querySelector('select[name$="-tipo_material"]'); // Seleccionar el select de tipo_material en la fila
+  const tipoPublicoDestinatarioSelect = row.querySelector('select[name$="-publico_destinatario"]'); // Seleccionar el select de tipo_publico_objetivo en la fila
+  if (input.value > 0 && input.value < 1000) {
+    tipoMaterialSelect.required = true;
+    tipoPublicoDestinatarioSelect.required = true;
+  } else {
+    tipoMaterialSelect.required = false;
+    tipoPublicoDestinatarioSelect.required = false;
+  }
+}
+
+cantidadOriginales.forEach(input => {
+  input.addEventListener('input', function () {
+    actualizarRequeridoTipoMaterial(this); // Llamar a la función para actualizar el requerido
+  });
+});
+
+cantidadReproducciones.forEach(input => {
+  input.addEventListener('input', function () {
+    actualizarRequeridoTipoMaterial(this); // Llamar a la función para actualizar el requerido
+  });
+});
+
+  // Validar formulario al cargar la página
+  validarFormulario();
+</script>
 {% endblock %}

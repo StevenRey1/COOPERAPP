@@ -118,6 +118,12 @@ class ContratacionDetalle(models.Model):
 
     class Meta:
         unique_together = ('apoyo_contratacion', 'tipo_personal', 'area_profesional') # Asegura que no haya combinaciones duplicadas
+
+class publicoDestinatario(models.Model):
+    nombre = models.CharField(max_length=255, verbose_name="Nombre del público objetivo")
+
+    def __str__(self):
+        return self.nombre
     
 class TipoMaterial(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Material")
@@ -127,12 +133,6 @@ class TipoMaterial(models.Model):
 
 class ApoyoMaterial(models.Model):
     reporte = models.OneToOneField(Reporte, on_delete=models.CASCADE, verbose_name="Reporte")
-    titulo_material = models.CharField(max_length=255, verbose_name="Título material")
-    objetivo_principal = models.TextField(verbose_name="Objetivo principal")
-    publico_destinatario = models.CharField(max_length=255, verbose_name="Público destinatario")
-    tipo_material = models.ForeignKey(TipoMaterial, on_delete=models.SET_NULL, null=True, blank=True)
-    cantidad_originales = models.PositiveIntegerField(verbose_name="Cantidad originales")
-    cantidad_reproducciones = models.PositiveIntegerField(verbose_name="Cantidad reproducciones")
     resaltar_apoyo = models.TextField(max_length=255, verbose_name="Que resaltaría de este apoyo a través de la producción de materiales")
 
     class Meta:
@@ -141,6 +141,19 @@ class ApoyoMaterial(models.Model):
 
     def __str__(self):
         return f"Apoyo en materiales para el reporte {self.reporte}"
+    
+class ApoyoMaterialDetalle(models.Model):
+    apoyo_material = models.ForeignKey(ApoyoMaterial, on_delete=models.CASCADE)
+    titulo_material = models.CharField(max_length=255, verbose_name="Título material")
+    objetivo_principal = models.TextField(verbose_name="Objetivo principal")
+    publico_destinatario = models.ForeignKey(publicoDestinatario, on_delete=models.SET_NULL, null=True, blank=True)
+    tipo_material = models.ForeignKey(TipoMaterial, on_delete=models.SET_NULL, null=True, blank=True)
+    cantidad_originales = models.PositiveIntegerField(verbose_name="Cantidad originales",
+                                                      validators=[MinValueValidator(0), MaxValueValidator(999)], default=0)
+    cantidad_reproducciones = models.PositiveIntegerField(verbose_name="Cantidad reproducciones",
+                                                          validators=[MinValueValidator(0), MaxValueValidator(999)], default=0)
+    
+
 
 class TipoHerramienta(models.Model):
     nombre = models.CharField(max_length=255, verbose_name="Tipo de Herramienta / Equipo")

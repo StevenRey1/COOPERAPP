@@ -1,6 +1,6 @@
 
 from typing import Any
-from reporteProgramas.models import  LogrosAvances, Logro
+from reporteProgramas.models import  LogrosAvances, Logro, DatosCooperante
 from django import forms
 from reporteAcercamientos.models import Reporte, DatosQuienReporta
 import datetime
@@ -113,13 +113,21 @@ class LogroForm(forms.ModelForm):
         validar_max_palabras(logros_avances_texto, max_palabras=50)
         return cleaned_data
 
-    
-   
 
 LogroFormSet = inlineformset_factory(LogrosAvances, Logro, form=LogroForm, extra=0)  
 
     
-
+class  DatosCooperanteForm(forms.ModelForm):
+    class Meta:
+        model = DatosCooperante
+        fields = ['cooperante', 'identificacion', 'operador', 'proyecto_plan', 'linea_accion']
+        widgets = {
+            'cooperante': forms.Select(attrs={'class':'form-control', 'required':'required'}),
+            'identificacion': forms.Select(attrs={'class':'form-control', 'required':'required', 'disabled': 'disabled'}),
+            'operador': forms.Select(attrs={'class':'form-control', 'required':'required', 'disabled': 'disabled'}),
+            'proyecto_plan': forms.Select(attrs={'class':'form-control', 'required':'required', 'disabled': 'disabled'}),
+            'linea_accion': forms.Select(attrs={'class':'form-control', 'required':'required', 'disabled': 'disabled'}),
+        }
         
     
     

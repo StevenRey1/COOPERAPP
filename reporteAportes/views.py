@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden, HttpResponse
-from . forms import ApoyoEventosForm, ApoyoViajesForm, ApoyoMaterialFormSet, ApoyoHerramientasFormSet, \
+from . forms import ApoyoEventosForm, ApoyoViajesForm, ApoyoMaterialDetalleFormSet, ApoyoHerramientasFormSet, \
                     ApoyoLitigioForm, ApoyoOrdenesJudicialesForm, ApoyoArchivoHistoricoForm, OtrosApoyosForm, \
                     EstimacionEconomicaForm, ApoyoTerritorioUbicacionFormset, ApoyoTerritoriosForm, ApoyoContratacionForm, ContratacionDetalle,  ContratacionDetalleForm, \
-                    ApoyoSeguridadAlimentariaForm, ApoyoDetallesFormSet,ApoyoLitigioFormset
+                    ApoyoSeguridadAlimentariaForm, ApoyoDetallesFormSet,ApoyoLitigioFormset, ApoyoMaterialForm, ApoyoMaterialDetalleFormSet
 
 from django.forms.models import inlineformset_factory
 from .models import TipoPersonal, AreaProfesional, TipoMaterial, TipoHerramienta, TipoCaso, TipoProyecto ,ApoyoHerramientas, \
-                    ApoyoTerritorios, ApoyoContratacion, ApoyoSeguridadAlimentaria, ApoyoSeguridadDetalle, ApoyoLitigio, ApoyoLitigioDetalle
+                    ApoyoTerritorios, ApoyoContratacion, ApoyoSeguridadAlimentaria, ApoyoSeguridadDetalle, ApoyoLitigio, ApoyoLitigioDetalle, \
+                    ApoyoEventos, ApoyoViajes, ApoyoMaterial, ApoyoMaterialDetalle, ApoyoOrdenesJudiciales, ApoyoArchivoHistorico, OtrosApoyos, \
+                    EstimacionEconomica
 
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -19,6 +21,8 @@ from reportlab.lib.units import inch
 
 
 from reporteAcercamientos.models import Reporte
+
+# APOYO EVENTOS
 
 def crear_apoyo_eventos(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
@@ -37,6 +41,23 @@ def crear_apoyo_eventos(request, reporte_id):
 
     return render(request, 'reporteAportes/crear_apoyo_eventos.html', {'form': form})
 
+def editar_apoyo_eventos(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_eventos = get_object_or_404(ApoyoEventos, reporte=reporte)
+    
+
+    if request.method == 'POST':
+        form = ApoyoEventosForm(request.POST, instance=apoyo_eventos)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')  # Redirige a otra vista después de guardar
+    else:
+        form = ApoyoEventosForm(instance=apoyo_eventos)
+
+    return render(request, 'reporteAportes/editar_apoyo_eventos.html', {'form': form})
+
+# APOYO VIAJES
+
 def crear_apoyo_viajes(request,reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     if request.method == 'POST':
@@ -52,6 +73,21 @@ def crear_apoyo_viajes(request,reporte_id):
 
     return render(request, 'reporteAportes/crear_apoyo_viajes.html', {'form': form})
 
+def editar_apoyo_viajes(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_viajes = get_object_or_404(ApoyoViajes, reporte=reporte)
+
+    if request.method == 'POST':
+        form = ApoyoViajesForm(request.POST, instance=apoyo_viajes)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')  # Redirige a otra vista después de guardar
+    else:
+        form = ApoyoViajesForm(instance=apoyo_viajes)
+
+    return render(request, 'reporteAportes/editar_apoyo_viajes.html', {'form': form})
+
+# APOYO TERRITORIOS
 
 def crear_apoyo_territorios(request, reporte_id):
     reporte = get_object_or_404(Reporte, pk=reporte_id)
@@ -86,6 +122,37 @@ def crear_apoyo_territorios(request, reporte_id):
         'reporte': reporte,
     }
     return render(request, 'reporteAportes/crear_apoyo_territorios.html', context)
+
+def editar_apoyo_territorios(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    apoyo_territorios = get_object_or_404(ApoyoTerritorios, reporte=reporte)
+  
+
+    if request.method == 'POST':
+        form = ApoyoTerritoriosForm(request.POST, instance=apoyo_territorios)
+        formset_ubicaciones = ApoyoTerritorioUbicacionFormset(request.POST, instance=apoyo_territorios)
+
+        if form.is_valid() and formset_ubicaciones.is_valid():
+            form.save()
+            formset_ubicaciones.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            # Render errors in template instead of console
+            print('error form:', form.errors)
+            print('error form_set:',formset_ubicaciones.errors)
+            print(form.non_field_errors())
+    else:
+        form = ApoyoTerritoriosForm(instance=apoyo_territorios)
+        formset_ubicaciones = ApoyoTerritorioUbicacionFormset(instance=apoyo_territorios)
+        formset_ubicaciones.extra = 0
+        formset_ubicaciones.can_delete = True
+
+    return render(request, 'reporteAportes/editar_apoyo_territorios.html', {
+        'form': form,
+        'formset_ubicaciones': formset_ubicaciones,
+    })
+
+# APOYO CONTRATACIÓN
 
 def crear_apoyo_contratacion(request, reporte_id):
     reporte = get_object_or_404(Reporte, pk=reporte_id)
@@ -134,48 +201,134 @@ def crear_apoyo_contratacion(request, reporte_id):
         'area_profesional': area_profesional,
     }
     return render(request, 'reporteAportes/crear_apoyo_contratacion.html', context)
+def editar_apoyo_contratacion(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    apoyo_contratacion = get_object_or_404(ApoyoContratacion, reporte=reporte)
+    tipos_personal = TipoPersonal.objects.all()
+    area_profesional = AreaProfesional.objects.all()
 
+    ContratacionDetalleFormSet = inlineformset_factory(
+        ApoyoContratacion,
+        ContratacionDetalle,
+        form=ContratacionDetalleForm,
+        extra=0,
+        can_delete=True
+    )
+
+    if request.method == 'POST':
+        form = ApoyoContratacionForm(request.POST, instance=apoyo_contratacion)
+        formset = ContratacionDetalleFormSet(request.POST, instance=apoyo_contratacion)
+
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            # Render errors in template instead of console
+            print('error form:', form.errors)
+            print('error form_set:',formset.errors)
+            print(form.non_field_errors())
+    else:
+        form = ApoyoContratacionForm(instance=apoyo_contratacion)
+        formset = ContratacionDetalleFormSet(instance=apoyo_contratacion)
+
+    return render(request, 'reporteAportes/editar_apoyo_contratacion.html', {
+        'form': form,
+        'formset': formset,
+        'tipos_personal': tipos_personal,
+        'area_profesional': area_profesional,
+    })
+
+# APOYO MATERIAL
 def crear_apoyo_material(request,reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     tipo_material = TipoMaterial.objects.all()
 
+    try:
+        apoyo = ApoyoMaterial.objects.get(reporte=reporte)
+    except ApoyoMaterial.DoesNotExist:
+        apoyo = None
+
     if request.method == 'POST':
-        formset = ApoyoMaterialFormSet(request.POST)
-        if formset.is_valid():
-            for form in formset:
-                apoyo = form.save(commit=False)
-                apoyo.reporte = reporte
-                apoyo.save() 
+        form = ApoyoMaterialForm(request.POST, instance=apoyo)
+        formset = ApoyoMaterialDetalleFormSet(request.POST, queryset=ApoyoMaterialDetalle.objects.filter(apoyo_material=apoyo))
+        if form.is_valid() and formset.is_valid():
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+
+            detalles = formset.save(commit=False)
+            for detalle in detalles:
+                detalle.apoyo_material = apoyo
+                detalle.save()
+
             reporte.avance = 8
             reporte.save()
-                    
-            return redirect('reporteAportes:crear_apoyo_herramientas')  # Reemplaza con la URL correcta
+            return redirect('reporteAportes:crear_apoyo_herramientas', reporte_id=reporte_id)
+        else:
+            print(form.errors, formset.errors)
     else:
-        formset = ApoyoMaterialFormSet(initial=[{'tipo_material': tipo.id} for tipo in tipo_material])
+        form = ApoyoMaterialForm(instance=apoyo)
+        formset = ApoyoMaterialDetalleFormSet(queryset=ApoyoMaterialDetalle.objects.filter(apoyo_material=apoyo))
 
     context = {
+        'form': form,
         'formset': formset,
         'tipo_material': tipo_material,
     }
     return render(request, 'reporteAportes/crear_apoyo_material.html', context)
 
-def crear_apoyo_herramientas(request, reporte_id):
+def editar_apoyo_material(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_material = get_object_or_404(ApoyoMaterial, reporte=reporte)
+    tipo_material = TipoMaterial.objects.all()
+
+    if request.method == 'POST':
+        form = ApoyoMaterialForm(request.POST, instance=apoyo_material)
+        formset = ApoyoMaterialDetalleFormSet(request.POST, instance=apoyo_material)
+
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            # Render errors in template instead of console
+            print('error form:', form.errors)
+            print('error form_set:',formset.errors)
+            print(form.non_field_errors())
+    else:
+        form = ApoyoMaterialForm(instance=apoyo_material)
+        formset = ApoyoMaterialDetalleFormSet(instance=apoyo_material)
+        formset.extra = 0
+
+    return render(request, 'reporteAportes/editar_apoyo_material.html', {
+        'form': form,
+        'formset': formset,
+        'tipo_material': tipo_material,
+    })
+
+# APOYO HERRAMIENTAS
+
+def crear_apoyo_herramientas(request, reporte_id):
+    reporte = get_object_or_404(Reporte, pk=reporte_id)
     tipos_herramienta = TipoHerramienta.objects.all()
 
     if request.method == 'POST':
         formset = ApoyoHerramientasFormSet(request.POST)
         if formset.is_valid():
+            # Iterar sobre cada formulario en el formset
             for form in formset:
-                apoyo = form.save(commit=False)
-                apoyo.reporte = reporte  # Ensure you are setting the report here
-                apoyo.save()
+                apoyo = form.save(commit=False)  # Crear la instancia sin guardar
+                apoyo.reporte = reporte  # Asignar el reporte a cada instancia
+                apoyo.save()  # Guardar la instancia
             reporte.avance = 9
-            reporte.save()   
-            return redirect('reporteAportes:crear_apoyo_litigio', reporte_id = reporte_id)  # Update with the correct URL
+            reporte.save()
+
+            return redirect('reporteAportes:crear_apoyo_litigio', reporte_id=reporte_id)
         else:
             print(formset.errors)
     else:
+        # Siempre inicializar los formularios para cada tipo de herramienta
         initial_data = [{'tipo_herramienta': tipo.id} for tipo in tipos_herramienta]
         formset = ApoyoHerramientasFormSet(initial=initial_data)
 
@@ -185,6 +338,32 @@ def crear_apoyo_herramientas(request, reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_herramientas.html', context)
 
+def editar_apoyo_herramientas(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyos_herramientas = ApoyoHerramientas.objects.filter(reporte=reporte)
+    tipos_herramienta = TipoHerramienta.objects.all()
+
+    if request.method == 'POST':
+        formset = ApoyoHerramientasFormSet(request.POST)
+        if formset.is_valid():
+            for form in formset:
+                apoyo = form.save(commit=False)
+                apoyo.reporte = reporte  # Ensure you are setting the report here
+                apoyo.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            print(formset.errors)
+    else:
+        formset = ApoyoHerramientasFormSet(queryset=apoyos_herramientas)
+        formset.extra = 0
+
+    context = {
+        'formset': formset,
+        'tipos_herramienta': tipos_herramienta,
+    }
+    return render(request, 'reporteAportes/editar_apoyo_herramientas.html', context)
+
+# APOYO LITIGIO
 def crear_apoyo_litigio(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     tipos_caso = TipoCaso.objects.all()
@@ -232,6 +411,32 @@ def crear_apoyo_litigio(request, reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_litigio.html', context)
 
+def editar_apoyo_litigio(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    apoyo_litigio = get_object_or_404(ApoyoLitigio, reporte=reporte)
+    tipos_caso = TipoCaso.objects.all()
+
+    if request.method == 'POST':
+        form = ApoyoLitigioForm(request.POST, instance=apoyo_litigio)
+        formset = ApoyoLitigioFormset(request.POST, queryset=ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo_litigio))
+
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            print(form.errors)
+            print(formset.errors)
+    else:
+        form = ApoyoLitigioForm(instance=apoyo_litigio)
+        formset = ApoyoLitigioFormset(queryset=ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo_litigio))
+        formset.extra=0
+    return render(request, 'reporteAportes/editar_apoyo_litigio.html', {
+        'form': form,
+        'formset': formset,
+        'tipos_caso': tipos_caso,
+    })
+# APOYO SEGURIDAD ALIMENTARIA
 def crear_apoyo_seguridad_alimentaria(request, reporte_id):
     reporte = get_object_or_404(Reporte, id=reporte_id)
     tipos_proyecto = TipoProyecto.objects.all()
@@ -274,6 +479,39 @@ def crear_apoyo_seguridad_alimentaria(request, reporte_id):
 
     return render(request, 'reporteAportes/crear_apoyo_seguridad_alimentaria.html', context)
 
+def editar_apoyo_seguridad_alimentaria(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    apoyo_seguridad = get_object_or_404(ApoyoSeguridadAlimentaria, reporte=reporte)
+    tipos_proyecto = TipoProyecto.objects.all()
+
+    if request.method == 'POST':
+        form = ApoyoSeguridadAlimentariaForm(request.POST, instance=apoyo_seguridad)
+        formset = ApoyoDetallesFormSet(request.POST, queryset=ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo_seguridad))
+
+        if form.is_valid() and formset.is_valid():
+            apoyo = form.save(commit=False)
+            apoyo.reporte = reporte
+            apoyo.save()
+            form.save_m2m()
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.apoyoSeguridadAlimentaria = apoyo
+                instance.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            print(form.errors)
+            print(formset.errors)
+    else:
+        form = ApoyoSeguridadAlimentariaForm(instance=apoyo_seguridad)
+        formset = ApoyoDetallesFormSet(queryset=ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo_seguridad))
+        formset.extra = 0
+
+    return render(request, 'reporteAportes/editar_apoyo_seguridad_alimentaria.html', {
+        'form': form,
+        'formset': formset,
+        'tipos_proyecto': tipos_proyecto,
+    })
+# APOYO ORDENES JUDICIALES
 def crear_apoyo_ordenes_judiciales(request,reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
     
@@ -295,6 +533,20 @@ def crear_apoyo_ordenes_judiciales(request,reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_ordenes_judiciales.html', context)
 
+def editar_apoyo_ordenes_judiciales(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_ordenes = get_object_or_404(ApoyoOrdenesJudiciales, reporte=reporte)
+
+    if request.method == 'POST':
+        form = ApoyoOrdenesJudicialesForm(request.POST, instance=apoyo_ordenes)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')
+    else:
+        form = ApoyoOrdenesJudicialesForm(instance=apoyo_ordenes)
+
+    return render(request, 'reporteAportes/editar_apoyo_ordenes_judiciales.html', {'form': form})
+# APOYO ARCHIVO HISTORICO
 def crear_apoyo_archivo_historico(request, reporte_id):
     reporte = Reporte.objects.get(id=reporte_id)
 
@@ -321,6 +573,20 @@ def crear_apoyo_archivo_historico(request, reporte_id):
     }
     return render(request, 'reporteAportes/crear_apoyo_archivo_historico.html', context)
 
+def editar_apoyo_archivo_historico(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_archivo = get_object_or_404(ApoyoArchivoHistorico, reporte=reporte)
+
+    if request.method == 'POST':
+        form = ApoyoArchivoHistoricoForm(request.POST, instance=apoyo_archivo)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')
+    else:
+        form = ApoyoArchivoHistoricoForm(instance=apoyo_archivo)
+
+    return render(request, 'reporteAportes/editar_apoyo_archivo_historico.html', {'form': form})
+# OTROS APOYOS
 def crear_otros_apoyos(request,reporte_id):
     
     reporte = Reporte.objects.get(id=reporte_id)
@@ -343,6 +609,22 @@ def crear_otros_apoyos(request,reporte_id):
     }
     return render(request, 'reporteAportes/crear_otros_apoyos.html', context)
 
+def editar_otros_apoyos(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_otros = get_object_or_404(OtrosApoyos, reporte=reporte)
+
+    if request.method == 'POST':
+        form = OtrosApoyosForm(request.POST, instance=apoyo_otros)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')
+    else:
+        form = OtrosApoyosForm(instance=apoyo_otros)
+
+    return render(request, 'reporteAportes/editar_otros_apoyos.html', {'form': form})
+
+
+# ESTIMACIÓN ECONÓMICA
 def crear_estimacion_economica(request,reporte_id):
 
     reporte = Reporte.objects.get(id=reporte_id)
@@ -368,6 +650,25 @@ def crear_estimacion_economica(request,reporte_id):
         
     }
     return render(request, 'reporteAportes/crear_estimacion_economica.html', context)
+
+def editar_estimacion_economica(request, reporte_id):
+    reporte = Reporte.objects.get(id=reporte_id)
+    apoyo_economico = get_object_or_404(EstimacionEconomica, reporte=reporte)
+
+    if request.method == 'POST':
+        form = EstimacionEconomicaForm(request.POST, instance=apoyo_economico)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')
+        else:
+            print(form.errors)
+            print(form.non_field_errors())
+    else:
+        form = EstimacionEconomicaForm(instance=apoyo_economico)
+
+    return render(request, 'reporteAportes/editar_estimacion_economica.html', {'form': form})
+
+# GENERAR REPORTE PDF
 
 def crear_reporte_pdf(request, reporte_id):
     # generar encabezado 
@@ -824,5 +1125,9 @@ def crear_reporte_pdf(request, reporte_id):
 
     return response
 
+# Editar reporte
 
-        
+def editar_reporte(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+
+    return render(request, 'reporteAportes/editar_reporte.html', {'reporte_id': reporte_id, 'reporte': reporte})        

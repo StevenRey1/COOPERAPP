@@ -1,5 +1,5 @@
 from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador, LineaAccion, LogrosAvances
-from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet
+from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet, DatosCooperanteForm
 from django.views.generic.edit import CreateView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -45,24 +45,7 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     form_class = DatosQuienReportaForm
     template_name = 'reporteProgramas/crear_datos_quien_reporta.html'
     
-    def dispatch(self, request, *args, **kwargs):
-        reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
-        
-       
-        if reporte.avance == 1:
-            return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
-        elif reporte.avance == 2:
-            linea_accion_id = reporte.datoscooperante.linea_accion
-            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id, linea_accion_id=linea_accion_id)
-        elif reporte.avance == 3:
-            return redirect('reporteAportes:crear_apoyo_eventos', reporte_id=reporte.id)
-        elif reporte.avance == 4:
-            return redirect('reporteAportes:crear_apoyo_viajes', reporte_id=reporte.id)
-        elif reporte.avance == 5:
-            return redirect('reporteAportes:crear_apoyo_territorios', reporte_id=reporte.id)
-        
-        return super().dispatch(request, *args, **kwargs)
-    
+
     def form_valid(self, form):
         form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
         
@@ -177,67 +160,42 @@ def obtener_lineas_accion(request, cooperante_id, identificacion_id, operador_id
         # Retornar la respuesta en formato JSON
         return JsonResponse({'lineas_accion': lineas_accion_data})
 
+# DATOS COOPERANTE
 @login_required
 def crear_datos_cooperante(request,reporte_id):
 
     reporte = get_object_or_404(Reporte, id=reporte_id)
-
-    # Verificar el avance del reporte
-    if reporte.avance == 0:
-        # Redirigir a la vista para crear datos de quien reporta
-        return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte_id)
-    
-    if reporte.avance == 2:
-        linea_accion_id = reporte.datoscooperante.linea_accion
-        return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte.id, linea_accion_id=linea_accion_id)
-
-
     if request.method == 'POST':
-        cooperante = request.POST.get('cooperante')
-        identificacion = request.POST.get('identificacion')
-        operador = request.POST.get('operador')
-        proyecto_plan = request.POST.get('proyecto_plan')
-        linea_accion = request.POST.get('linea_accion')
-        
-        
-        try:
-            # Guardar los datos en la base de datos
-            DatosCooperante.objects.create(
-                reporte = reporte,
-                cooperante=cooperante,
-                identificacion=identificacion,
-                operador=operador,
-                proyecto_plan=proyecto_plan,
-                linea_accion=linea_accion,
-                
-            )
-            
+        form = DatosCooperanteForm(request.POST)
+        if form.is_valid():
+            datos_cooperante = form.save(commit=False)
+            datos_cooperante.reporte = reporte
+            datos_cooperante.save()
             reporte.avance = 2
             reporte.save()
-            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id, linea_accion_id=linea_accion)
-        except Exception as e:
-            messages.error(request, f'Ocurrió un error al guardar los datos: {str(e)}')
+            return redirect('reporteProgramas:crear_logros_avances', reporte_id=reporte_id, linea_accion_id=datos_cooperante.linea_accion.id)
+    else:
+        form = DatosCooperanteForm()
+    return render(request, 'reporteProgramas/crear_datos_cooperante.html', {'form': form, 'reporte': reporte})
 
-    return render(request, 'reporteProgramas/crear_datos_cooperante.html', {'reporte': reporte})
+@login_required
+def editar_datos_cooperante(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    datos_cooperante = get_object_or_404(DatosCooperante, reporte=reporte_id)
+    if request.method == 'POST':
+        form = DatosCooperanteForm(request.POST, instance=datos_cooperante)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:listar_reportes')
+    else:
+        form = DatosCooperanteForm(instance=datos_cooperante)
+    return render(request, 'reporteProgramas/editar_datos_cooperante.html', {'form': form, 'reporte': reporte})
 
-
+# REPORTE LOGROS Y AVANCES
 @login_required
 def crear_reporte_logros(request, reporte_id, linea_accion_id):
     # Obtén el reporte basado en el ID
     reporte = get_object_or_404(Reporte, id=reporte_id)
-
-    # Verificar el avance del reporte
-    if reporte.avance == 0:
-        # Redirigir a la vista para crear datos de quien reporta
-        return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte_id)
-    
-    if reporte.avance == 1:
-        
-        return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
-    
-
-    if reporte.avance == 3:
-        return redirect('reporteAportes:crear_apoyo_eventos', reporte_id=reporte.id)
 
 
     # Filtrar resultados según la línea de acción
@@ -281,6 +239,37 @@ def crear_reporte_logros(request, reporte_id, linea_accion_id):
 
     return render(request, 'reporteProgramas/crear_logros_avances.html', context)
 
+@login_required
+def editar_reporte_logros(request, reporte_id):
+    reporte = get_object_or_404(Reporte, id=reporte_id)
+    logros_avances = get_object_or_404(LogrosAvances, reporte=reporte_id)
+    resultados = Resultado.objects.filter(linea_accion=logros_avances.reporte.datoscooperante.linea_accion)
+    urls = [logro.adjunto.url for logro in logros_avances.logros.all()]
+ 
+
+    if request.method == 'POST':
+        form_logros_avances = LogrosAvancesForm(request.POST, instance=logros_avances)
+        formset_logro = LogroFormSet(request.POST, request.FILES, instance=logros_avances)
+
+        if form_logros_avances.is_valid() and formset_logro.is_valid():
+            form_logros_avances.save()
+            formset_logro.save()
+            return redirect('accounts:listar_reportes')
+    else:
+        form_logros_avances = LogrosAvancesForm(instance=logros_avances)
+        # No pasar queryset ni initial al editar
+        formset_logro = LogroFormSet(instance=logros_avances)  
+        formset_logro.extra = 0
+
+    context = {
+        'form_logros_avances': form_logros_avances,
+        'formset_logro': formset_logro,
+        'reporte': reporte,
+        'resultados': resultados,
+        'urls': urls
+    }
+
+    return render(request, 'reporteProgramas/editar_logros_avances.html', context)
    
 
 @login_required
@@ -288,14 +277,11 @@ def get_municipios(request, departamento_id):
     municipios = Municipio.objects.filter(departamento_id=departamento_id).values('id', 'nombre')
     return JsonResponse({'municipios': list(municipios)})
 
-
 class ReporteProgramasListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         reportes = Reporte.objects.filter(tipo=2)
         return render(request, 'reporteProgramas/listar_reportes_avances.html', {'reportes': reportes})
     
-    
-
 @login_required
 def generar_pdf_reporte_avances(request, reporte_id):
     # Obtener el reporte
