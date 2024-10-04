@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la producción de materiales en este periodo</h5>
+    <p>Por cada tipo de material, indique la cantidad de materiales y reproducciones que haya sido apoyado por el proyecto / cooperante en este periodo:</p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Título material</th>
+              <th>Objetivo principal</th>
+              <th>Público destinatario</th>
+              <th>Tipo de material</th>
+              <th>Cantidad originales</th>
+              <th>Cantidad reproducciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="field-container">
+            {{ formset.management_form }}
+            {% for detalle_form in formset %}
+            <tr class="field-group">
+              <td>{{ detalle_form.id }}
+                {{forloop.counter}}
+              </td>
+              <td>{{ detalle_form.titulo_material }}</td>
+              <td>{{ detalle_form.objetivo_principal }}</td>
+              <td>{{ detalle_form.publico_destinatario }}</td>
+              <td>{{ detalle_form.tipo_material }}</td>
+              <td>{{ detalle_form.cantidad_originales }}</td>
+              <td>{{ detalle_form.cantidad_reproducciones }}</td>
+              <td>
+             
+                {% if not forloop.first %}
+                Eliminar
+                {{ detalle_form.DELETE }}  <!-- Renderiza el checkbox DELETE -->                                 
+                {% endif %}
+
+             
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-success" id="add-material">Agregar Material</button>
+      </div>
+
+      <div class="mb-3">
+        <label for="id_resaltar_apoyo" class="form-label">Que resaltaría de este apoyo a través de la producción de materiales:</label>
+        {{ form.resaltar_apoyo }}
+        <div class = "invalid-feedback">
+          El campo no puede tener más de 100 palabras
+        </div>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const addMaterialButton = document.getElementById('add-material');
+
+  addMaterialButton.addEventListener('click', function () {
+    const container = document.getElementById('field-container');
+    const totalFormsInput = document.querySelector('input[name="apoyomaterialdetalle_set-TOTAL_FORMS"]');
+    const totalForms = parseInt(totalFormsInput.value);
+
+    // Clonar la última fila del formset
+    const lastFieldGroup = container.querySelector('.field-group:last-of-type');
+    const newFieldGroup = lastFieldGroup.cloneNode(true);
+
+    // Limpiar los valores de los nuevos campos
+    newFieldGroup.querySelectorAll('input, select, textarea').forEach(input => {
+      if (input.type === 'number') {
+        input.value = 0; // Set number inputs to 0
+      } else {
+        input.value = ''; // Clear other inputs
+      }
+      textarea ='';
+      number = 0;
+      
+    });
+
+    // Agregar botón de eliminar a la última celda de la nueva fila
+    const lastCell = newFieldGroup.querySelector('td:last-child');
+    lastCell.innerHTML = ''; // Limpiar contenido anterior
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'mt-2');
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.addEventListener('click', function () {
+      //tomar el valor del primer td de la fila a eliminar
+      const rowNumber = newFieldGroup.querySelector('td:first-child').textContent;
+      // buscar todas las filas que tengan su primer td con un valor mayor al de la fila a eliminar
+      const rows = container.querySelectorAll('.field-group');
+      rows.forEach(row => {
+        const rowNumberCell = row.querySelector('td:first-child');
+        if (parseInt(rowNumberCell.textContent) > parseInt(rowNumber)) {
+          // Decrementar el número de la fila
+          rowNumberCell.textContent = parseInt(rowNumberCell.textContent) - 1;
+        }
+      });
+      newFieldGroup.remove();
+      // mirar el indice de la fila removida
+
+
+      // Decrementar el contador de formularios
+      totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+      
+    });
+    lastCell.appendChild(deleteButton);
+
+    // Agregar el nuevo grupo al contenedor
+    container.appendChild(newFieldGroup);
+   
+
+       // Actualizar los IDs y nombres de los campos en la nueva fila DESPUÉS de agregarla al DOM
+newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element => {
+  const oldId = element.id;
+  if (oldId) {
+    const newId = oldId.replace(/-\d+-/g, `-${totalForms}-`);
+    element.id = newId;
+  }
+  if (element.name) {
+    element.name = element.name.replace(/-\d+-/g, `-${totalForms}-`);
+  }
+  if (element.tagName === 'LABEL') {
+    const oldFor = element.getAttribute('for');
+    if (oldFor) {
+      const newFor = oldFor.replace(/-\d+-/g, `-${totalForms}-`);
+      element.setAttribute('for', newFor);
+    }
+  }
+});
+
+    // Incrementar el contador de formularios
+    totalFormsInput.value = totalForms + 1;
+
+    // Actualizar el índice de la nueva fila
+  const newRowIndex = container.querySelectorAll('.field-group').length; // Obtener el nuevo índice
+  const newRowNumberCell = newFieldGroup.querySelector('td:first-child'); // Seleccionar la primera celda
+  newRowNumberCell.textContent = newRowIndex; // Actualizar el índice
+    
+  });
+
+  // contado de palabaras para resaltar_apoyo
+  const resaltarApoyo = document.getElementById('id_resaltar_apoyo');
+  const resaltarApoyoCounter = document.createElement('p');
+  resaltarApoyoCounter.textContent = '0/100 palabras';
+  resaltarApoyoCounter.style.fontSize = '0.8rem';
+  resaltarApoyoCounter.style.color = '#6c757d';
+  resaltarApoyo.insertAdjacentElement('afterend', resaltarApoyoCounter);
+
+  // Contador de palabras
+  resaltarApoyo.addEventListener('input', function () {
+    //crear una variable que cuenta el numero de palabaras que se ingresan
+    const counter = resaltarApoyo.value.split(/\s+/).length;
+    resaltarApoyoCounter.textContent = ` ${counter}/100 palabras`;
+    if (counter > 100) {
+      resaltarApoyoCounter.style.color = 'red';
+      resaltarApoyo.classList.add('is-invalid');
+    } else {
+      resaltarApoyoCounter.style.color = '#6c757d';
+      resaltarApoyo.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+
+  // Validar que no exista clase is-invalid o se deshabilita el submit
+  const submitButton = document.querySelector('button[type="submit"]');
+  const validarFormulario = () => {
+    if (document.querySelectorAll('.is-invalid').length > 0) {
+      submitButton.disabled = true;
+    } else {
+      submitButton.disabled = false;
+    }
+  };
+
+// si cantidad original o cantidad reproducciones es mayor que 0 y menor que 999 se vuelven requeridos los selects
+const cantidadOriginales = document.querySelectorAll('input[name*="cantidad_originales"]');
+const cantidadReproducciones = document.querySelectorAll('input[name*="cantidad_reproducciones"]');
+
+function actualizarRequeridoTipoMaterial(input) {
+  const row = input.closest('tr'); // Obtener la fila actual
+  const tipoMaterialSelect = row.querySelector('select[name$="-tipo_material"]'); // Seleccionar el select de tipo_material en la fila
+  const tipoPublicoDestinatarioSelect = row.querySelector('select[name$="-publico_destinatario"]'); // Seleccionar el select de tipo_publico_objetivo en la fila
+  if (input.value > 0 && input.value < 1000) {
+    tipoMaterialSelect.required = true;
+    tipoPublicoDestinatarioSelect.required = true;
+  } else {
+    tipoMaterialSelect.required = false;
+    tipoPublicoDestinatarioSelect.required = false;
+  }
+}
+
+cantidadOriginales.forEach(input => {
+  input.addEventListener('input', function () {
+    actualizarRequeridoTipoMaterial(this); // Llamar a la función para actualizar el requerido
+  });
+});
+
+cantidadReproducciones.forEach(input => {
+  input.addEventListener('input', function () {
+    actualizarRequeridoTipoMaterial(this); // Llamar a la función para actualizar el requerido
+  });
+});
+
+
+  // Validar formulario al cargar la página
+  validarFormulario();
+</script>
+{% endblock %}

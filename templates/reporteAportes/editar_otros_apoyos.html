@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+  <h5 class="text-center mb-4 form-title">Otro tipo de apoyos de este proyecto / cooperante en el periodo</h5>
+  <form method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_descripcion" class="form-label">Realice una breve descripción de algún otro tipo de apoyo recibido por este proyecto / cooperante, si no pudo registrarlo en las anteriores preguntas:</label>
+        {{ form.descripcion }} 
+        <div class="invalid-feedback">
+          Por favor, ingrese una descripción.
+        </div>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      
+      </div>
+  </form>
+</div>
+</div>
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+</style>
+{% endblock %}
+{% block extra_js%}
+<script>
+// agregar a id_descripcion contador de palabras
+const descripcion = document.getElementById('id_descripcion');
+const descripcionWordCount = document.createElement('div');
+descripcionWordCount.textContent = '0/150 palabras';
+descripcionWordCount.classList.add('form-text', 'text-muted');
+descripcion.insertAdjacentElement('afterend', descripcionWordCount);
+
+// contar las palabras de la descripción
+descripcion.addEventListener('input', () => {
+  const words = descripcion.value.trim().split(/\s+/).length;
+  descripcionWordCount.textContent = `${words}/150 palabras`;
+  if (words > 150) {
+    this.classList.add('is-invalid');
+  } else {
+    this.classList.remove('is-invalid');
+  }
+});
+
+// Validar formulario y deshabilitar botón de envío si hay una clase is-invalid
+const form = document.querySelector('form');
+const buttonSubmit = document.querySelector('button[type="submit"]');
+form.addEventListener('input', () => {
+  const invalidInputs = form.querySelectorAll('.is-invalid');
+  buttonSubmit.disabled = invalidInputs.length > 0;
+});
+
+</script>
+{% endblock %}

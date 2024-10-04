@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="form-container">
+        <div class="error">
+            {% if form.errors %}
+                <div class="alert alert-danger" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.8rem;"></button>
+                    {{form.errors}}
+                </div>
+            {% endif %}
+        </div>
+        <h5 class="text-center mb-4 form-title">
+            Apoyo de este proyecto / cooperante para asistir o realizar eventos, jornadas y otros espacios de información, sensibilización y/o capacitación
+        </h5>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row mb-3">
+                <label for="{{ form.cantidad_eventos.id_for_label }}" class="col-sm-8 col-form-label">
+                    Cantidad de eventos apoyados por este proyecto / cooperante en el período reportado:
+                </label>
+                <div class="col-sm-4">
+                    {{ form.cantidad_eventos }}
+                    <div class="invalid-feedback">El campo debe contener un máximo de 999.</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Tipo de eventos apoyados:</label>
+                <div class="row">
+                    {% for evento in form.eventos %}
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                {{ evento.tag }}
+                                <label class="form-check-label" for="{{ evento.id_for_label }}">
+                                    {{ evento.choice_label }}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="col-sm-6 mb-2">
+                        <div class="form-check">
+                            {{ form.otros_eventos }}
+                            <label class="form-check-label" for="{{ form.otros_eventos.id_for_label }}">
+                                Otros
+                            </label>
+                            {{ form.cuales_eventos }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.objetivo_principal.id_for_label }}" class="form-label">
+                    Objetivo principal de los eventos apoyados:
+                </label>
+                {{ form.objetivo_principal }}
+                <small id="wordCount" class="form-text text-muted">0/120 palabras</small>
+                <div class="invalid-feedback">El campo debe contener un máximo de 120 palabras.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Principal público objetivo de los eventos:</label>
+                <div class="row">
+                    {% for publico in form.publico_objetivo %}
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                {{ publico.tag }}
+                                <label class="form-check-label" for="{{ publico.id_for_label }}">
+                                    {{ publico.choice_label }}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="col-sm-6 mb-2">
+                        <div class="form-check">
+                            {{ form.otro_publico }}
+                            <label class="form-check-label" for="{{ form.otro_publico.id_for_label }}">
+                                Otros
+                            </label>
+                            {{ form.cual_publico }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="{{ form.cantidad_participantes.id_for_label }}" class="col-sm-6 col-form-label">
+                    Cantidad total de participantes en los eventos en este período:
+                </label>
+                <div class="col-sm-6">
+                    {{ form.cantidad_participantes }}
+                    <div class="invalid-feedback">El campo debe contener un máximo de 9999.</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-title {
+        background-color: #f0f4c3;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+  
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to check if any field has the 'is-invalid' class
+    function checkInvalidFields() {
+        const invalidFields = document.querySelectorAll('.is-invalid');
+        const buttonSubmit = document.querySelector('button[type="submit"]');
+        buttonSubmit.disabled = invalidFields.length > 0;
+    }
+
+    // Attach event listener to inputs and textareas for validation
+    document.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.toggle('is-invalid', this.value === '' || (this.type === 'number' && (this.value < 0 || this.value > this.max)));
+            checkInvalidFields();
+        });
+    });
+
+    // Word count for 'objetivo_principal'
+    const objetivoPrincipalField = document.querySelector('textarea[name="objetivo_principal"]');
+    const wordCountDisplay = document.getElementById('wordCount');
+    objetivoPrincipalField.addEventListener('input', function() {
+        const text = this.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
+        wordCountDisplay.textContent = `${wordCount}/120 palabras`;
+        objetivoPrincipalField.classList.toggle('is-invalid', wordCount > 120);
+        checkInvalidFields();
+    });
+
+    // Validation for number fields
+    const cantidadEventos = document.getElementById('{{ form.cantidad_eventos.id_for_label }}');
+    const cantidadParticipantes = document.getElementById('{{ form.cantidad_participantes.id_for_label }}');
+    
+    cantidadEventos.addEventListener('input', function() {
+        this.classList.toggle('is-invalid', this.value < 0 || this.value > 999);
+        checkInvalidFields();
+    });
+
+    cantidadParticipantes.addEventListener('input', function() {
+        this.classList.toggle('is-invalid', this.value < 0 || this.value > 9999);
+        checkInvalidFields();
+    });
+
+    // Enable/disable fields based on checkbox status
+    function toggleField(checkboxId, fieldId) {
+        const checkbox = document.getElementById(checkboxId);
+        const field = document.getElementById(fieldId);
+        checkbox.addEventListener('change', function() {
+            field.disabled = !this.checked;
+            if (!this.checked) {
+                field.value = '';
+                field.classList.remove('is-invalid');
+            }
+            checkInvalidFields();
+        });
+    }
+
+    toggleField('{{ form.otros_eventos.id_for_label }}', '{{ form.cuales_eventos.id_for_label }}');
+    toggleField('{{ form.otro_publico.id_for_label }}', '{{ form.cual_publico.id_for_label }}');
+
+    // Ensure the correct required state for fields based on checkboxes
+    const cualesEventos = document.getElementById('{{ form.cuales_eventos.id_for_label }}');
+    const cualPublico = document.getElementById('{{ form.cual_publico.id_for_label }}');
+    const otrosEventos = document.getElementById('{{ form.otros_eventos.id_for_label }}');
+    const otroPublico = document.getElementById('{{ form.otro_publico.id_for_label }}');
+
+    function updateRequiredFields() {
+        cualesEventos.required = otrosEventos.checked;
+        cualPublico.required = otroPublico.checked;
+    }
+
+    otrosEventos.addEventListener('change', updateRequiredFields);
+    otroPublico.addEventListener('change', updateRequiredFields);
+    updateRequiredFields();
+</script>
+{% endblock %}

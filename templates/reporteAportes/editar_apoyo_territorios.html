@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+      <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para acceder a territorios o comunidades en este periodo</h5>
+      <form method="POST"  >
+          {% csrf_token %}
+
+          <div class="mb-4">
+              <label class="form-label">Indique para qué territorios (municipios, veredas, resguardos, etc.) tuvo acompañamiento o apoyo de este cooperante para el acceso durante este periodo:</label>
+              <div class="table-responsive">
+                  <table class="table table-bordered">
+                      <thead>
+                          <tr> <td>No</td>
+                              <th>Departamento</th>
+                              <th>Municipio</th>
+                              <th>Vereda / territorio / cabildo</th>
+                              <th>Acciones</th>
+                          </tr>
+                      </thead>
+                      <tbody id="field-container">
+                          {{ formset_ubicaciones.management_form }}
+                          {% for ubicacion_form in formset_ubicaciones %}
+                          <tr class="field-group">
+                              <td> {{ubicacion_form.id}}
+                                {{forloop.counter}}
+                              </td>    
+                              <td>{{ ubicacion_form.departamento }} </td>
+                              <td>{{ ubicacion_form.municipio }}</td>
+                              <td>{{ ubicacion_form.vereda }}</td>
+                              <td>
+                                  {% if not forloop.first %}
+                                  Eliminar
+                                  {{ ubicacion_form.DELETE }}  <!-- Renderiza el checkbox DELETE -->                                 
+                                  {% endif %}
+                              </td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+              <div>
+                  <small class="ms-2">Adicionar otro departamento, municipio o vereda / territorio / cabildo</small>
+                  <button type="button" class="btn btn-danger" id="add-more">Si</button>
+              </div>
+          </div>
+
+          <div class="mb-3">
+              <label for="id_apoyo_recibido" class="form-label">En qué consistió el apoyo recibido: <span class="text-muted">(Máximo 50 palabras)</span></label>
+              {{ form.apoyo_recibido }}
+              <small class="text-muted" id="count_apoyo_recibido">0 palabras</small>
+              <div class="invalid-feedback">Texto máximo 50 palabras</div>
+          </div>
+
+          <div class="form-group">
+              <label for="id_tipo_visitas" class="form-label">Indique para qué tipo de visitas / actividades tuvo el acompañamiento o apoyo en cuanto al acceso: <span class="text-muted">(Máximo 100 palabras)</span></label>
+              {{ form.tipo_visitas }}
+              <small class="text-muted" id="count_tipo_visitas">0 palabras</small>
+              <div class="invalid-feedback">Texto máximo 100 palabras</div>
+          </div>
+
+          <div class="form-group">
+            <div class="row">
+              <label for="id_cantidad_visitas" class="form-label">¿Para cuántas visitas obtuvo apoyo de este cooperante para el acceso a territorios en este periodo?</label>
+              <div class="col-md-4">
+                  <div class="input-group">
+                      {{ form.cantidad_visitas }}
+                      <span class="input-group-text">/ 999</span>
+                      <div class="invalid-feedback">No se aceptan número negativos y el valor máximo es 999</div> 
+                  </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+              <label for="id_resaltar_apoyo" class="form-label">¿Qué resaltaría de este apoyo relacionado con acceso a los territorios por parte de este cooperante? <span class="text-muted">(Máximo 100 palabras)</span></label>
+              {{ form.resaltar_apoyo }}
+              <small class="text-muted" id="count_resaltar_apoyo">0 palabras</small>
+              <div class="invalid-feedback">Texto máximo 100 palabras</div>
+          </div>
+
+          <div class="d-grid gap-2 d-md-flex justify-content-center">
+              <button type="submit" class="btn btn-primary" id="submit-button">Guardar</button>
+              <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+          </div>
+      </form>
+  </div>
+</div>
+
+<style>
+  body {
+      background-color: #e8f5e9;
+  }
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+// Función para actualizar los municipios en base al departamento
+function actualizarMunicipios(departamentoSelect, municipioSelect) {
+    const departamentoId = departamentoSelect.value;
+
+    // Habilitar el campo de municipio
+    municipioSelect.disabled = false;
+
+    console.log(departamentoId);
+
+    if (departamentoId === '' || departamentoId === '----------') {
+        // Limpiar municipios actuales si no se selecciona un departamento válido
+        municipioSelect.innerHTML = '<option value="">----------</option>';
+        municipioSelect.disabled = true; // Deshabilitar el select de municipio
+        return;
+    }
+
+    // Generar la URL usando el ID del departamento
+    const url = `{% url 'reporteProgramas:get_municipios' 0 %}`.replace('0', departamentoId);
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Limpiar municipios actuales
+            municipioSelect.innerHTML = '';
+
+            // Agregar opciones de municipios
+            data.municipios.forEach(municipio => {
+                const option = document.createElement('option');
+                option.value = municipio.id;
+                option.textContent = municipio.nombre;
+                municipioSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Selecciona todos los selects de municipio y departamento para agregar evento change y actualizar municipios
+const allMunicipios = document.querySelectorAll('select[id^="id_apoyoterritorioubicacion_set-"][id$="-municipio"]');
+const allDepartamentos = document.querySelectorAll('select[id^="id_apoyoterritorioubicacion_set-"][id$="-departamento"]');
+allDepartamentos.forEach((departamentoSelect, index) => {
+    const municipioSelect = allMunicipios[index];
+    departamentoSelect.addEventListener('change', function() {
+        actualizarMunicipios(this, municipioSelect);
+    });
+});
+
+// Manejar la eliminación de filas
+document.querySelectorAll('.delete-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const fieldGroup = this.closest('.field-group');
+        fieldGroup.remove(); // Eliminar la fila
+        actualizarTotalForms(); // Actualizar el total de formularios
+        
+    });
+});
+
+// Actualizar el campo TOTAL_FORMS
+function actualizarTotalForms() {
+    const totalFormsInput = document.querySelector('input[name="apoyoterritorioubicacion_set-TOTAL_FORMS"]');
+    const totalForms = document.querySelectorAll('.field-group').length;
+    totalFormsInput.value = totalForms; // Actualizar el valor
+    console.log(totalForms);
+}
+
+// Controlar el botón de envío
+const submitButton = document.getElementById('submit-button');
+
+// Función para verificar si hay campos inválidos
+function verificarCamposInvalidos() {
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    submitButton.disabled = invalidFields.length > 0;
+}
+
+// Función para contar palabras y validar
+function contarPalabrasYValidar(textarea, contadorId, maxPalabras) {
+    const words = textarea.value.trim().split(/\s+/).length;
+    document.getElementById(contadorId).textContent = `${words} palabra${words !== 1 ? 's' : ''}`;
+
+    if (words > maxPalabras) {
+        textarea.classList.add('is-invalid');
+    } else {
+        textarea.classList.remove('is-invalid');
+    }
+    verificarCamposInvalidos(); // Verificar campos inválidos al validar
+}
+
+// Agregar evento input a los textareas para contar palabras
+const apoyoRecibidoTextarea = document.getElementById('id_apoyo_recibido');
+apoyoRecibidoTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_apoyo_recibido', 50);
+});
+
+const tipoVisitasTextarea = document.getElementById('id_tipo_visitas');
+tipoVisitasTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_tipo_visitas', 100);
+});
+
+const resaltarApoyoTextarea = document.getElementById('id_resaltar_apoyo');
+resaltarApoyoTextarea.addEventListener('input', function() {
+    contarPalabrasYValidar(this, 'count_resaltar_apoyo', 100);
+});
+
+// Agregar un nuevo formulario
+document.getElementById('add-more').addEventListener('click', function() {
+    const totalFormsInput = document.querySelector('input[name="apoyoterritorioubicacion_set-TOTAL_FORMS"]');
+    const totalForms = parseInt(totalFormsInput.value);
+    const newFormIndex = totalForms;
+
+    // Clonar la primera fila (excepto el botón de eliminar)
+    const firstFieldGroup = document.querySelector('.field-group').cloneNode(true);
+    const newRow = firstFieldGroup.cloneNode(true);
+    
+    // Actualizar los valores de los nuevos selects
+    newRow.querySelector('select[name^="apoyoterritorioubicacion_set"][name$="-departamento"]').value = '';
+    newRow.querySelector('select[name^="apoyoterritorioubicacion_set"][name$="-municipio"]').value = '';
+    newRow.querySelector('select[name^="apoyoterritorioubicacion_set"][name$="-municipio"]').disabled = true;
+    newRow.querySelector('input[name^="apoyoterritorioubicacion_set"][name$="-vereda"]').value = '';
+
+    // Actualizar los nombres de los inputs y selects en la nueva fila
+    const regex = /apoyoterritorioubicacion_set-(\d+)-(.+)/;
+    newRow.querySelectorAll('input, select').forEach(field => {
+        field.name = field.name.replace(regex, `apoyoterritorioubicacion_set-${newFormIndex}-$2`);
+        field.id = field.id.replace(regex, `apoyoterritorioubicacion_set-${newFormIndex}-$2`);
+    });
+
+    // Agregar el nuevo formulario al contenedor
+    document.getElementById('field-container').appendChild(newRow);
+
+    // Incrementar el TOTAL_FORMS
+    totalFormsInput.value = newFormIndex + 1;
+
+    // Agregar el evento para actualizar los municipios
+    const departamentoSelect = newRow.querySelector('select[name$="-departamento"]');
+    const municipioSelect = newRow.querySelector('select[name$="-municipio"]');
+    departamentoSelect.addEventListener('change', function() {
+        actualizarMunicipios(this, municipioSelect);
+    });
+
+    // Habilitar el botón de eliminación en la nueva fila
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'btn btn-danger btn-sm mt-2 delete-button';
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.addEventListener('click', function() {
+        const fieldGroup = this.closest('tr'); // Obtener la fila desde el botón
+        const rowNumber = fieldGroup.querySelector('td:first-child').textContent;
+        const container = document.getElementById('field-container');
+        const rows = container.querySelectorAll('.field-group');
+        rows.forEach(row => {
+            const rowNumberCell = row.querySelector('td:first-child');
+            if (parseInt(rowNumberCell.textContent) > parseInt(rowNumber)) {
+            rowNumberCell.textContent = parseInt(rowNumberCell.textContent) - 1;
+            }
+        });
+
+        fieldGroup.remove();
+        actualizarTotalForms();
+        
+    });
+    newRow.querySelector('td:last-child').appendChild(deleteButton);
+
+    // Actualizar SOLO el índice de la nueva fila
+    const indiceCelda = newRow.querySelector('td:first-child');
+    indiceCelda.textContent = newFormIndex + 1; 
+});
+
+
+
+
+
+
+
+
+
+</script>
+{% endblock %}

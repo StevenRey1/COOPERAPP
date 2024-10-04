@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+  
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Datos del cooperante y programa, proyecto o plan</h5>
+
+  <form method="POST">
+      {% csrf_token %}
+      
+      {{form.as_p}}
+
+
+      <div class="d-flex justify-content-center mt-3"> 
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+
+      
+  </form>
+</div>
+</div>
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-title {
+        background-color: #f0f4c3;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+document.getElementById('id_cooperante').addEventListener('change', function() {
+    const cooperanteId = this.value;
+    const identificacionSelect = document.getElementById('id_identificacion');
+    
+    // Limpiar identificaciones anteriores y establecer el valor a vacío
+    identificacionSelect.innerHTML = '<option value="">Seleccione una identificación</option>';
+    identificacionSelect.value = ''; // Limpiar valor seleccionado
+    identificacionSelect.disabled = false; // Habilitar el select
+
+    const operadorSelect = document.getElementById('id_operador');
+    operadorSelect.innerHTML = '<option value="">Seleccione un operador</option>'; // Limpiar operadores anteriores
+    operadorSelect.value = ''; // Limpiar valor seleccionado
+    operadorSelect.disabled = true; // Deshabilitar el select
+
+    const proyectoPlanSelect = document.getElementById('id_proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar proyectos/planes anteriores
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+    proyectoPlanSelect.disabled = true; // Deshabilitar el select
+
+    const lineaAccionSelect = document.getElementById('id_linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
+    lineaAccionSelect.disabled = true; // Deshabilitar el select
+  
+   
+
+    if (cooperanteId) {
+        const identificacionUrl = `{% url 'reporteProgramas:obtener_identificaciones' 0 %}`.replace('0', cooperanteId);
+
+        fetch(identificacionUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data.identificaciones.forEach(identificacion => {
+                    const option = document.createElement('option');
+                    option.value = identificacion.id;
+                    option.textContent = identificacion.identificacion;
+                    identificacionSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar identificaciones:', error));
+    }
+});
+
+document.getElementById('id_identificacion').addEventListener('change', function() {
+    const identificacionId = this.value;
+    console.log(identificacionId);
+    const operadorSelect = document.getElementById('id_operador');
+
+    // Limpiar operadores anteriores
+    operadorSelect.innerHTML = '<option value="">Seleccione un operador</option>';
+    operadorSelect.disabled = false; // Habilitar el select
+
+    const proyectoPlanSelect = document.getElementById('id_proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar proyectos/planes anteriores
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+  
+    const lineaAccionSelect = document.getElementById('id_linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
+
+    if (identificacionId) {
+        const operadorUrl = `{% url 'reporteProgramas:obtener_operadores' 0 %}`.replace('0', identificacionId);
+
+        fetch(operadorUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                data.operadores.forEach(operador => {
+                    const option = document.createElement('option');
+                    option.value = operador.id;
+                    option.textContent = operador.nombre;
+                    operadorSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar operadores:', error));
+    }
+});
+
+document.getElementById('id_operador').addEventListener('change', function() {
+    const cooperanteId = document.getElementById('id_cooperante').value;
+    const identificacionId = document.getElementById('id_identificacion').value;
+    const operadorId = this.value; // Obtener el valor directamente de 'this'
+
+    // Limpiar proyectos/planes anteriores y establecer el valor a vacío
+    const proyectoPlanSelect = document.getElementById('id_proyecto_plan');
+    proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>';
+    proyectoPlanSelect.value = ''; // Limpiar valor seleccionado
+    proyectoPlanSelect.disabled = false; // Habilitar el select
+
+    const lineaAccionSelect = document.getElementById('id_linea_accion');
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>'; // Limpiar líneas de acción anteriores
+    lineaAccionSelect.value = ''; // Limpiar valor seleccionado
+
+    if (cooperanteId && identificacionId && operadorId) {
+        let url = "{% url 'reporteProgramas:obtener_proyectos_plan' 0 0 0 %}"
+            .replace('0', cooperanteId)
+            .replace('0', identificacionId)
+            .replace('0', operadorId);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                proyectoPlanSelect.innerHTML = '<option value="">Seleccione un proyecto/plan</option>'; // Limpiar opciones anteriores
+                data.proyectos_plan.forEach(proyecto => {
+                    const option = document.createElement('option');
+                    option.value = proyecto.id;
+                    option.textContent = proyecto.nombre;
+                    proyectoPlanSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar los proyectos plan:', error));
+    }
+});
+
+document.getElementById('id_proyecto_plan').addEventListener('change', function() {
+    const cooperanteId = document.getElementById('id_cooperante').value;
+    const identificacionId = document.getElementById('id_identificacion').value;
+    const operadorId = document.getElementById('id_operador').value;
+    const proyectoId = this.value;  // Obtener el ID del proyecto/plan seleccionado
+
+    const lineaAccionSelect = document.getElementById('id_linea_accion');
+
+    // Limpiar líneas de acción anteriores
+    lineaAccionSelect.innerHTML = '<option value="">Seleccione una línea de acción</option>';
+    lineaAccionSelect.disabled = false; // Habilitar el select
+
+    if (cooperanteId && identificacionId && operadorId && proyectoId) {
+        // Generar la URL para obtener las líneas de acción
+        const lineasAccionUrl = `{% url 'reporteProgramas:obtener_lineas_accion' 0 0 0 0 %}`
+            .replace('0', cooperanteId)
+            .replace('0', identificacionId)
+            .replace('0', operadorId)
+            .replace('0', proyectoId);
+
+        fetch(lineasAccionUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Para depuración
+                data.lineas_accion.forEach(linea => {
+                    const option = document.createElement('option');
+                    option.value = linea.id;
+                    option.textContent = linea.nombre;
+                    lineaAccionSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar líneas de acción:', error));
+    }
+});
+
+</script>
+{% endblock %}

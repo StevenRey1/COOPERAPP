@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para proyectos de seguridad alimentaria y proyectos productivos</h5>
+
+    <div class="form-container">
+      <div class="error">
+          {% if form.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.8rem;"></button>
+                  {{form.errors}}
+              </div>
+          {% endif %}
+      </div>
+    <p>Indique en este periodo, para cuántos proyectos ha recibido apoyo por parte de este proyecto / cooperante:</p>
+
+    <form method="POST">
+      {% csrf_token %}
+      {{ formset.management_form }}
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th></th>
+              <th>Cantidad proyectos</th>
+              <th>Cantidad familias beneficiarias</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form in formset %}
+              <tr>
+                <td>{{form.id}}
+                    {{ forloop.counter }}
+                </td>
+                    
+                </td>
+                <td>
+                  {{ form.tipo_proyecto }}
+                  {% for item in tipos_proyecto %}
+                  {% if form.tipo_proyecto.value == item.id %}  
+                   {{item.nombre}}
+                  {% endif %}
+                  
+                  {% endfor %}
+                </td>
+                <td>{{ form.cantidad_proyectos }}</td>
+                <td>{{ form.cantidad_familias}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Indique el tipo de apoyo recibido para los proyectos de seguridad alimentaria o productivos en este periodo:</label>
+        <div class="row">
+          {% for checkbox in form.tipo_apoyo %}
+            <div class="col-sm-6">
+              <div class="form-check">
+                {{ checkbox }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.otro_apoyo.id_for_label }}" class="form-label">Otro (Cuál)</label>
+        {{ form.otro_apoyo }}
+        
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.resaltar_apoyo.id_for_label }}" class="form-label">¿Qué resaltaría de este apoyo relacionado con seguridad alimentaria o proyectos productivos por parte de este proyecto / cooperante?</label>
+        {{ form.resaltar_apoyo }}
+        <div class="invalid-feedback">El máximo de palabras permitido es de 100</div>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table th,
+  .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table input,
+  .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+</style>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Agregar contador de palabras al campo resaltar_apoyo
+  const resaltarApoyo = document.getElementById('id_resaltar_apoyo');
+  const resaltarApoyoCounter = document.createElement('span');
+  resaltarApoyoCounter.textContent = '0/100 palabras';
+  resaltarApoyoCounter.style.fontSize = '0.8rem';
+  resaltarApoyoCounter.style.color = '#6c757d';
+  resaltarApoyo.insertAdjacentElement('afterend', resaltarApoyoCounter);
+
+  // Función para contar palabras
+  function contarPalabras(text) {
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    return words.length;
+  }
+
+  // Actualizar el contador de palabras
+  resaltarApoyo.addEventListener('input', function() {
+    const wordCount = contarPalabras(this.value);
+    resaltarApoyoCounter.textContent = `${wordCount}/100 palabras`;
+
+    if (wordCount > 100) {
+      resaltarApoyoCounter.style.color = 'red';
+      this.classList.add('is-invalid');
+    } else {
+      resaltarApoyoCounter.style.color = '#6c757d';
+      this.classList.remove('is-invalid');
+    }
+    validateForm();
+  });
+
+  // Manejo del campo "Otro" en tipo_apoyo
+  const otroApoyo = document.querySelector('input[name="tipo_apoyo"][value="6"]');  // Asumiendo que "Otro" tiene el valor 6
+  const otroApoyoInput = document.getElementById('id_otro_apoyo');
+
+  function toggleOtroApoyo() {
+    otroApoyoInput.disabled = !otroApoyo.checked;
+    otroApoyoInput.required = otroApoyo.checked;
+    if (!otroApoyo.checked) {
+      otroApoyoInput.value = '';
+      otroApoyoInput.required = false;
+    }
+  }
+
+  otroApoyo.addEventListener('change', toggleOtroApoyo);
+  toggleOtroApoyo();  // Estado inicial
+});
+
+// crear funcion de validacion si hay una clase is-invalid en el formulario deshabilitando el boton submit
+const submitButton = document.querySelector('button[type="submit"]');
+
+function validateForm() {
+  const form = document.querySelector('form');
+  if (form.querySelector('.is-invalid')) {
+    submitButton.disabled = true;
+  } else {
+    submitButton.disabled = false;
+  }
+}
+
+
+</script>
+{% endblock %}

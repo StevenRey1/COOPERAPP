@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+  <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para la gestión del archivo histórico de restitución de tierras</h5  >
+ 
+  {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+      {{form.errors}}
+    </div>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label">Indique el tipo de acciones para las cuales ha recibido apoyo de este proyecto / cooperante en función del fortalecimiento del sistema documental:</label>
+      <div class="row">
+        {% for checkbox in form.acciones %}
+          <div class="col-sm-4">
+            <div class="form-check">
+              {{ checkbox }}
+             
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <div class="row">
+        <div class="col-sm-1">
+          <label for="id_cuales_acciones" class="form-label">Cuales:</label>
+        </div>
+        <div class="col-sm-8">
+          {{ form.cuales_acciones }}
+          <div class="invalid-feedback">
+            Por favor, especifique otras acciones.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_comentarios" class="form-label">¿Qué resaltaría o que comentarios tiene sobre el apoyo recibido para la gestión documental?</label>
+      {{ form.comentarios }}
+      <div class="invalid-feedback">
+        El máximo de palabras es 100
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-center">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+    </div>
+  </form>
+</div>
+</div>
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table th,
+  .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table input,
+  .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+  // funcion para al dar clic en id_acciones_5 se habilite id_cuales_acciones
+  document.getElementById('id_acciones_5').addEventListener('click', function() {
+    document.getElementById('id_cuales_acciones').disabled = !document.getElementById('id_cuales_acciones').disabled;
+  });
+  // crear contador de palabras para comentarios
+  const comentarios = document.getElementById('id_comentarios');
+  const comentariosWordCount = document.createElement('div');
+  comentariosWordCount.textContent = '0/100 palabras';
+  comentariosWordCount.classList.add('form-text', 'text-muted');
+  comentarios.insertAdjacentElement('afterend', comentariosWordCount);
+  // contar palabras
+  const countWords = (text) => text.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+  comentarios.addEventListener('input', function() {
+    const words = countWords(comentarios.value);
+    comentariosWordCount.textContent = `${words}/100 palabras`;
+    if (words > 100) {
+      this.classList.add('is-invalid');
+    } else {
+      this.classList.remove('is-invalid');
+    }
+    checkFormValidity();
+  });
+
+  // validar que el campo cuales acciones sea requerido cuando la opcion es otro
+  document.getElementById('id_acciones_5').addEventListener('click', function() {
+    document.getElementById('id_cuales_acciones').required = !document.getElementById('id_cuales_acciones').required;
+  });
+
+  // deshabilitar boton submit cuando hay un is-invalid 
+  const buttonSubmit = document.querySelector('button[type="submit"]');
+  function checkFormValidity() {
+    const isInvalid = document.querySelectorAll('.is-invalid').length > 0;
+    buttonSubmit.disabled = isInvalid;
+  }
+
+  
+
+</script>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+  <div class="form-container"> 
+    <h5 class="text-center mb-4 form-title"> RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS</h5>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Tabla de Logros -->
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th scope="col">Resultados/Productos Esperados</th>
+              <th scope="col">Logros y/o avances</th>
+              <th scope="col">Departamentos</th>
+              <th scope="col">Municipios</th>
+              <th scope="col">Adjuntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ formset_logro.management_form }}
+            {% for form in formset_logro %} 
+            <tr>
+               <td> {{form.id}}
+                {{ forloop.counter }}
+
+               </td> 
+              <td>
+                {{ form.resultado }}
+                {% for resultado in resultados %}
+                   {% if form.resultado.value == resultado.id %}
+                      {{ resultado.nombre }}
+                    {% endif %}
+                {% endfor %}  
+              </td>
+              <td>
+                {{ form.logros_avances_texto }}
+              </td>
+              <td>
+                {{ form.departamento }}
+              </td>
+              <td>
+                {{ form.municipio }}
+                
+              </td>
+              <td>
+                {{ form.adjunto }}
+                {{urls}}
+                
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Campos de LogrosAvances -->
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.logros_significativos.id_for_label }}" class="form-label">Algún aspecto a resaltar como un logro significativo en este periodo:</label>
+        {{ form_logros_avances.logros_significativos }}
+        <div class="invalid-feedback">El campo debe contener un máximo de 50 palabras.</div>       
+      </div>
+      {{form_logros_avances.errors}}
+    
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.dificultades.id_for_label }}" class="form-label">Comente en caso haya habido inconvenientes o dificultades presentadas en relación a este proyecto:</label>
+        {{ form_logros_avances.dificultades }}
+        <div class="invalid-feedback">El campo debe contener un máximo de 50 palabras.</div> 
+      </div>
+
+      <div class="row mb-3">
+        <p class="form-label">¿Se ha presentado alguna situación que ponga en riesgo el buen relacionamiento con el cooperante?</p>
+        <div class="col-12">
+          <div class="form-check">
+            {{ form_logros_avances.riesgo_relacionamiento }}
+            <label class="form-check-label" for="riesgo_si">Sí</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3" id="id_detalle_riesgo_bloque" style="display: none;">
+        <label for="{{ form_logros_avances.detalle_riesgo.id_for_label }}" class="form-label">Explique detalladamente:</label>
+        {{ form_logros_avances.detalle_riesgo }}
+        <div class="invalid-feedback">El campo debe contener un máximo de 50 palabras.</div>
+      </div>
+        
+      <div class="row mb-3">
+        <label for="{{ form_logros_avances.observaciones_generales.id_for_label }}" class="form-label">Observaciones o comentarios generales: otros aspectos respecto al desarrollo de este proyecto (sugerencias, inquietudes etc.):</label>
+        {{ form_logros_avances.observaciones_generales }} 
+        <div class="invalid-feedback">El campo debe contener un máximo de 50 palabras.</div> 
+      </div>
+       
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+    </form>
+  </div>
+</div>
+
+<style>
+  .input-dynamic {
+      transition: width 0.2s ease;
+  }
+  
+  body {
+      background-color: #e8f5e9;
+  }
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+  // Hacer dinámica la altura de los textArea
+  const allTextAreas = document.querySelectorAll('textarea');
+
+  allTextAreas.forEach(input => {
+    input.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+  });
+
+  // Mostrar/ocultar el campo "Detalle situación de riesgo"
+const riesgoRelacionamientoField = document.getElementById('id_riesgo_relacionamiento');
+const detalleRiesgoField = document.getElementById('id_detalle_riesgo_bloque');
+const detalleRiesgo = document.getElementById('id_detalle_riesgo');
+
+  riesgoRelacionamientoField.addEventListener('change', function() {
+    if (this.checked) {
+      detalleRiesgoField.style.display = 'block';
+      // hacer campo detalle riesgo requerido
+      detalleRiesgo.required= true
+    } else {
+      detalleRiesgoField.style.display = 'none';
+      detalleRiesgo.required= false
+    }
+  });
+
+  const MAX_WORDS = 50;
+  const textareas = document.querySelectorAll('textarea');
+
+  function updateSubmitButtonState() {
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    const buttonSubmit = document.querySelector('button[type="submit"]');
+    buttonSubmit.disabled = invalidFields.length > 0;
+  }
+
+  textareas.forEach(textarea => {
+    const counterId = `counter_${textarea.id}`;
+    let counter = document.getElementById(counterId);
+    
+    if (!counter) {
+      counter = document.createElement('small');
+      counter.id = counterId;
+      counter.className = 'text-muted d-block mt-1';
+      textarea.parentNode.insertBefore(counter, textarea.nextSibling);
+    }
+
+    function updateWordCount() {
+      const words = textarea.value.trim().split(/\s+/).filter(Boolean).length;
+      counter.textContent = `${words} / ${MAX_WORDS} palabras`;
+
+      if (words > MAX_WORDS) {
+        textarea.classList.add('is-invalid'); // Agrega clase para mostrar error
+      } else {
+        textarea.classList.remove('is-invalid'); // Elimina la clase si es válido
+      }
+      updateSubmitButtonState(); // Actualiza el estado del botón al contar palabras
+    }
+
+    textarea.addEventListener('input', updateWordCount);
+    updateWordCount(); // Contar palabras inicialmente
+  });
+
+  // Filtrar municipios al seleccionar departamento
+  const departamentoSelects = document.querySelectorAll('[id^="id_logros-"][id$="-departamento"]');
+  const municipioSelects = document.querySelectorAll('[id^="id_logros-"][id$="-municipio"]');
+
+  departamentoSelects.forEach((departamentoSelect, index) => {
+    departamentoSelect.addEventListener('change', function() { 
+      const departamentoId = this.value;
+      const municipioSelect = municipioSelects[index];
+
+      // Habilitar el campo de municipio
+      municipioSelect.disabled = false;
+
+      // Generar la URL usando el ID del departamento
+      const url = `{% url 'reporteProgramas:get_municipios' 0 %}`.replace('0', departamentoId);
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Limpiar municipios actuales
+          municipioSelect.innerHTML = '';
+
+          // Agregar opciones de municipios
+          data.municipios.forEach(municipio => {
+            const option = document.createElement('option');
+            option.value = municipio.id;
+            option.textContent = municipio.nombre;
+            municipioSelect.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching municipios:', error);
+        });
+    });
+  });
+
+  // Inicializa el estado del botón al cargar la página
+  updateSubmitButtonState();
+
+</script>
+{% endblock %}

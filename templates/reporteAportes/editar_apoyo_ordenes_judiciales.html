@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante para el cumplimiento de órdenes judiciales (diferente a seg. alimentaria y proyectos productivos)</h5>
+
+  <form method="POST" >
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="id_tipo_apoyo" class="form-label">Indique el tipo de apoyo que ha recibido de este proyecto / cooperante para el cumplimiento de órdenes judiciales:</label>
+      {{ form.tipo_apoyo }} 
+      <div class="invalid-feedback">El número de palabras es de máximo 120 palabras</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_tipo_ordenes" class="form-label">¿Para qué tipo de órdenes judiciales recibió el apoyo?</label>
+      {{ form.tipo_ordenes }} 
+      <div class="invalid-feedback">El número de palabras es de máximo 120 palabras</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_cantidad_sentencias" class="form-label">Indique, si es posible, para cuántas sentencias ha contribuido el apoyo recibido de este proyecto / cooperante:</label>
+      <div class="input-group">
+        {{ form.cantidad_sentencias }}
+        <span class="input-group-text">/ 999</span>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_cantidad_ordenes" class="form-label">Indique, si es posible, para cuántas órdenes ha contribuido el apoyo recibido de este proyecto / cooperante:</label>
+      <div class="input-group">
+        {{ form.cantidad_ordenes }}
+        <span class="input-group-text">/ 999</span>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-center">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+    </div>
+  </form>
+</div>
+</div>
+<style>
+  body {
+    background-color: #e8f5e9;
+}
+  .form-container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .form-title {
+      background-color: #f0f4c3;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+  }
+  .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+  }
+  .table input, .table select {
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+  }
+ 
+
+
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+  // agregar contador de palabras a los campos de texto
+  document.addEventListener('DOMContentLoaded', function() {
+    const tipoApoyo = document.getElementById('id_tipo_apoyo');
+    const tipoApoyoCounter = document.createElement('span');
+    tipoApoyoCounter.textContent = '0/120 palabras';
+    tipoApoyoCounter.style.fontSize = '0.8rem';
+    tipoApoyoCounter.style.color = '#6c757d';
+    tipoApoyo.insertAdjacentElement('afterend', tipoApoyoCounter);
+
+    const tipoOrdenes = document.getElementById('id_tipo_ordenes');
+    const tipoOrdenesCounter = document.createElement('span');
+    tipoOrdenesCounter.textContent = '0/120 palabras';
+    tipoOrdenesCounter.style.fontSize = '0.8rem';
+    tipoOrdenesCounter.style.color = '#6c757d';
+    tipoOrdenes.insertAdjacentElement('afterend', tipoOrdenesCounter);
+
+    // función para contar palabras
+    function contarPalabras(text) {
+      return text.trim().split(/\s+/).length;
+    }
+
+    tipoApoyo.addEventListener('input', function() {
+      const palabras = contarPalabras(this.value);
+      tipoApoyoCounter.textContent = `${palabras}/120 palabras`;
+    });
+
+    tipoOrdenes.addEventListener('input', function() {
+      const palabras = contarPalabras(this.value);
+      tipoOrdenesCounter.textContent = `${palabras}/120 palabras`;
+    });
+
+    // si hay más de 120 palabras, mostrar class invalid
+    tipoApoyo.addEventListener('input', function() {
+      if (contarPalabras(this.value) > 120) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+      validateForm();
+    });
+
+    tipoOrdenes.addEventListener('input', function() {
+      if (contarPalabras(this.value) > 120) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+      validateForm();
+    });
+    
+  });
+
+  //validar formulario que no hayan class is-invalid en los campos de texto
+
+  const submitButton = document.querySelector('button[type="submit"]');
+  function validateForm() {
+    const form = document.querySelector('form');
+    if (form.querySelector('.is-invalid')) {
+      submitButton.disabled = true;
+    } else {
+      submitButton.disabled = false;
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="form-container">
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+      {{form.errors}}
+    </div>
+    {% endif %}
+    <h5 class="text-center mb-4 form-title">Apoyo de este proyecto / cooperante a través de contratación de personal</h5>
+    <form method="POST">
+      {% csrf_token %}
+
+      <p>Indique la cantidad de personas y el tiempo de servicio, para las cuales obtuvo apoyo de este proyecto / cooperante:</p>
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th></th>
+              <th>Cantidad de personas (0-999)</th>
+              <th>Tiempo de servicio en meses (0-99)</th>
+              <th>Área profesional</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ formset.management_form }}
+            {% for detalle_form in formset %}
+            <tr>
+              <td>{{detalle_form.id}}
+                {{forloop.counter}}
+              </td>
+              <td>
+                {{ detalle_form.tipo_personal }}
+                {% for tipo in tipos_personal %}
+                {% if detalle_form.tipo_personal.value == tipo.id %}
+                {{ tipo.nombre }}
+                {% endif %}
+                {% endfor %}
+              </td>
+              <td>
+                <div class="input-group">
+                  {{ detalle_form.cantidad_personas }}
+                  
+                  <div class="invalid-feedback">El campo debe contener un máximo de 999.</div>
+                </div>
+              </td>
+              <td>
+                <div class="input-group">
+                  {{ detalle_form.tiempo_servicio }}
+                  <div class="invalid-feedback">El campo debe contener un máximo de 99.</div>
+                </div>
+              </td>
+              <td>
+                {{ detalle_form.area_profesional }}
+              </td>
+            </tr>
+            {% endfor %}
+            <tr>
+              <td class="text-start" colspan="4">
+                  <!-- Align text to the start (left) -->
+                  <div class="d-flex align-items-center">
+                      <span>Otro, ¿Cuáles? <small class="form-text text-muted">(Texto máximo 5 palabras)</small></span>
+                      <div class="ms-2">
+                          {{ form.otro_tipo }}
+                      </div>
+                  </div>
+              </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.objetivo_principal.id_for_label }}" class="form-label">¿Cuál es el objetivo principal de los contratos del personal con el cual apoya este proyecto / cooperante?</label>
+        {{ form.objetivo_principal }}
+        <div id="objetivoWordCount" class="form-text text-muted">0/120 palabras</div>
+        <div class="invalid-feedback">El campo debe contener un máximo de 120 palabras.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.resaltar_apoyo.id_for_label }}" class="form-label">¿Qué resaltaría de este apoyo relacionado con la contratación de personal por parte de este cooperante?</label>
+        {{ form.resaltar_apoyo }}
+        <div id="resaltarWordCount" class="form-text text-muted">0/100 palabras</div>
+        <div class="invalid-feedback">El campo debe contener un máximo de 100 palabras.</div>
+      </div>
+
+      <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table th,
+  .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table input,
+  .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para contar palabras
+const countWords = (text) => text.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+// Referencias a los elementos del DOM
+const objetivoPrincipal = document.getElementById('id_objetivo_principal');
+const resaltarApoyo = document.getElementById('id_resaltar_apoyo');
+const buttonSubmit = document.querySelector('button[type="submit"]');
+
+// Función para contar palabras y actualizar el contador
+function updateWordCount(textarea, maxWords, wordCountDisplay) {
+  const wordCount = countWords(textarea.value);
+  wordCountDisplay.textContent = `${wordCount}/${maxWords} palabras`;
+
+  if (wordCount > maxWords) {
+    textarea.classList.add('is-invalid');
+  } else {
+    textarea.classList.remove('is-invalid');
+  }
+
+  checkFormValidity(); // Revisar la validez del formulario cada vez que se actualiza un campo
+}
+
+// Validación de cantidad_personas y tiempo_servicio
+document.querySelectorAll('[id$=cantidad_personas]').forEach(element => {
+  element.addEventListener('input', function () {
+    if (parseInt(element.value) > 999 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+document.querySelectorAll('[id$=tiempo_servicio]').forEach(element => {
+  element.addEventListener('input', function () {
+    if (parseInt(element.value) > 99 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+// Función que revisa si el formulario es válido
+function checkFormValidity() {
+  let isFormValid = true;
+
+  // Verifica si hay algún campo con la clase 'is-invalid'
+  document.querySelectorAll('.is-invalid').forEach(field => {
+    if (field.classList.contains('is-invalid')) {
+      isFormValid = false;
+    }
+  });
+
+  // Verifica si las áreas de texto tienen más palabras de lo permitido
+  const objetivoWordCount = countWords(objetivoPrincipal.value);
+  const resaltarWordCount = countWords(resaltarApoyo.value);
+
+  if (objetivoWordCount > 120 || resaltarWordCount > 100) {
+    isFormValid = false;
+  }
+
+  // Habilitar o deshabilitar el botón de submit
+  buttonSubmit.disabled = !isFormValid;
+}
+
+// Escuchando cambios en los campos de texto
+objetivoPrincipal.addEventListener('input', function () {
+  updateWordCount(objetivoPrincipal, 120, document.getElementById('objetivoWordCount'));
+});
+
+resaltarApoyo.addEventListener('input', function () {
+  updateWordCount(resaltarApoyo, 100, document.getElementById('resaltarWordCount'));
+});
+
+// Inicializa el estado del formulario al cargar la página
+checkFormValidity();
+
+// si el valor de id_contrataciondetalle_set-3-cantidad_personas es mayor que 0 y menor que 999 se activa el campo  id_otro_tipo
+
+// Validación de cantidad_personas y área_profesional
+document.querySelectorAll('[id^=id_contrataciondetalle_set-][id$=-cantidad_personas]').forEach((element, index) => {
+  element.addEventListener('input', function () {
+    const rowIndex = element.id.match(/id_contrataciondetalle_set-(\d+)-cantidad_personas/)[1];  // Extrae el número de la fila
+    const areaProfesionalField = document.getElementById(`id_contrataciondetalle_set-${rowIndex}-area_profesional`);  // Accede al campo área_profesional correspondiente
+
+    if (parseInt(element.value) > 999 || parseInt(element.value) < 0) {
+      element.classList.add('is-invalid');
+    } else {
+      element.classList.remove('is-invalid');
+    }
+
+    // Si la cantidad de personas es 0, hacer obligatorio el campo de Área profesional
+    if (parseInt(element.value) > 0 && parseInt(element.value) < 999) {
+      areaProfesionalField.required = true;
+     
+    } else {
+      areaProfesionalField.required = false;
+      
+    }
+
+    checkFormValidity(); // Llamar a la función de validación general
+  });
+});
+
+// Referencias a los elementos del DOM
+const otroTipoField = document.getElementById('id_otro_tipo');
+const cantidadPersonasField = document.getElementById('id_contrataciondetalle_set-3-cantidad_personas');
+
+// Función para habilitar o deshabilitar el campo "Otro, ¿Cuáles?"
+function toggleOtroTipoField() {
+  const value = parseInt(cantidadPersonasField.value);
+
+  if (value > 0 && value < 999) {
+    otroTipoField.disabled = false; // Habilitar el campo "Otro, ¿Cuáles?"
+    otroTipoField.required = true;  // Hacer que el campo sea obligatorio
+  } else {
+    otroTipoField.disabled = true;  // Deshabilitar el campo "Otro, ¿Cuáles?"
+    otroTipoField.value = '';        // Limpiar el valor si se deshabilita
+    otroTipoField.required = false;  // Hacer que el campo no sea obligatorio
+  }
+}
+
+// Escuchar cambios en el campo cantidad_personas
+cantidadPersonasField.addEventListener('input', toggleOtroTipoField);
+
+// Inicializar el estado del campo al cargar la página
+toggleOtroTipoField();
+   
+
+
+
+
+
+</script>
+{% endblock %}
