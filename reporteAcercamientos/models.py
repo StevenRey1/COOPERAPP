@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from accounts.models import User
 
 
 class Reporte(models.Model):
@@ -61,7 +61,7 @@ class DatosQuienReporta(models.Model):
     nombre_completo = models.CharField(max_length=255)
     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True)
     dependencia = models.ForeignKey(Dependencia, on_delete=models.SET_NULL, null=True)
-    correo_electronico = models.EmailField(max_length=254)
+    correo_electronico_sesion = models.EmailField(max_length=254)
     correo_electronico_institucional = models.EmailField(max_length=254, blank=True, null=True)
     
     class Meta:

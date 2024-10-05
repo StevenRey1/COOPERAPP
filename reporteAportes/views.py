@@ -331,6 +331,7 @@ def crear_apoyo_herramientas(request, reporte_id):
         # Siempre inicializar los formularios para cada tipo de herramienta
         initial_data = [{'tipo_herramienta': tipo.id} for tipo in tipos_herramienta]
         formset = ApoyoHerramientasFormSet(initial=initial_data)
+        formset.extra = TipoHerramienta.objects.all().count()
 
     context = {
         'formset': formset,
@@ -403,6 +404,7 @@ def crear_apoyo_litigio(request, reporte_id):
             queryset=ApoyoLitigioDetalle.objects.filter(apoyo_litigio=apoyo),
             initial=[{'tipo_caso': tipo.id} for tipo in tipos_caso]
         )
+        formset.extra = TipoCaso.objects.all().count()
 
     context = {
         'form': form,
@@ -470,6 +472,7 @@ def crear_apoyo_seguridad_alimentaria(request, reporte_id):
         form = ApoyoSeguridadAlimentariaForm(instance=apoyo)
         formset = ApoyoDetallesFormSet(queryset=ApoyoSeguridadDetalle.objects.filter(apoyoSeguridadAlimentaria=apoyo),
                                        initial=[{'tipo_proyecto': tipo.id} for tipo in tipos_proyecto])
+        formset.extra = TipoProyecto.objects.all().count(),
 
     context = {
         'form': form,

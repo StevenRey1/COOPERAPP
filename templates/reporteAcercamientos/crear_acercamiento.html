@@ -1,150 +1,324 @@
-{% extends 'base.html' %}
-
+{% extends 'base.html' %} 
 {% block content %}
 <div class="container mt-4">
-  
-    <h2 class="text-center mb-4">Acercamientos de Cooperación Internacional</h2>
-    <p>¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación internacional en este periodo {{reporte.periodo}}?</p>
+  <h2 class="text-center mb-4">Acercamientos de Cooperación Internacional</h2>
+  <p>
+    ¿Ha realizado algún tipo de acercamiento con alguna entidad de cooperación
+    internacional en este periodo {{ reporte.periodo }}?
+  </p>
 
-    <!-- Radio buttons para 'Sí' y 'No' -->
-    <div class="d-flex mb-4">
-        <div class="form-check me-3">
-            <input class="form-check-input" type="radio" id="si" name="acercamiento" value="si" onclick="toggleForm(true)">
-            <label class="form-check-label" for="si">Sí</label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" id="no" name="acercamiento" value="no" onclick="toggleForm(false)" checked>
-            <label class="form-check-label" for="no">No</label>
-        </div>
+  <!-- Radio buttons para 'Sí' y 'No' -->
+  <div class="d-flex mb-4">
+    <div class="form-check me-3">
+      <input
+        class="form-check-input"
+        type="radio"
+        id="si"
+        name="acercamiento"
+        value="si"
+        onclick="toggleForm(true)"
+      />
+      <label class="form-check-label" for="si">Sí</label>
     </div>
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="radio"
+        id="no"
+        name="acercamiento"
+        value="no"
+        onclick="toggleForm(false)"
+        checked
+      />
+      <label class="form-check-label" for="no">No</label>
+    </div>
+  </div>
 
-    
-    <div class="form-container" id="acercamientoForm" style="display: none;">
-    <!-- El formulario, inicialmente oculto si se selecciona 'No' -->
-    <form method="POST" >
-        {% csrf_token %}
-        <h5 class="text-center mb-4 form-title">ACERCAMIENTOS DE COOPERACIÓN INTERNACIONAL</h5>
-                <fieldset id="acercamientoFormContainer">
-                    <div class="acercamiento-form mb-3">
-                        <div class="form-group">
-                            <label for="id_entidad_1">Mencione aquí el nombre de la entidad con quien ha realizado los acercamientos</label>
-                            <input type="text" name="entidad" id="id_entidad_1" class="form-control" placeholder="Texto máximo 20 palabras" required oninput="countWords('id_entidad_1', 20, 'entidadCount_1')">
-                            <small id="entidadCount_1" class="form-text text-muted">0/20 palabras</small>
-                        </div>
-                        <div class="form-group mt-3">
-                            <label for="id_temas_perspectivas_1">Mencione aquí los temas y perspectivas de trabajo colaborativo:</label>
-                            <textarea name="temas_perspectivas" id="id_temas_perspectivas_1" class="form-control" placeholder="Texto máximo 100 palabras" required oninput="countWords('id_temas_perspectivas_1', 100, 'temasCount_1')"></textarea>
-                            <small id="temasCount_1" class="form-text text-muted">0/100 palabras</small>
-                        </div>
-                    </div>
-                </fieldset>
+  <!-- Contenedor para los formularios de acercamiento -->
+  <div class="form-container" id="acercamientoForm" style="display: none">
+    <form method="POST" id="acercamientoForm_1">
+      {% csrf_token %}
 
-                <fieldset id="fieldAddForm" style="display: none;">
-                    <div class="mt-4">
-                        <span>¿Tiene otro acercamiento?</span>
-                        <button type="button" class="btn btn-warning" onclick="addForm()">Sí</button>
-                    </div>
-                    <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-success">Guardar</button>
-                        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
-                    </div>
-                </fieldset>
-            
-        
+      <div id="acercamientoFormContainer">
+        {{ formset.management_form }} 
+        {% for form in formset %}
+        <div class="acercamiento-form">
+          <div class="mb-3">
+            <label for="{{ form.entidad.id_for_label }}" class="form-label"
+              >Mencione aquí el nombre de la entidad con quien ha realizado los
+              acercamientos:</label
+            >
+            {{ form.entidad }}
+           
+            <div class="invalid-feedback">
+              Este campo es obligatorio y no puede superar las 20 palabras.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label
+              for="{{ form.temas_perspectivas.id_for_label }}"
+              class="form-label"
+              >Mencione aquí los temas y perspectivas de trabajo
+              colaborativo:</label
+            >
+            {{ form.temas_perspectivas }}
+           
+            <div class="invalid-feedback">
+              Este campo es obligatorio y no puede superar las 100 palabras.
+            </div>
+          </div>
+          {% if not forloop.first %}
+          <button type="button" class="btn btn-danger mt-2 remove-form-button">
+            Eliminar
+          </button>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="row mt-3 justify-content-center">
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            Guardar
+          </button>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-success" id="addFormBtn">
+            Agregar otro
+          </button>
+        </div>
+        <div class="col-auto">
+          <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger"
+            >Salir</a
+          >
+        </div>
+      </div>
     </form>
-    </div>
-    <fieldset id="continuar_sin_guardar" style="display: block;" class="mt-4">
-        <a href="{% url 'reporteAcercamientos:saltar_acercamiento' reporte.id %}" class="btn btn-primary">Continuar</a>
-    </fieldset>
-  
+  </div>
+
+  <fieldset id="continuar_sin_guardar" class="mt-4">
+    <a
+      href="{% url 'reporteAcercamientos:saltar_acercamiento' reporte.id %}"
+      class="btn btn-primary"
+      >Continuar</a
+    >
+    <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger"
+      >Salir</a
+    >
+  </fieldset>
 </div>
 
 <style>
   body {
-      background-color: #e8f5e9;
+    background-color: #e8f5e9;
   }
+
   .form-container {
-      background-color: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  .form-title {
-      background-color: #f0f4c3;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
 </style>
-{% endblock %}
-
+{% endblock %} 
 {% block extra_js %}
 <script type="text/javascript">
-  let formCount = 1;  // Contador para formularios
-
+  // Función para mostrar/ocultar el formulario según la selección
   function toggleForm(show) {
-    const formFieldset = document.getElementById('acercamientoForm');
-    const continueField = document.getElementById('continuar_sin_guardar');
-    const addField = document.getElementById('fieldAddForm');
-    
+    const formFieldset = document.getElementById("acercamientoForm");
+    const continueField = document.getElementById("continuar_sin_guardar");
+    const addFormBtn = document.getElementById("addFormBtn");
+
     if (show) {
-      formFieldset.style.display = 'block';  // Muestra el formulario si se selecciona 'Sí'
-      addField.style.display = 'block';
-      continueField.style.display = 'none';
+      formFieldset.style.display = "block";
+      addFormBtn.style.display = "block";
+      continueField.style.display = "none";
     } else {
-      formFieldset.style.display = 'none';  // Oculta el formulario si se selecciona 'No'
-      addField.style.display = 'none';
-      continueField.style.display = 'block';
+      formFieldset.style.display = "none";
+      addFormBtn.style.display = "none";
+      continueField.style.display = "block";
     }
   }
 
+  // Función para agregar un nuevo formulario
   function addForm() {
-    formCount++;
-    const formContainer = document.getElementById('acercamientoFormContainer');
+    const formContainer = document.getElementById("acercamientoFormContainer");
+    const totalFormsInput = document.querySelector(
+      'input[name="form-TOTAL_FORMS"]'
+    );
+    const totalForms = parseInt(totalFormsInput.value);
 
-    // Clonar el formulario existente
-    const newForm = document.querySelector('.acercamiento-form').cloneNode(true);
-    
-    // Actualizar IDs y nombres de campos para el nuevo formulario
-    const newFormHTML = newForm.innerHTML
-      .replace(/id_entidad_1/g, `id_entidad_${formCount}`)
-      .replace(/id_temas_perspectivas_1/g, `id_temas_perspectivas_${formCount}`)
-      .replace(/entidadCount_1/g, `entidadCount_${formCount}`)
-      .replace(/temasCount_1/g, `temasCount_${formCount}`);
-    
-    newForm.innerHTML = newFormHTML;
+    // Clonar el último formulario en el contenedor
+    const lastForm = formContainer.querySelector(
+      ".acercamiento-form:last-of-type"
+    );
+    const newForm = lastForm.cloneNode(true);
 
-    // Agregar el botón de eliminar al nuevo formulario
-    const deleteButton = document.createElement('button');
-    deleteButton.type = 'button';
-    deleteButton.className = 'btn btn-danger mt-2';
-    deleteButton.textContent = 'Eliminar';
-    deleteButton.onclick = () => removeForm(newForm);
+    // Actualizar los IDs y nombres de los campos en el nuevo formulario
+    newForm.querySelectorAll("textarea, input, label").forEach((element) => {
+      const oldId = element.id;
+      if (oldId) {
+        const newId = oldId.replace(/-\d+-/g, `-${totalForms}-`);
+        element.id = newId;
+        if (element.tagName === "LABEL") {
+          element.setAttribute("for", newId);
+        }
+        if (element.name) {
+          element.name = element.name.replace(/-\d+-/g, `-${totalForms}-`);
+        }
+      }
+    });
+
+    // Reiniciar los valores de los campos en el nuevo formulario
+    newForm.querySelectorAll("input, textarea").forEach((el) => {
+      el.value = "";
+      el.classList.remove("is-invalid");
+    });
+
+
+    // Reiniciar el contador de palabras a "0 palabras"
+  const entidadInput = newForm.querySelector('input[name$="entidad"]');
+  const wordCountEntidad = entidadInput.nextElementSibling;
+  wordCountEntidad.textContent = "0 palabras"; // Reiniciar contador de palabras
+
+  const perspectivasTextarea = newForm.querySelector(
+    'textarea[name$="temas_perspectivas"]'
+  );
+  const wordCountPerspectivas = perspectivasTextarea.nextElementSibling;
+  wordCountPerspectivas.textContent = "0 palabras"; // Reiniciar contador de palabras
+
+   
+    // verificar si hay un boton de eliminar existente 
+    const removeButton = newForm.querySelector('.btn-danger');
+    if (removeButton) {
+      removeButton.remove();
+    }
+    // Mostrar el botón "Eliminar" en el nuevo formulario
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.classList.add("btn", "btn-danger", "btn-sm", "mt-2");
+    deleteButton.textContent = "Eliminar";
+    deleteButton.addEventListener("click", function () {
+      newForm.remove();
+      const totalFormsInput = document.querySelector(
+        'input[name="form-TOTAL_FORMS"]'
+      );
+      totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+      validateForm(); // Actualizar validación después de eliminar el formulario
+    });
 
     newForm.appendChild(deleteButton);
-    
+
+    // Incrementar el contador de formularios
+    totalFormsInput.value = totalForms + 1;
+
     // Añadir el nuevo formulario al contenedor
     formContainer.appendChild(newForm);
+
+    // Asignar eventos de 'input' a los campos de entidad y textarea en el nuevo formulario
+    const newEntidadInput = newForm.querySelector('input[name$="entidad"]');
+    newEntidadInput.addEventListener("input", () =>
+      updateEntidadWordCount(newEntidadInput)
+    );
+
+    const newTextarea = newForm.querySelector(
+      'textarea[name$="temas_perspectivas"]'
+    );
+    newTextarea.addEventListener("input", () =>
+      updatePerspectivasWordCount(newTextarea)
+    );
   }
 
-  function removeForm(form) {
-    const formContainer = document.getElementById('acercamientoFormContainer');
-    if (formContainer.children.length > 1) { // Asegura que siempre quede al menos un formulario
-      form.remove();
+  const addFormBtn = document.getElementById("addFormBtn");
+  addFormBtn.addEventListener("click", addForm);
+
+  
+// seleccionar todos los campos de entidad que tienen un id id_form-0-entidad
+  const entidadInputs = document.querySelectorAll('input[id$="entidad"]');
+// agregar label a cada campo de entidad para contar palabras
+
+  entidadInputs.forEach((entidadInput) => {
+    const wordCount = document.createElement("small");
+    wordCount.textContent = "0 palabras";
+    wordCount.classList.add("form-text", "text-muted");
+    entidadInput.insertAdjacentElement("afterend", wordCount);
+  });
+
+  // Función para actualizar el contador de palabras de entidad
+  function updateEntidadWordCount(entidadInput) {
+    const wordCount = entidadInput.nextElementSibling;
+    const words = entidadInput.value.trim().split(/\s+/).length;
+    wordCount.textContent = `${words} palabras`;
+
+    if (words > 20) {
+      entidadInput.classList.add("is-invalid");
+    } else {
+      entidadInput.classList.remove("is-invalid");
+    }
+
+    validateForm();
+  }
+  // para cada entidad input agregar un evento input para actualizar el contador de palabras
+  entidadInputs.forEach((entidadInput) => {
+    entidadInput.addEventListener("input", () => updateEntidadWordCount(entidadInput));
+  });
+
+
+  // agregar label a cada campo de perspectivas para contar palabras
+  const perspectivasTextareas = document.querySelectorAll('textarea[id$="temas_perspectivas"]');
+  perspectivasTextareas.forEach((textarea) => {
+    const wordCount = document.createElement("small");
+    wordCount.textContent = "0 palabras";
+    wordCount.classList.add("form-text", "text-muted");
+    textarea.insertAdjacentElement("afterend", wordCount);
+  });
+
+  // Función para actualizar el contador de palabras de perspectivas
+  function updatePerspectivasWordCount(textarea) {
+    const wordCount = textarea.nextElementSibling;
+    const words = textarea.value.trim().split(/\s+/).length;
+    wordCount.textContent = `${words} palabras`;
+
+    if (words > 100) {
+      textarea.classList.add("is-invalid");
+    } else {
+      textarea.classList.remove("is-invalid");
+    }
+
+    validateForm();
+  }
+
+  // para cada textarea de perspectivas agregar un evento input para actualizar el contador de palabras
+  perspectivasTextareas.forEach((textarea) => {
+    textarea.addEventListener("input", () => updatePerspectivasWordCount(textarea));
+  });
+
+  
+
+  // Función para validar el formulario
+  function validateForm() {
+    const invalidInputs = document.querySelectorAll(".is-invalid");
+    const submitBtn = document.getElementById("submitBtn");
+
+    if (invalidInputs.length > 0) {
+      submitBtn.disabled = true; // Deshabilitar el botón de envío si hay campos inválidos
+    } else {
+      submitBtn.disabled = false; // Habilitar el botón de envío si todos los campos son válidos
     }
   }
 
-  // Función para contar palabras
-  function countWords(fieldId, maxWords, counterId) {
-    const field = document.getElementById(fieldId);
-    const wordCount = field.value.trim().split(/\s+/).filter(word => word.length > 0).length;
-    document.getElementById(counterId).textContent = `${wordCount}/${maxWords} palabras`;
+  // Agregar eventos a los formularios existentes
+  document.querySelectorAll(".acercamiento-form").forEach((form) => {
+    const entidadInput = form.querySelector('input[name$="entidad"]');
+    entidadInput.addEventListener("input", () => updateEntidadWordCount(entidadInput));
 
-    // Deshabilita el botón de envío si se excede el número máximo de palabras
-    field.setCustomValidity(wordCount > maxWords ? 'Has excedido el límite de palabras.' : '');
-  }
+    const perspectivasTextarea = form.querySelector(
+      'textarea[name$="temas_perspectivas"]'
+    );
+    perspectivasTextarea.addEventListener("input", () => updatePerspectivasWordCount(perspectivasTextarea));
+  });
 
-  // Inicializar el estado del formulario
-  document.getElementById('no').checked ? toggleForm(false) : toggleForm(true);
+  // Inicializar el formulario de acercamiento basado en la selección de radio
+  toggleForm(document.querySelector('input[name="acercamiento"]:checked').value === "si");
 </script>
 {% endblock %}

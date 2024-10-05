@@ -31,12 +31,18 @@ class ProgresoReporteMiddleware:
                     if reporte.avance == 0 and 'crear-datos-quien-reporta' not in path:
                         # Si no ha completado los datos de quien reporta, redirigir a esa vista
                         return redirect('reporteProgramas:crear_datos_quien_reporta', reporte_id=reporte.id)
-
-                    elif reporte.avance == 1 and 'crear-datos-cooperante' not in path:
+                    
+                    elif reporte.avance == 1 and 'crear-acercamiento' not in path and reporte.tipo==1:
+                        return redirect('reporteAcercamientos:crear_acercamiento', reporte_id=reporte.id)
+                        
+                    elif reporte.avance == 1 and 'crear-datos-cooperante' not in path and reporte.tipo==2:
                         # Si no ha completado el acercamiento, redirigir a la vista de crear acercamiento
                         return redirect('reporteProgramas:crear_datos_cooperante', reporte_id=reporte.id)
+                    
+                    elif reporte.avance == 2 and 'crear-necesidades' not in path and reporte.tipo==1:
+                        return redirect('reporteAcercamientos:crear_necesidades', reporte_id=reporte.id)
 
-                    elif reporte.avance == 2 and 'crear-logros-avances' not in path:
+                    elif reporte.avance == 2 and 'crear-logros-avances' not in path and reporte.tipo==2:
 
                         linea_accion = reporte.datoscooperante.linea_accion.id
 

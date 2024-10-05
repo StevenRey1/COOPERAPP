@@ -1,11 +1,272 @@
-{% extends 'base.html' %}
-
+{% extends 'base.html' %} 
 {% block content %}
-  <h2>Editar Acercamiento</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-    <a href="{% url 'reporteAcercamientos:editar_reporte' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
-  </form>
+<div class="container mt-4">
+
+  <!-- Contenedor para los formularios de acercamiento -->
+  <div class="form-container" id="acercamientoForm" >
+    <h5 class="text-center mb-4 form-title">Acercamientos de Cooperación Internacional</h5>
+    <form method="POST" id="acercamientoForm_1">
+      {% csrf_token %}
+
+      <div id="acercamientoFormContainer">
+        {{ formset.management_form }} 
+        {% for form in formset %}
+        <div class="acercamiento-form">
+          <!-- Contador de índice -->
+          <h6 class="form-index">Formulario {{ forloop.counter }}</h6> 
+
+          <div class="mb-3">
+            {{ form.id }}
+            <label for="{{ form.entidad.id_for_label }}" class="form-label"
+              >Mencione aquí el nombre de la entidad con quien ha realizado los
+              acercamientos:</label
+            >
+            {{ form.entidad }}
+           
+            <div class="invalid-feedback">
+              Este campo es obligatorio y no puede superar las 20 palabras.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label
+              for="{{ form.temas_perspectivas.id_for_label }} "
+              class="form-label"
+              >Mencione aquí los temas y perspectivas de trabajo
+              colaborativo:</label
+            >
+            {{ form.temas_perspectivas }}
+           
+            <div class="invalid-feedback">
+              Este campo es obligatorio y no puede superar las 100 palabras.
+            </div>
+          </div>
+          {% if not forloop.first %}
+          <div class="form-check">
+            {{ form.DELETE }}
+            <label class="form-check-label" for="{{ form.DELETE.id_for_label }}">Eliminar</label>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="row mt-3 justify-content-center">
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            Guardar
+          </button>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-success" id="addFormBtn">
+            Agregar otro
+          </button>
+        </div>
+        <div class="col-auto">
+          <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger"
+            >Salir</a
+          >
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .form-index {
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+</style>
+
+{% endblock %} 
+
+{% block extra_js %}
+<script type="text/javascript">
+// Función para agregar un nuevo formulario
+function addForm() {
+  const formContainer = document.getElementById("acercamientoFormContainer");
+  const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+  const totalForms = parseInt(totalFormsInput.value);
+
+  // Clonar el último formulario en el contenedor
+  const lastForm = formContainer.querySelector(".acercamiento-form:last-of-type");
+  const newForm = lastForm.cloneNode(true);
+
+  // Eliminar el checkbox de eliminación del nuevo formulario
+  const deleteCheckbox = newForm.querySelector('input[type="checkbox"][name$="DELETE"]');
+  if (deleteCheckbox) {
+    deleteCheckbox.parentElement.remove(); // Remover el checkbox de eliminación
+  }
+
+  // Actualizar los IDs y nombres de los campos en el nuevo formulario
+  newForm.querySelectorAll("textarea, input, label").forEach((element) => {
+    const oldId = element.id;
+    if (oldId) {
+      const newId = oldId.replace(/-\d+-/g, `-${totalForms}-`);
+      element.id = newId;
+      if (element.tagName === "LABEL") {
+        element.setAttribute("for", newId);
+      }
+      if (element.name) {
+        element.name = element.name.replace(/-\d+-/g, `-${totalForms}-`);
+      }
+    }
+  });
+
+  // Reiniciar los valores de los campos en el nuevo formulario
+  newForm.querySelectorAll("input, textarea").forEach((el) => {
+    el.value = "";
+    el.classList.remove("is-invalid");
+  });
+
+  // Reiniciar el contador de palabras a "0 palabras"
+  const entidadInput = newForm.querySelector('input[name$="entidad"]');
+  const wordCountEntidad = entidadInput.nextElementSibling;
+  wordCountEntidad.textContent = "0 palabras"; // Reiniciar contador de palabras
+
+  const perspectivasTextarea = newForm.querySelector('textarea[name$="temas_perspectivas"]');
+  const wordCountPerspectivas = perspectivasTextarea.nextElementSibling;
+  wordCountPerspectivas.textContent = "0 palabras"; // Reiniciar contador de palabras
+
+  // Verificar si hay un botón de eliminar existente
+  const removeButton = newForm.querySelector('.btn-danger');
+  if (removeButton) {
+    removeButton.remove();
+  }
+  
+  // Mostrar el botón "Eliminar" en el nuevo formulario
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.classList.add("btn", "btn-danger", "btn-sm", "mt-2");
+  deleteButton.textContent = "Eliminar";
+  deleteButton.addEventListener("click", function () {
+    newForm.remove();
+    const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+    totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+    updateIndices(); // Actualizar índices después de eliminar el formulario
+    validateForm(); // Actualizar validación después de eliminar el formulario
+  });
+
+  newForm.appendChild(deleteButton);
+
+  // Incrementar el contador de formularios
+  totalFormsInput.value = totalForms + 1;
+
+  // Añadir el nuevo formulario al contenedor
+  formContainer.appendChild(newForm);
+
+  // Actualizar índices de todos los formularios
+  updateIndices();
+
+  // Asignar eventos de 'input' a los campos de entidad y textarea en el nuevo formulario
+  const newEntidadInput = newForm.querySelector('input[name$="entidad"]');
+  newEntidadInput.addEventListener("input", () => updateEntidadWordCount(newEntidadInput));
+
+  const newTextarea = newForm.querySelector('textarea[name$="temas_perspectivas"]');
+  newTextarea.addEventListener("input", () => updatePerspectivasWordCount(newTextarea));
+}
+
+// Función para actualizar los índices de los formularios
+function updateIndices() {
+  const forms = document.querySelectorAll(".acercamiento-form");
+  forms.forEach((form, index) => {
+    const indexLabel = form.querySelector(".form-index");
+    indexLabel.textContent = `Formulario ${index + 1}`; // Actualizar el texto del índice
+  });
+}
+
+const addFormBtn = document.getElementById("addFormBtn");
+addFormBtn.addEventListener("click", addForm);
+
+// Seleccionar todos los campos de entidad que tienen un id id_form-0-entidad
+const entidadInputs = document.querySelectorAll('input[id$="entidad"]');
+// Agregar label a cada campo de entidad para contar palabras
+entidadInputs.forEach((entidadInput) => {
+  const wordCount = document.createElement("small");
+  wordCount.textContent = "0 palabras";
+  wordCount.classList.add("form-text", "text-muted");
+  entidadInput.insertAdjacentElement("afterend", wordCount);
+});
+
+// Función para actualizar el contador de palabras de entidad
+function updateEntidadWordCount(entidadInput) {
+  const wordCount = entidadInput.nextElementSibling;
+  const words = entidadInput.value.trim().split(/\s+/).length;
+  wordCount.textContent = `${words} palabras`;
+
+  if (words > 20) {
+    entidadInput.classList.add("is-invalid");
+  } else {
+    entidadInput.classList.remove("is-invalid");
+  }
+
+  validateForm();
+}
+
+// Para cada entidad input agregar un evento input para actualizar el contador de palabras
+entidadInputs.forEach((entidadInput) => {
+  entidadInput.addEventListener("input", () => updateEntidadWordCount(entidadInput));
+});
+
+// Agregar label a cada campo de perspectivas para contar palabras
+const perspectivasTextareas = document.querySelectorAll('textarea[id$="temas_perspectivas"]');
+perspectivasTextareas.forEach((textarea) => {
+  const wordCount = document.createElement("small");
+  wordCount.textContent = "0 palabras";
+  wordCount.classList.add("form-text", "text-muted");
+  textarea.insertAdjacentElement("afterend", wordCount);
+});
+
+// Función para actualizar el contador de palabras de perspectivas
+function updatePerspectivasWordCount(textarea) {
+  const wordCount = textarea.nextElementSibling;
+  const words = textarea.value.trim().split(/\s+/).length;
+  wordCount.textContent = `${words} palabras`;
+
+  if (words > 100) {
+    textarea.classList.add("is-invalid");
+  } else {
+    textarea.classList.remove("is-invalid");
+  }
+
+  validateForm();
+}
+
+// Para cada textarea agregar un evento input para actualizar el contador de palabras
+perspectivasTextareas.forEach((textarea) => {
+  textarea.addEventListener("input", () => updatePerspectivasWordCount(textarea));
+});
+
+// Función para validar el formulario
+function validateForm() {
+  const inputs = document.querySelectorAll("input.is-invalid, textarea.is-invalid");
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (inputs.length > 0) {
+    submitBtn.disabled = true;
+  } else {
+    submitBtn.disabled = false;
+  }
+}
+
+// Inicializar validación del formulario al cargar
+validateForm();
+</script>
 {% endblock %}

@@ -1,11 +1,81 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Editar Datos Quien Reporta</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-    <a href="{% url 'reporteAcercamientos:editar_reporte' reporte_id=object.reporte.id %}" class="btn btn-secondary">Cancelar</a>
-  </form>
+<div class="container mt-4">
+    <div class="form-container">
+        <h5 class="text-center mb-4 form-title">DATOS DE QUIEN REPORTA</h5>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.nombre_completo.id_for_label }}" class="form-label">Nombres y apellidos:</label>
+                {{ form.nombre_completo }}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.dependencia.id_for_label }}" class="form-label">Dependencia:</label>
+                {{ form.dependencia }}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.rol.id_for_label }}" class="form-label">Rol:</label>
+                {{ form.rol }}
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="{{ form.correo_electronico_sesion.id_for_label }}" class="form-label">Correo electrónico:</label>
+                {{ form.correo_electronico_sesion }}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.correo_electronico_institucional.id_for_label }}" class="form-label">Si el correo de inicio de sesión fue de dependencia (ej: cooperacion@urt.gov.co)  
+                    escriba su correo personal institucional o en su defecto deje vacio el campo:</label>
+                {{ form.correo_electronico_institucional }}
+                {% if form.correo_electronico_institucional.errors %}
+                    <div class="text-danger">
+                        {{ form.correo_electronico_institucional.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <div class="mx-1"></div>
+
+                <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #e8f5e9;
+    }
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .form-title {
+        background-color: #c5e1a5;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+  
+   
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    
+
+</script>
 {% endblock %}

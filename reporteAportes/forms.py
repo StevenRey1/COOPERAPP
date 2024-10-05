@@ -218,7 +218,7 @@ class ApoyoHerramientasForm(forms.ModelForm):
 
         return cleaned_data
 
-ApoyoHerramientasFormSet = modelformset_factory(ApoyoHerramientas,form=ApoyoHerramientasForm, extra=TipoHerramienta.objects.all().count(), can_delete=False)
+ApoyoHerramientasFormSet = modelformset_factory(ApoyoHerramientas,form=ApoyoHerramientasForm, extra=0, can_delete=False)
 
 
 
@@ -259,7 +259,7 @@ class ApoyoLitigioDetalleForm(forms.ModelForm):
 ApoyoLitigioFormset = forms.modelformset_factory(
     ApoyoLitigioDetalle,  # Cambia a ApoyoLitigioDetalle
     form=ApoyoLitigioDetalleForm,
-    extra=TipoCaso.objects.all().count(),  # Ajusta según sea necesario
+    extra=0,  # Ajusta según sea necesario
     can_delete=False
 )
 
@@ -296,7 +296,7 @@ class ApoyoDetallesForm(forms.ModelForm):
 ApoyoDetallesFormSet = forms.modelformset_factory(
     ApoyoSeguridadDetalle,
     form=ApoyoDetallesForm,
-    extra=TipoProyecto.objects.all().count(),
+    extra=0,
     can_delete=False
 )
 

@@ -26,6 +26,7 @@
       <label for="{{ form.necesidades_identificadas.id_for_label }}">Mencione necesidades identificadas por su dependencia como acciones para
         las cuales busca apoyo por parte de entidades de Cooperación Internacional.</label>
       {{ form.necesidades_identificadas }}
+      <div class = "invalid-feedback">El máximo de palabras son 50</div>
       <!-- Contador de palabras para necesidades identificadas -->
       <small id="wordCountIdentificadas" class="form-text text-muted">0/50 palabras</small>
     </div>
@@ -43,6 +44,7 @@
     <div class="form-group mb-3">
       <label for="{{ form.cooperante.id_for_label }}">Cuál/es:</label>
       {{ form.cooperante }}
+      <div class="invalid-feedback">El máximo de palabras son 15</div>
       <!-- Contador de palabras para cooperante -->
       <small id="wordCountCooperante" class="form-text text-muted">0/15 palabras</small>
     </div>
@@ -113,10 +115,11 @@
 
     // Limitar la cantidad de palabras
     if (wordCount > maxWords) {
-      var trimmedText = currentText.split(/\s+/).slice(0, maxWords).join(' ');
-      textField.value = trimmedText;
-      wordCountDisplay.textContent = maxWords + '/' + maxWords + ' palabras';
+      textField.classList.add('is-invalid');
+    }else{
+      textField.classList.remove('is-invalid');
     }
+    validateForm();
   }
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -133,5 +136,19 @@
       updateWordCount('id_cooperante', 'wordCountCooperante', 15);
     });
   });
+
+
+
+  // si hay clases is-invalid en el formulario se deshabilita el boton de guardar
+  const submitButton = document.querySelector('button[type="submit"]');
+  // crear funcion que valide si hay clases is-invalid en el formulario
+  function validateForm() {
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    if (invalidFields.length > 0) {
+      submitButton.disabled = true;
+    } else {
+      submitButton.disabled = false;
+    }
+  }
 </script>
 {% endblock %}

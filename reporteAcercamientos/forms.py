@@ -1,6 +1,7 @@
-from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea
+from django.forms import ModelForm, BooleanField, CharField, TextInput, Textarea, modelformset_factory
 from reporteAcercamientos.models import Reporte, AcercamientoCooperacion, NecesidadesCooperacion, DatosQuienReporta, Rol, Dependencia
 from django import forms
+from django.core.exceptions import ValidationError
 import datetime
 
 class ReporteForm(forms.ModelForm):
@@ -46,20 +47,26 @@ class DatosQuienReportaForm(forms.ModelForm):
         model = DatosQuienReporta
         exclude = ['reporte']  # Excluimos 'reporte' porque lo asignamos manualmente
         widgets = {
-            'nombre_completo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
-            'correo_electronico': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'correo_electronico_sesion': forms.EmailInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'dependencia': forms.Select(attrs={'class': 'form-control'}),
             'rol': forms.Select(attrs={'class': 'form-control'}),
-            'correo_electronico_institucional': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 50 caracteres'}),
+            'correo_electronico_institucional': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'nombre.apellido@urt.gov.co'}),
         }
+        
+    def clean_correo_electronico_institucional(self):
+        correo = self.cleaned_data.get('correo_electronico_institucional')
+        if correo and not correo.endswith('@urt.gov.co'):
+            raise ValidationError("El correo debe terminar en @urt.gov.co")
+        return correo
 
 class AcercamientoForm(forms.ModelForm):
     class Meta:
         model = AcercamientoCooperacion
         fields = ['entidad', 'temas_perspectivas']
         widgets = {
-            'entidad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 20 palabras'}),
-            'temas_perspectivas': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 100 palabras'}),
+            'entidad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 20 palabras' , 'required': 'required'}),
+            'temas_perspectivas': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Texto máximo 100 palabras', 'rows':3, 'required': 'required'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -67,6 +74,14 @@ class AcercamientoForm(forms.ModelForm):
         # Asegurando que los campos sean requeridos
         self.fields['entidad'].required = True
         self.fields['temas_perspectivas'].required = True
+        
+        
+AcercamientoFormSet = modelformset_factory(
+    AcercamientoCooperacion,
+    form=AcercamientoForm,
+    extra=1,
+    can_delete=True
+)
 
 class NecesidadesForm(ModelForm):
     class Meta:

@@ -14,12 +14,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-
-LDAP_SERVER = os.getenv('LDAP_SERVER')
-LDAP_PORT = os.getenv('LDAP_PORT')
-LDAP_BASE_DN = os.getenv('LDAP_BASE_DN')
-LDAP_USERNAME_PREFIX = os.getenv('LDAP_USERNAME_PREFIX')
-
+LDAP_SERVER = '192.168.101.11'
+LDAP_PORT = 389
+LDAP_BASE_DN = 'DC=uaegrtd,DC=local'
+LDAP_USERNAME_PREFIX = 'uaegrtd\\'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -112,6 +110,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+AUTH_USER_MODEL = 'accounts.User'  # Asegúrate de que 'accounts' sea el nombre de tu aplicación
 
 
 # Internationalization
