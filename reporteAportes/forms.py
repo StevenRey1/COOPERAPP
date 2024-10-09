@@ -35,18 +35,23 @@ class ApoyoEventosForm(forms.ModelForm):
             'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'cols': 160, 'placeholder': 'Texto máximo de 120 palabras'}),
        }
     
-    def clean(self) :
+    def clean(self):
         cleaned_data = super().clean()
+        
+        # Validar que se haya seleccionado al menos un evento
         eventos = cleaned_data.get('eventos')
+        if eventos is None or len(eventos) == 0:
+            raise forms.ValidationError("Debes seleccionar al menos un evento apoyado.")
+
+        # Validar que se haya seleccionado al menos un público objetivo
         publico_objetivo = cleaned_data.get('publico_objetivo')
-
-        if not eventos:
-            raise ValidationError('Debe seleccionar al menos un evento.')
-        if not publico_objetivo:
-            raise ValidationError('Debe seleccionar al menos un publico objetivo.')
-
+        if publico_objetivo is None or len(publico_objetivo) == 0:
+            raise forms.ValidationError("Debes seleccionar al menos un público objetivo.")
+        
+        # Validar el objetivo principal
         objetivo_principal = cleaned_data.get('objetivo_principal')
         validar_max_palabras(objetivo_principal, max_palabras=120)
+
         return cleaned_data
 
 class ApoyoViajesForm(forms.ModelForm):
@@ -153,7 +158,7 @@ class ContratacionDetalleForm(forms.ModelForm):
         fields = ['tipo_personal','area_profesional', 'cantidad_personas', 'tiempo_servicio']
         widgets = {
             'tipo_personal': forms.HiddenInput(),
-            'area_profesional': forms.Select(attrs={'class': 'form-select' }),
+            'area_profesional': forms.Select(attrs={'class': 'form-select' , 'disabled': 'disabled'}),  
             'cantidad_personas': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
             'tiempo_servicio': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 99, 'required': 'required'}),
         }
@@ -179,13 +184,20 @@ class ApoyoMaterialDetalleForm(forms.ModelForm):
         model = ApoyoMaterialDetalle
         fields = ['titulo_material', 'objetivo_principal', 'publico_destinatario', 'tipo_material', 'cantidad_originales', 'cantidad_reproducciones']
         widgets = {
-            'titulo_material': forms.TextInput(attrs={'class': 'form-control', 'required': 'required', 'placeholder': 'Texto máximo 5 palabras'}),		
-            'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'required':'required', 'placeholder': 'Texto máximo 20 palabras'}),
+            'titulo_material': forms.Textarea(attrs={'class': 'form-control', 'required': 'required', 'rows':1}),		
+            'objetivo_principal': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'required':'required'}),
             'publico_destinatario': forms.Select(attrs={'class': 'form-select'}),
             'tipo_material': forms.Select(attrs={'class': 'form-select'}),
             'cantidad_originales': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),
             'cantidad_reproducciones': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999, 'required': 'required'}),    
         }
+    def clean(self):
+        cleaned_data = super().clean()
+        titulo_material = cleaned_data.get('titulo_material')
+        objetivo_principal = cleaned_data.get('objetivo_principal')
+        validar_max_palabras(titulo_material, max_palabras=5)
+        validar_max_palabras(objetivo_principal, max_palabras=20)
+        return cleaned_data
 
 # Formset para ApoyoMaterialDetalle
 ApoyoMaterialDetalleFormSet = inlineformset_factory(
@@ -205,8 +217,8 @@ class ApoyoHerramientasForm(forms.ModelForm):
         widgets = {
             'tipo_herramienta': forms.HiddenInput(),
             'cantidad_recibida': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows':1, 'placeholder': 'Texto máx. 20 palabras', 'required': 'required'}),
-            'observaciones': forms.Textarea(attrs={'class': 'form-control','rows':1 ,'placeholder': 'Texto máx. 20 palabras', 'required': 'required'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control','rows':1, 'placeholder': 'Texto máx. 20 palabras', 'disabled': 'disabled'}),
+            'observaciones': forms.Textarea(attrs={'class': 'form-control','rows':1 ,'placeholder': 'Texto máx. 20 palabras', 'disabled': 'disabled'}),
         }
     
     def clean(self):
@@ -230,6 +242,7 @@ class ApoyoLitigioForm(forms.ModelForm):
         exclude = ['reporte']
         widgets = {
             'resaltar_apoyo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Texto máximo 100 palabras', 'required': 'required'}),
+            
         }
 
     def clean(self):
@@ -245,7 +258,7 @@ class ApoyoLitigioDetalleForm(forms.ModelForm):
         fields = ['tipo_caso', 'nombre_caso', 'cantidad_ids']
         widgets = {
             'tipo_caso': forms.HiddenInput(),
-            'nombre_caso': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'placeholder': 'Texto máximo 5 palabras', 'required': 'required'}),
+            'nombre_caso': forms.Textarea(attrs={'class': 'form-control', 'rows': 1, 'placeholder': 'Texto máximo 5 palabras', 'disabled': 'disabled'}),
             'cantidad_ids': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 999}),
         }
 

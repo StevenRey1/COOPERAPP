@@ -82,6 +82,7 @@
                       {% if reporte.avance < 15 %}
                         <a href="{% url 'reporteProgramas:crear_datos_quien_reporta' reporte_id=reporte.id %}" class="btn btn-sm btn-warning">Completar</a>
                       {% else %}
+                        <a href="{% url 'reporteAportes:editar_reporte' reporte_id=reporte.id %}" class="btn btn-sm btn-info">Editar</a>
                         <a href="{% url 'reporteAportes:reporte_pdf' reporte_id=reporte.id %}" class="btn btn-sm btn-info">Ver PDF</a>
                       {% endif %}
                     </td>

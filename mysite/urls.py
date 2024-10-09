@@ -25,4 +25,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),  # Incluye las URLs de la aplicación de autenticación
     path('reporteAportes/', include('reporteAportes.urls')),  # Incluye las URLs de la aplicación 'report
     path('', lambda request: redirect('accounts:login')),  # Redirige a la vista de login de la app 'accounts'
+    path('usuarioCooperacion/', include('usuarioCooperacion.urls')),  # Incluye las URLs de la aplicación 'usuarioCooperacion'
 ]

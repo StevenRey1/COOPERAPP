@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="form-container">
+    <h5 class="text-center mb-4 form-title">Buscar Usuario por Correo</h5>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ buscar_form.as_p }}
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    {% if usuario %}
+        <hr>
+
+        <h5 class="text-center mb-4 form-title">Editar Usuario</h5>
+        <form method="POST" action="{% url 'usuarioCooperacion:editar_usuario_cooperacion' usuario.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </form>
+    {% elif buscar_form.is_bound %}
+        <p class="text-danger">No se encontró ningún usuario con el correo ingresado.</p>
+    {% endif %}
+    </div>
+</div>
+
+<style>
+
+        body {
+          background-color: #e8f5e9;
+        }
+      
+        .form-container {
+          background-color: #ffffff;
+          border-radius: 10px;
+          padding: 20px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+      
+        .form-title {
+          background-color: #f0f4c3;
+          padding: 10px;
+          border-radius: 5px;
+          margin-bottom: 20px;
+        }
+</style>
+
+{% endblock %}
+

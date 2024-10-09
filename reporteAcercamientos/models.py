@@ -31,7 +31,7 @@ class Reporte(models.Model):
         ]
 
     def __str__(self):
-        return f"Informe {self.fecha_elaboracion} - {self.get_periodo_display()}"
+        return f"Informe {self.tipo} del periodo {self.periodo} del usuario {self.usuario.username}"
     
 class Rol(models.Model):
     nombre = models.CharField(max_length=100, unique=True)

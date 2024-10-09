@@ -29,3 +29,21 @@ class User(AbstractUser):
         return self.get_full_name()  # O cualquier otro campo que prefieras
     
     
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ('C', 'Create'),
+        ('U', 'Update'),
+        ('D', 'Delete'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=1, choices=ACTION_CHOICES)
+    model_name = models.CharField(max_length=100)  # Nombre del modelo afectado
+    object_id = models.CharField(max_length=100)  # ID del objeto afectado
+    changes = models.JSONField()  # Detalles de los cambios realizados
+    timestamp = models.DateTimeField(auto_now_add=True)  # Hora de la acción
+
+    def __str__(self):
+        return f"{self.get_action_display()} - {self.model_name} - {self.timestamp}"
+    
+    

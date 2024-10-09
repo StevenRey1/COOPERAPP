@@ -1,6 +1,6 @@
 from reporteProgramas.models import  Logro, Cooperante, AcuerdoCooperacion, Acuerdo, Operador, LineaAccion, LogrosAvances
 from  reporteProgramas.forms import   LogrosAvancesForm, LogroFormSet, DatosCooperanteForm
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.urls import reverse_lazy
@@ -9,7 +9,8 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -45,6 +46,12 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
     form_class = DatosQuienReportaForm
     template_name = 'reporteProgramas/crear_datos_quien_reporta.html'
     
+    def get_initial(self):
+        # Aquí puedes establecer los valores iniciales del formulario
+        initial = super().get_initial()
+        initial['nombre_completo'] = self.request.user.first_name + ' ' + self.request.user.last_name
+        initial['correo_electronico_sesion'] = self.request.user.email
+        return initial
 
     def form_valid(self, form):
         form.instance.reporte = get_object_or_404(Reporte, id=self.kwargs['reporte_id'])
@@ -63,6 +70,19 @@ class DatosQuienReportaCreateView(LoginRequiredMixin,CreateView):
 
     def get_success_url(self):
         return reverse_lazy('reporteProgramas:crear_datos_cooperante', kwargs={'reporte_id': self.kwargs['reporte_id']})
+ 
+class DatosQuienReportaUpdateView(LoginRequiredMixin, UpdateView):
+    model = DatosQuienReporta
+    form_class = DatosQuienReportaForm
+    template_name = 'reporteProgramas/editar_datos_quien_reporta.html'
+
+    def get_object(self, queryset=None):
+        # Buscamos el objeto DatosQuienReporta relacionado al reporte_id
+        reporte_id = self.kwargs.get('reporte_id')
+        return get_object_or_404(DatosQuienReporta, reporte_id=reporte_id)
+    
+    def get_success_url(self):
+        return reverse_lazy('reporteAportes:editar_reporte', kwargs={'reporte_id': self.object.reporte.id}) 
     
 @login_required
 def obtener_cooperantes(request):
@@ -277,20 +297,16 @@ def get_municipios(request, departamento_id):
     municipios = Municipio.objects.filter(departamento_id=departamento_id).values('id', 'nombre')
     return JsonResponse({'municipios': list(municipios)})
 
-class ReporteProgramasListView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        reportes = Reporte.objects.filter(tipo=2)
-        return render(request, 'reporteProgramas/listar_reportes_avances.html', {'reportes': reportes})
     
 @login_required
 def generar_pdf_reporte_avances(request, reporte_id):
     # Obtener el reporte
     reporte = get_object_or_404(Reporte, id=reporte_id)
     usuario = get_object_or_404(DatosQuienReporta,reporte=reporte_id)
-    acuerdo = get_object_or_404(Acuerdo, id=reporte.datoscooperante.identificacion)
-    cooperante = get_object_or_404(Cooperante, id=reporte.datoscooperante.cooperante)
-    operante = get_object_or_404(Operador, id=reporte.datoscooperante.operador)
-    linea_accion = get_object_or_404(LineaAccion, id = reporte.datoscooperante.linea_accion) 
+    acuerdo = get_object_or_404(Acuerdo, id=reporte.datoscooperante.identificacion.id)
+    cooperante = get_object_or_404(Cooperante, id=reporte.datoscooperante.cooperante.id)
+    operante = get_object_or_404(Operador, id=reporte.datoscooperante.operador.id)
+    linea_accion = get_object_or_404(LineaAccion, id = reporte.datoscooperante.linea_accion.id) 
     
     logros_avances = reporte.logrosavances  # Acceder al objeto LogrosAvances
     reporte_fecha = reporte.fecha_elaboracion.strftime('%Y-%m-%d')
@@ -300,9 +316,14 @@ def generar_pdf_reporte_avances(request, reporte_id):
     # Crear buffer
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=30, bottomMargin=30, leftMargin=40, rightMargin=40)
+    logo = Image('static/img/image.png', width=0.6*inch, height=1.2*inch) # Ajusta altura
+    
+    styles = getSampleStyleSheet()
+    style_title = ParagraphStyle('CustomTitle', textColor=colors.black, parent=styles['Normal'], alignment=1, spaceAfter=6, fontSize=8)
+   
     
     # Definir estilos
-    styles = getSampleStyleSheet()
+    
     styles.add(ParagraphStyle(name='CenteredHeading', parent=styles['Heading3'], alignment=TA_CENTER, fontSize=10))
     styles.add(ParagraphStyle(name='LeftAligned', parent=styles['Normal'], alignment=TA_LEFT, fontSize=10))
     styles.add(ParagraphStyle(name='TableHeader', fontSize=10, alignment=TA_CENTER, fontName='Helvetica-Bold'))
@@ -310,7 +331,8 @@ def generar_pdf_reporte_avances(request, reporte_id):
     styles.add(ParagraphStyle(name='ObjectiveContent', alignment=TA_LEFT, fontSize=9))  # Estilo para el objetivo
     styles.add(ParagraphStyle(name='RightAligned', parent=styles['Normal'], alignment=TA_RIGHT, fontSize=9))  # Estilo alineado a la derecha
     styles.add(ParagraphStyle(name='Bold', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9))  # Estilo para texto en negrita
-
+    styles.add(ParagraphStyle(name='Normal-gray', parent=styles['Normal'], textColor=colors.gray, fontSize=9))
+    
     # Definir los datos de la tabla
     data = [
         [Paragraph("1. OBJETIVO", styles['TableHeader'])], 
@@ -323,16 +345,42 @@ def generar_pdf_reporte_avances(request, reporte_id):
         [Paragraph("Nombre y apellidos"), Paragraph(usuario.nombre_completo)],
         [Paragraph("Rol"), Paragraph(usuario.rol.nombre)],
         [Paragraph("Dependencia"), Paragraph(usuario.dependencia.nombre)],
-        [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico)],
+        [Paragraph("Correo Electrónico"), Paragraph(usuario.correo_electronico_sesion)],
         [Paragraph("4. DATOS DEL COOPERANTE Y PROGRAMA, PROYECTO O PLAN", styles['TableHeader'])],
         [Paragraph("NOMBRE DEL COOPERANTE"), Paragraph(cooperante.nombre)],
         [Paragraph("IDENTIFICACIÓN:"), Paragraph(acuerdo.identificacion )],
         [Paragraph("NOMBRE DEL IMPLEMENTADOR U OPERADOR: "), Paragraph(operante.nombre)],
         [Paragraph("LÍNEA DE ACCIÓN / COMPONENTE: "), Paragraph(linea_accion.nombre)],
-        [Paragraph("ROL DE QUIEN REPORTA: "), Paragraph(reporte.datoscooperante.rol)],
+        [Paragraph("ROL DE QUIEN REPORTA: "), Paragraph(reporte.datosquienreporta.rol.nombre)],
         [Paragraph("5. RESULTADOS, LOGROS Y/O AVANCES Y ADJUNTOS", styles['TableHeader'])],
         [Paragraph("Resultados/Productos Esperados"), Paragraph("Logros y/o avances"), Paragraph("Adjunto")]
     ]
+    
+     # Header data
+    header_data = [
+        [logo, Paragraph('UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS<br/>DESPOJADAS', style_title), Paragraph('PÁGINA: 1 DE 1', style_title)],
+        ['', Paragraph('PROCESO: GESTIÓN DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('CÓDIGO: CP-FO-04', style_title)],
+        ['', Paragraph('REPORTE DE ACERCAMIENTOS, ACCIONES Y APORTES DE COOPERACIÓN INTERNACIONAL', style_title), Paragraph('VERSIÓN: 3', style_title)],
+    ]
+    
+    # Create the header table
+    header_table = Table(header_data, colWidths=[0.7*inch, 5*inch, 1.3*inch]) # Ajusta rowHeights
+    header_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (1,0), (1,-1), 'CENTER'),
+        ('ALIGN', (2,0), (2,-1), 'RIGHT'),
+        ('SPAN', (0,0), (0,2)),  # Combina las celdas de la primera columna
+    ]))
+    
+    # Crear una tabla con dos celdas: una para el texto de clasificación y otra para la fecha
+    data_foot_header = [
+        [Paragraph("Clasificación de la Información: Pública <b>■</b> Reservada  Clasificada  ", styles['Normal-gray']),
+         Paragraph("Fecha de aprobación: 12/03/2024", styles['Normal-gray'])]
+    ]
+    
+    # Agregar la tabla a 'elements'
+    table_foot_header = Table(data_foot_header, colWidths=[300, 200])  # Puedes ajustar los anchos de columna según sea necesario
     
    
 
@@ -370,8 +418,8 @@ def generar_pdf_reporte_avances(request, reporte_id):
         ('SPAN', (1, 15), (-1, 15)),
         ('SPAN', (1, 16), (-1, 16)),
         ('SPAN', (0, 17), (-1, 17)),
-     
         
+     
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey), 
         ('BACKGROUND', (0, 2), (-1, 2), colors.lightgrey),
         ('BACKGROUND', (0, 6), (-1, 6), colors.lightgrey),
@@ -391,13 +439,11 @@ def generar_pdf_reporte_avances(request, reporte_id):
     table2_style = TableStyle([
         ('SPAN', (0, 0), (-1, 0)),
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('SPAN', (2, 1), (-1, 1)) ,
-        ('SPAN', (2, 2), (-1, 2)) ,
-        ('SPAN', (2, 4), (-1, 4)) ,
-       
-        
-        ('SPAN', (2, 1), (-1, 1)),
-        ('SPAN', (2, 2), (-1, 2)),
+        ('SPAN', (1, 1), (-1, 1)) ,
+        ('SPAN', (1, 2), (-1, 2)) ,
+        ('SPAN', (1, 4), (-1, 4)) ,
+        ('SPAN', (1, 1), (-1, 1)),
+        ('SPAN', (1, 2), (-1, 2)),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Agrega esta línea para las líneas de la tabla
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -406,34 +452,38 @@ def generar_pdf_reporte_avances(request, reporte_id):
     ])
 
     
-    table = Table(data, colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25, doc.width * 0.25])
-    table2 = Table(data2,colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25, doc.width * 0.25] )
+    table = Table(data, colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25])
+    table2 = Table(data2,colWidths=[doc.width * 0.25, doc.width * 0.25, doc.width * 0.25] )
     table.setStyle(table_style)
 
     table2.setStyle(table2_style)
     # Construir el documento
     elements = [
-        Paragraph("UNIDAD ADMINISTRATIVA ESPECIAL DE GESTIÓN DE RESTITUCIÓN DE TIERRAS DESPOJADAS", styles['CenteredHeading']),
-        Spacer(1, 12),
-        Paragraph("PROCESO: GESTIÓN DE TI", styles['CenteredHeading']),
-        Spacer(1, 12),
-        Paragraph("REPORTE DE COOPERACIÓN INTERNACIONAL", styles['CenteredHeading']),
-        Spacer(1, 20),
+        header_table,  # Encabezado
+        table_foot_header,
+        Spacer(1, 12),  # Espacio después del encabezado
         table,
         table2,
         Spacer(1, 25),  # Espacio después de la tabla
         Paragraph("______________________________", styles['LeftAligned']),
         Paragraph("Firma", styles['LeftAligned']),
         Spacer(1, 12),
-        Paragraph('usuario', styles['Bold']),
-        Paragraph('usuario', styles['LeftAligned']),
-        Paragraph('usuario', styles['LeftAligned'])]
+        Paragraph(reporte.usuario.first_name +' '+ reporte.usuario.last_name , styles['Bold']),
+        Paragraph(reporte.datosquienreporta.rol.nombre, styles['LeftAligned']),
+        Paragraph(reporte.datosquienreporta.dependencia.nombre, styles['LeftAligned'])]
     
     doc.build(elements)
 
     # Obtener el PDF
     pdf = buffer.getvalue()
     buffer.close()
+    
+   #Guardar el pdf si no exite en media o reemplazarlo aún asi este creado
+    with open(f'media/reportes2/reporte2_{reporte.usuario.identificacion}_periodo{reporte.periodo}.pdf', 'wb') as f:
+        f.write(pdf)
+
+    
+    
 
     # Crear la respuesta HTTP con el PDF
     response = HttpResponse(content_type='application/pdf')

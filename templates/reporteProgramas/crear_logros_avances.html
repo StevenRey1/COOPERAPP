@@ -86,9 +86,14 @@
         {{ form_logros_avances.observaciones_generales }} 
         <div class="invalid-feedback">El campo debe contener un máximo de 50 palabras.</div> 
       </div>
+
+
        
-      <button type="submit" class="btn btn-primary">Guardar</button>
-      <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      <div class="d-flex justify-content-center mt-3"> 
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Salir</a>
+      </div>
+
     </form>
   </div>
 </div>
@@ -228,6 +233,28 @@ const detalleRiesgo = document.getElementById('id_detalle_riesgo');
         });
     });
   });
+
+
+
+  // Mostrar el nombre del archivo adjunto debajo del input
+const adjuntoInputs = document.querySelectorAll('[id^="id_logros-"][id$="-adjunto"]');
+
+adjuntoInputs.forEach(input => {
+  input.addEventListener('change', function() {
+    const fileName = this.files[0].name;
+    const label = document.createElement('label');
+    label.textContent = fileName;
+    label.className = 'form-label mt-1'; 
+
+    // Reemplazar la etiqueta anterior si existe
+    const existingLabel = this.parentNode.querySelector('.form-label.mt-1');
+    if (existingLabel) {
+      this.parentNode.replaceChild(label, existingLabel);
+    } else {
+      this.parentNode.appendChild(label);
+    }
+  });
+});
 
   // Inicializa el estado del botón al cargar la página
   updateSubmitButtonState();

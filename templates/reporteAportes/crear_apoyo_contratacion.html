@@ -217,19 +217,22 @@ document.querySelectorAll('[id^=id_contrataciondetalle_set-][id$=-cantidad_perso
     const rowIndex = element.id.match(/id_contrataciondetalle_set-(\d+)-cantidad_personas/)[1];  // Extrae el número de la fila
     const areaProfesionalField = document.getElementById(`id_contrataciondetalle_set-${rowIndex}-area_profesional`);  // Accede al campo área_profesional correspondiente
 
-    if (parseInt(element.value) > 999 || parseInt(element.value) < 0) {
-      element.classList.add('is-invalid');
+    // Validar si la cantidad de personas está dentro del rango permitido
+    const cantidadPersonas = parseInt(element.value);
+    if (isNaN(cantidadPersonas) || cantidadPersonas < 0 || cantidadPersonas > 999) {
+      element.classList.add('is-invalid'); 
     } else {
       element.classList.remove('is-invalid');
     }
 
-    // Si la cantidad de personas es 0, hacer obligatorio el campo de Área profesional
-    if (parseInt(element.value) > 0 && parseInt(element.value) < 999) {
+    // Si la cantidad de personas es mayor que 0, hacer obligatorio el campo de Área profesional
+    if (cantidadPersonas > 0) {
       areaProfesionalField.required = true;
-     
+      areaProfesionalField.disabled = false; // Habilitar el campo si estaba deshabilitado
     } else {
       areaProfesionalField.required = false;
-      
+      areaProfesionalField.value = ""; // Limpiar el valor del campo si es 0
+      areaProfesionalField.disabled = true; // Deshabilitar el campo si es 0
     }
 
     checkFormValidity(); // Llamar a la función de validación general

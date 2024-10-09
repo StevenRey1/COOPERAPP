@@ -31,18 +31,13 @@
               <td>{{ detalle_form.cantidad_originales }}</td>
               <td>{{ detalle_form.cantidad_reproducciones }}</td>
               <td>
-                {% if detalle_form.DELETE %}
-                  <div class="form-check">
-                    {{ detalle_form.DELETE }}
-                    <label class="form-check-label" for="{{ detalle_form.DELETE.id_for_label }}">Eliminar</label>
-                  </div>
-                {% endif %}
+                
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
-        <button type="button" class="btn btn-secondary" id="add-material">Agregar Material</button>
+        <button type="button" class="btn btn-success" id="add-material">Agregar Material</button>
       </div>
 
       <div class="mb-3">
@@ -60,6 +55,39 @@
     </form>
   </div>
 </div>
+<style>
+  body {
+    background-color: #e8f5e9;
+  }
+
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    background-color: #f0f4c3;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table th,
+  .table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table input,
+  .table select {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -79,8 +107,11 @@
     newFieldGroup.querySelectorAll('input, select').forEach(input => {
       if (input.type === 'number') {
         input.value = 0; // Set number inputs to 0
+      
+      } else{
+        input.value = ''; // Set text inputs to empty
       } 
-      input.value = ''; // Set text inputs to empty
+      
     
     });
 
@@ -120,7 +151,90 @@ newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element
       element.setAttribute('for', newFor);
     }
   }
+  // Agregar evento para actualizar el requerido si es un input de cantidad
+ if (element.name.includes('cantidad_originales') || element.name.includes('cantidad_reproducciones')) {
+    element.addEventListener('input', function() {
+      actualizarRequeridoTipoMaterial(this);
+    });
+  }
+
+  // Agregar contador de palabras si es un textarea de objetivo principal o titulo material
+  if (element.name.includes('objetivo_principal')) {
+    const counter = document.createElement('p');
+    counter.textContent = '0/20 palabras';
+    counter.style.fontSize = '0.8rem';
+    counter.style.color = '#6c757d';
+    element.insertAdjacentElement('afterend', counter);
+    element.addEventListener('input', function() {
+      const count = element.value.trim().split(/\s+/).filter(Boolean).length;;
+      counter.textContent = ` ${count}/20 palabras`;
+      if (count > 20) {
+        counter.style.color = 'red';
+        element.classList.add('is-invalid');
+      } else {
+        counter.style.color = '#6c757d';
+        element.classList.remove('is-invalid');
+      }
+      validarFormulario();
+    });
+  } else if (element.name.includes('titulo_material')) {
+    const counter = document.createElement('p');
+    counter.textContent = '0/5 palabras';
+    counter.style.fontSize = '0.8rem';
+    counter.style.color = '#6c757d';
+    element.insertAdjacentElement('afterend', counter);
+    element.addEventListener('input', function() {
+      const count = element.value.trim().split(/\s+/).filter(Boolean).length;;
+      counter.textContent = ` ${count}/5 palabras`;
+      if (count > 5) {
+        counter.style.color = 'red';
+        element.classList.add('is-invalid');
+      } else {
+        counter.style.color = '#6c757d';
+        element.classList.remove('is-invalid');
+      }
+      validarFormulario();
+    });
+  }
 });
+
+// elminar el segundo p y el tercero de la fila
+newFieldGroup.querySelectorAll('p').forEach((element, index) => {
+  if (index === 1 || index === 3  ) {
+    element.remove();
+  }
+});
+
+// agrandar los text area segun el contenido
+
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+// quitar las clases is-invalid de los textarea
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.classList.remove('is-invalid');
+});
+
+
+// quitar los required de los select nuevos 
+newFieldGroup.querySelectorAll('select').forEach(element => {
+  element.required = false;
+});
+
+// limpiar los campos de texto
+
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.value = '';
+});
+
+
+
+
+
 
     // Incrementar el contador de formularios
     totalFormsInput.value = totalForms + 1;
@@ -135,9 +249,9 @@ newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element
   resaltarApoyo.insertAdjacentElement('afterend', resaltarApoyoCounter);
 
   // Contador de palabras
-  resaltarApoyo.addEventListener('input', function () {
+    resaltarApoyo.addEventListener('input', function () {
     //crear una variable que cuenta el numero de palabaras que se ingresan
-    const counter = resaltarApoyo.value.split(/\s+/).length;
+    const counter = resaltarApoyo.value.trim().split(/\s+/).filter(Boolean).length; // Filtrar espacios en blanco
     resaltarApoyoCounter.textContent = ` ${counter}/100 palabras`;
     if (counter > 100) {
       resaltarApoyoCounter.style.color = 'red';
@@ -188,7 +302,84 @@ cantidadReproducciones.forEach(input => {
   });
 });
 
+// agregar contador de palabras a los campos de texto objetivo principal
+
+const objetivoPrincipal = document.querySelectorAll('textarea[name*="objetivo_principal"]');
+const objetivoPrincipalCounter = document.createElement('p');
+objetivoPrincipalCounter.textContent = '0/20 palabras';
+objetivoPrincipalCounter.style.fontSize = '0.8rem';
+objetivoPrincipalCounter.style.color = '#6c757d';
+objetivoPrincipal.forEach(element => {
+  element.insertAdjacentElement('afterend', objetivoPrincipalCounter);
+  element.addEventListener('input', function () {
+    const counter = element.value.split(/\s+/).length;
+    objetivoPrincipalCounter.textContent = ` ${counter}/20 palabras`;
+    if (counter > 20) {
+      objetivoPrincipalCounter.style.color = 'red';
+      element.classList.add('is-invalid');
+    } else {
+      objetivoPrincipalCounter.style.color = '#6c757d';
+      element.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+});
+
+// hacer que los texto de objetivo principal crezcan con el contenido
+
+objetivoPrincipal.forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+
+// hacer que los titulo material crezcan con el contenido
+
+const tituloMaterial = document.querySelectorAll('textarea[name*="titulo_material"]');
+tituloMaterial.forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+// agregar contador de palabras a los campos titulo material y actualizar palabras
+
+const tituloMaterialCounter = document.createElement('p');
+tituloMaterialCounter.textContent = '0/5 palabras';
+tituloMaterialCounter.style.fontSize = '0.8rem';
+tituloMaterialCounter.style.color = '#6c757d';
+tituloMaterial.forEach(element => {
+  element.insertAdjacentElement('afterend', tituloMaterialCounter);
+  element.addEventListener('input', function () {
+    const counter = element.value.split(/\s+/).length;
+    tituloMaterialCounter.textContent = ` ${counter}/5 palabras`;
+    if (counter > 5) {
+      tituloMaterialCounter.style.color = 'red';
+      element.classList.add('is-invalid');
+    } else {
+      tituloMaterialCounter.style.color = '#6c757d';
+      element.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+
+});
+
+
+
+
+
+
+
+
+
   // Validar formulario al cargar la página
   validarFormulario();
+
+
+
 </script>
 {% endblock %}

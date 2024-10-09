@@ -26,14 +26,41 @@
             </div>
 
             <div class="row custom-row" style="border-bottom: 2px solid green;">
-                <li class="nav-item ">
-                    <a href="#" class="nav-link">
+                <li class="nav-item">
+                    <a href="#" class="nav-link align-middle " data-bs-toggle="collapse" data-bs-target="#usuarioCooperacionCollapse" aria-expanded="false" aria-controls="usuarioCooperacionCollapse">
                         <i class="fs-4 bi-house"></i> 
-                        3. Usuario de Cooperación
+                        
+                            3. Usuario de Cooperación
+                         
                     </a>
-
+                    <div class="collapse" id="usuarioCooperacionCollapse">
+                        <ul class="list-unstyled ps-4">
+                            <li class="li-usuario"><a href="#"  class="nav-link align-middle px-0">
+                                <i class="fs-4 bi-house"></i> 
+                                    
+                                        Agregar usuario
+                                    
+                                </a>
+                            </li>
+                            <li class="li-usuario"><a href="#"  class="nav-link align-middle px-0">
+                                <i class="fs-4 bi-house"></i> 
+                                    
+                                        Modificar usuario
+                                   
+                               
+                            </a></li>
+                            <li class="li-usuario">
+                                <a href="#"  class="nav-link align-middle px-0">
+                                <i class="fs-4 bi-house"></i> 
+                                    
+                                       Ver usuarios por dependencia
+                                    
+                              
+                            </a>
+                        </li>
+                        </ul>
+                    </div>
                 </li>
-
             </div>
 
 
@@ -74,12 +101,39 @@
                 <!-- Fila 3 -->
                 <div class="row custom-row" style="border-bottom: 2px solid green;">
                     <li class="nav-item">
-                        <a href="#" class="nav-link align-middle px-0">
+                        <a href="#" class="nav-link align-middle px-0 " data-bs-toggle="collapse" data-bs-target="#usuarioCooperacionCollapse" aria-expanded="false" aria-controls="usuarioCooperacionCollapse">
                             <i class="fs-4 bi-house"></i> 
-                            <span class="ms-1 d-none d-sm-inline custom-font">
+                            <span class="ms-1 d-none d-sm-inline custom-font"> 
                                 3. Usuario de Cooperación
-                            </span>
+                            </span>   
                         </a>
+                        <div class="collapse" id="usuarioCooperacionCollapse">
+                            <ul class="list-unstyled ps-4">
+                                <li class="li-usuario"><a href="{% url 'usuarioCooperacion:crear_usuario_cooperacion' %}"  class="nav-link align-middle px-0">
+                                    <i class="fs-4 bi-house"></i> 
+                                        <span class="ms-1 d-none d-sm-inline custom-font underline">
+                                            Agregar usuario
+                                        </span>
+                                    </a>
+                                </li>
+                                <li class="li-usuario"><a href="{% url 'usuarioCooperacion:buscar_usuario_cooperacion' %}"  class="nav-link align-middle px-0">
+                                    <i class="fs-4 bi-house"></i> 
+                                        <span class="ms-1 d-none d-sm-inline custom-font underline">
+                                            Modificar usuario
+                                        </span>
+                                   
+                                </a></li>
+                                <li class="li-usuario">
+                                    <a href="{%url 'usuarioCooperacion:buscar_por_dependencia' %}"  class="nav-link align-middle px-0">
+                                    <i class="fs-4 bi-house"></i> 
+                                        <span class="ms-1 d-none d-sm-inline custom-font underline">
+                                           Ver usuarios por dependencia
+                                        </span>
+                                  
+                                </a>
+                            </li>
+                            </ul>
+                        </div>
                     </li>
                 </div>
             </div>
@@ -87,3 +141,10 @@
         <hr>
     </div>
 </div>
+<style>
+
+.underline:hover{
+    text-decoration: underline;
+}
+
+</style>

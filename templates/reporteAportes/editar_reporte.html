@@ -4,164 +4,83 @@
 
 <div class="container mt-4">
     <h5 class="mb-3">Formularios completados para editar</h5>
+    
 
     {% if reporte.avance == 15 %}
+    <ol>
+        <li>
+            
+            <a href="{% url 'reporteProgramas:editar_datos_quien_reporta' reporte.id %}" >Editar Datos de Quien Reporta</a>
+        </li>
 
+        <li>
+           
+            <a href="{% url 'reporteProgramas:editar_datos_cooperante' reporte.id %}" >Editar Datos Cooperante</a>
+        </li>
 
+        <li> 
+            <a href="{% url 'reporteProgramas:editar_logros_avances' reporte.id %}" >Editar logros avances</a>
+        </li>
     
-    <!-- Editar formulario de acercamiento -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Datos de Quien Reporta</h6>
-            <a href="{% url 'reporteAcercamientos:editar_datos_quien_reporta' reporte.id %}" class="btn btn-primary">Editar Datos</a>
-        </div>
-    </div>
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_eventos' reporte.id %}" >Editar Apoyo para asistir o realizar eventos</a>
+        </li>
 
-    <!-- Iterar sobre los acercamientos -->
-    {% for acercamiento in reporte.acercamientos.all %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Acercamiento {{ forloop.counter }}</h6>
-            <a href="{% url 'reporteAcercamientos:editar_datos_acercamiento' acercamiento.id %}" class="btn btn-primary">Editar Acercamiento</a>
-        </div>
-    </div>
-    {% endfor %}
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_viajes' reporte.id %}" >Editar Apoyo para la realización de viajes</a>
+        </li>
 
-    <!-- Editar formulario de necesidades -->
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_territorios' reporte.id %}" >Editar Apoyo para acceder a territorios o comunidades</a>
+        </li>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Necesidades</h6>
-            <a href="{% url 'reporteAcercamientos:editar_necesidades' reporte.id %}" class="btn btn-primary">Editar Necesidades</a>
-        </div>
-    </div>
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_contratacion' reporte.id %}" >Editar Apoyo a través de contratación de personal</a>
+        </li>
 
-    <!-- Editar formulario datos del cooperante-->
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_material' reporte.id %}" >Editar Apoyo para la producción de materiales</a>
+        </li>
 
-    
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_herramientas' reporte.id %}" >Editar Apoyo de herramientas y/o equipos tecnológicos</a>
+        </li>
 
-    {% if reporte.avance > 3 %}
+        <li>
+            <a href="{% url 'reporteAportes:editar_apoyo_litigio' reporte.id %}" >Editar Apoyo para el litigio de casos</a>
+        </li>
 
-    <!-- Editar formulario de  apoyo para asistir o realizar eventos.  -->
+        <li>
+            
+            <a href="{% url 'reporteAportes:editar_apoyo_seguridad_alimentaria' reporte.id %}" >Editar Apoyo para proyectos de seguridad alimentaria y productivos</a>
+        </li>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para asistir o realizar eventos</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_eventos' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
+        <li>
+          
+            <a href="{% url 'reporteAportes:editar_apoyo_ordenes_judiciales' reporte.id %}" >Editar Apoyo para el cumplimiento de órdenes judiciales</a>
+        </li>
 
-    <!-- Editar formulario de apoyo para la realización de viajes.  -->
+        <li>
+         
+            <a href="{% url 'reporteAportes:editar_apoyo_archivo_historico' reporte.id %}" >Editar Apoyo para la gestión del archivo histórico</a>
+        </li>
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para la realización de viajes</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_viajes' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
+        <li>
+          
+            <a href="{% url 'reporteAportes:editar_otros_apoyos' reporte.id %}" >Editar Otro tipo de apoyo </a>
+        </li>
 
-    <!-- Editar formulario de apoyo para acceder a territorios o comunidades.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para acceder a territorios o comunidades</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_territorios' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de  apoyo a través de contratación de personal.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo a través de contratación de personal</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_contratacion' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de  apoyo para la producción de materiales.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para la producción de materiales</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_material' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de apoyo de herramientas y/o equipos tecnológicos.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo de herramientas y/o equipos tecnológicos</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_herramientas' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de apoyo para el litigio de casos.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para el litigio de casos</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_litigio' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de apoyo para proyectos de seguridad alimentaria y productivos.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para proyectos de seguridad alimentaria y productivos</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_seguridad_alimentaria' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de apoyo para el cumplimiento de órdenes judiciales.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para el cumplimiento de órdenes judiciales</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_ordenes_judiciales' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario de apoyo para la gestión del archivo histórico.   -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Apoyo para la gestión del archivo histórico</h6>
-            <a href="{% url 'reporteAportes:editar_apoyo_archivo_historico' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-     <!-- Editar formulario de otro tipo de apoyo. -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Otro tipo de apoyo</h6>
-            <a href="{% url 'reporteAportes:editar_otros_apoyos' reporte.id %}" class="btn btn-primary">Editar Apoyo</a>
-        </div>
-    </div>
-
-    <!-- Editar formulario estimación económica. -->
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Estimación Económica</h6>
-            <a href="{% url 'reporteAportes:editar_estimacion_economica' reporte.id %}" class="btn btn-primary">Editar Estimación Económica</a>
-        </div>
-    </div>
-
+        <li>
+           
+            <a href="{% url 'reporteAportes:editar_estimacion_economica' reporte.id %}" >Editar Estimación Económica</a>
+        </li>
+        
+    </ol>
     {% endif %}
 
-
-
-
-    {% endif %}
+    <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger">Volver</a>
 </div>
 
-<a href="{% url 'accounts:listar_reportes' %}" class="btn btn-secondary">Volver</a>
+
 
 {% endblock %}
-
-
-
-

@@ -133,6 +133,26 @@
     const buttonSubmit = document.querySelector('button[type="submit"]');
     buttonSubmit.disabled = invalidFields.length > 0; // Desactivar botón si hay campos inválidos
   }
+   
+  // si la cantidad de ids es mayor que cero o menor que 999 se habilita el campo de texto nombre de los casos de esa fila
+
+  document.querySelectorAll('input[type="number"][id$="-cantidad_ids"]').forEach(input => {
+  input.addEventListener('input', function() {
+    const nombreCaso = this.closest('tr').querySelector('[id$="-nombre_caso"]'); // Usa closest para encontrar el padre más cercano de tipo 'tr'
+    const cantidad = Number(this.value); // Convierte el valor a número
+
+    // Verifica que el valor sea un número entre 1 y 998
+    if (cantidad > 0 && cantidad < 999) {
+      nombreCaso.disabled = false;
+      nombreCaso.required = true;
+    } else {
+      nombreCaso.disabled = true;
+      nombreCaso.required = false;
+    }
+
+    checkInvalidFields(); // Asegúrate de que esta función esté definida
+  });
+});
 
   // Llamar a la función para asegurar que el botón esté correctamente deshabilitado al cargar la página
   checkInvalidFields();

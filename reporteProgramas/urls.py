@@ -6,9 +6,9 @@ from . import views
 
 app_name = 'reporteProgramas'
 urlpatterns = [
-    path('',ReporteProgramasListView.as_view(), name='index'),
     path('crear-reporte/', ReporteProgramaCreateView.as_view(), name='crear_reporte_avances'),
     path('crear-datos-quien-reporta/<int:reporte_id>/', DatosQuienReportaCreateView.as_view(), name='crear_datos_quien_reporta'),
+    path('editar-datos-quien-reporta/<int:reporte_id>/', DatosQuienReportaUpdateView.as_view(), name='editar_datos_quien_reporta'),
     path('crear-logros-avances/<int:reporte_id>/<int:linea_accion_id>', crear_reporte_logros, name='crear_logros_avances'),
     path('editar-logros-avances/<int:reporte_id>/', editar_reporte_logros, name='editar_logros_avances'),
     path('reporte-avances-pdf/<int:reporte_id>/', generar_pdf_reporte_avances, name='reporte_avances_pdf'),

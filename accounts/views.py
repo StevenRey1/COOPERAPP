@@ -1,24 +1,17 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from reporteAcercamientos.models import Reporte
 from django.contrib.auth.decorators import login_required
 from .utils import authenticate_ldap
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('accounts:listar_reportes')  # Redirige a una vista de tu elección
-    else:
-        form = UserCreationForm()
-
-    return render(request, 'accounts/register.html', {'form': form})
-
 def login_view(request):
+    
+    if request.user.is_authenticated:
+        return redirect('accounts:listar_reportes')  # Redirigir a la vista deseada
+    
+    
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -37,13 +30,12 @@ def login_view(request):
             return redirect('accounts:listar_reportes')  # Redirige a una vista de tu elección
             
         except Exception as e:
+            form = AuthenticationForm()
             print(f'Ocurrió un error durante la autenticación: {e}')
-            return render(request, 'accounts/login.html', {'error': 'Ocurrió un error durante la autenticación'})
+            return render(request, 'accounts/login.html', {'error': 'Ocurrió un error durante la autenticación' ,'form': form} )
     else:
         form = AuthenticationForm()
         return render(request, 'accounts/login.html', {'form': form})  # Asegúrate de pasar el formulario al render
-
-
 
 
 @login_required
@@ -55,10 +47,10 @@ def listar_reportes(request):
     }
     return render(request, 'accounts/listar_reportes.html', context)
     
-    
 
-
+@login_required
 def logout_view(request):
-    from django.contrib.auth import logout
-    logout(request)
-    return redirect('login')  # Redirige a la vista de inicio de sesión
+    logout(request)  # Cierra la sesión del usuario
+    return redirect('accounts:login')  # Redirige a la página de inicio de sesión
+
+

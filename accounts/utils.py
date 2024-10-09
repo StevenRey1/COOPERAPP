@@ -18,7 +18,6 @@ def authenticate_ldap(username, password):
             conn.search(settings.LDAP_BASE_DN, f'(sAMAccountName={username})', 
                         attributes=['displayName', 'mail', 'urtTipoDocumento', 'urtIdentificacion', 'givenName', 'sn', 'sAMAccountName'])
             
-            # Obtén la entrada del usuario
             user_data = conn.entries[0] if conn.entries else None
             
             if user_data:
@@ -35,11 +34,9 @@ def authenticate_ldap(username, password):
                 
                 return user  # Retorna el usuario autenticado
             
-            else:
-                return None  # No se encontró el usuario en LDAP
-            
-        else:
-            return False  # Falló la autenticación
+            return None  # No se encontró el usuario en LDAP
+        
+        return False  # Falló la autenticación
     except Exception as e:
         print(f"Error de autenticación LDAP: {e}")
         return None  # O manejar el error de otra manera

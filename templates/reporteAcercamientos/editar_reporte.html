@@ -1,48 +1,38 @@
-{% extends 'base.html' %}
-
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 
 <div class="container mt-4">
-    <h5 class="mb-3">Formularios completados para editar</h5>
+  <h5 class="mb-3">Formularios completados para editar</h5>
 
-    {% if reporte.avance == 3 %}
-    
-    <!-- Editar formulario de acercamiento -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Datos de Quien Reporta</h6>
-            <a href="{% url 'reporteAcercamientos:editar_datos_quien_reporta' reporte.id %}" class="btn btn-primary">Editar Datos</a>
-        </div>
-    </div>
+  {% if reporte.avance == 3 %}
 
+  <ol>
+    <li>
+      <a
+        href="{% url 'reporteAcercamientos:editar_datos_quien_reporta' reporte.id %}"
+        >Editar Datos de Quien Reporta</a
+      >
+    </li>
     <!-- Iterar sobre los acercamientos -->
-    {% for acercamiento in reporte.acercamientos.all %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Acercamiento {{ forloop.counter }}</h6>
-            <a href="{% url 'reporteAcercamientos:editar_datos_acercamiento' acercamiento.id %}" class="btn btn-primary">Editar Acercamiento</a>
-        </div>
-    </div>
-    {% endfor %}
 
+    <li>
+      <a
+        href="{% url 'reporteAcercamientos:editar_datos_acercamiento' reporte.id %}"
+        >Editar Acercamiento de Cooperación internacional
+      </a>
+    </li>
     <!-- Editar formulario de necesidades -->
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <h6>Editar Necesidades</h6>
-            <a href="{% url 'reporteAcercamientos:editar_necesidades' reporte.id %}" class="btn btn-primary">Editar Necesidades</a>
-        </div>
-    </div>
-
-
-
-    {% endif %}
+    <li>
+      <a href="{% url 'reporteAcercamientos:editar_necesidades' reporte.id %}"
+        >Editar pre-identificación de necesidades de Cooperación
+        Internacional</a
+      >
+    </li>
+    <a href="{% url 'accounts:listar_reportes' %}" class="btn btn-danger"
+      >Salir</a
+    >
+  </ol>
+  {% endif %}
 </div>
 
-<a href="{% url 'accounts:listar_reportes' %}" class="btn btn-secondary">Volver</a>
-
 {% endblock %}
-
-
-
-

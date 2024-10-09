@@ -56,15 +56,19 @@ class DatosQuienReportaForm(forms.ModelForm):
     class Meta:
         model = DatosQuienReporta
         exclude = ['reporte']  # Excluimos 'reporte' porque lo asignamos manualmente
-
-
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-
-        # Pre-llenar el correo electrónico del usuario
-        if user:
-            self.fields['correo_electronico'].initial = 'EXAMPLE@GMAIL.COM'
+        widgets = {
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'correo_electronico_sesion': forms.EmailInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'dependencia': forms.Select(attrs={'class': 'form-control'}),
+            'rol': forms.Select(attrs={'class': 'form-control'}),
+            'correo_electronico_institucional': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'nombre.apellido@urt.gov.co'}),
+        }
+        
+    def clean_correo_electronico_institucional(self):
+        correo = self.cleaned_data.get('correo_electronico_institucional')
+        if correo and not correo.endswith('@urt.gov.co'):
+            raise ValidationError("El correo debe terminar en @urt.gov.co")
+        return correo
 
 class LogrosAvancesForm(forms.ModelForm):
     class Meta:
@@ -111,6 +115,9 @@ class LogroForm(forms.ModelForm):
         cleaned_data = super().clean()
         logros_avances_texto = cleaned_data.get('logros_avances_texto')
         validar_max_palabras(logros_avances_texto, max_palabras=50)
+        adjunto = self.cleaned_data.get('adjunto')
+        if adjunto and adjunto.size > 20 * 1024 * 1024:  # 20MB en bytes
+            raise forms.ValidationError("El archivo no puede superar los 20MB.")
         return cleaned_data
 
 

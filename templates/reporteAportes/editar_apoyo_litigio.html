@@ -11,7 +11,7 @@
       <div class="table-responsive mb-3">
         <table class="table table-bordered">
           <thead>
-            <tr>
+            <tr> 
               <th>No</th>
               <th>Tipo de casos</th>
               <th>Nombre de los casos</th>
@@ -138,6 +138,37 @@
     const buttonSubmit = document.querySelector('button[type="submit"]');
     buttonSubmit.disabled = invalidFields.length > 0; // Desactivar botón si hay campos inválidos
   }
+
+  // quiero que se habiliten todos los nombres de los casos apenas cargue la pagina
+
+  document.querySelectorAll('textarea[id$="-nombre_caso"]').forEach(textarea => {
+    textarea.style.height = 'auto'; // Resetear altura para ajustar
+    textarea.style.height = textarea.scrollHeight + 'px'; // Ajustar a contenido
+    textarea.disabled = false;
+  });
+
+
+  // si se coloca un valor de cero en cantidad de ids se deshabilita el campo de texto nombre de los casos de esa fila
+  document.querySelectorAll('input[type="number"][id$="-cantidad_ids"]').forEach(input => {
+    input.addEventListener('input', function() {
+      const textarea = document.querySelector(`textarea[id="${this.id.replace('cantidad_ids', 'nombre_caso')}"]`);
+    
+      if (this.value == 0){
+        textarea.disabled = true;
+        textarea.value = '';
+      }else{
+        textarea.disabled = false;
+        textarea.required = true;
+      }
+     
+      textarea.style.height = textarea.scrollHeight + 'px'; // Ajustar a contenido
+      checkInvalidFields();
+    });
+  });
+
+
+
+ 
 
   // Llamar a la función para asegurar que el botón esté correctamente deshabilitado al cargar la página
   checkInvalidFields();

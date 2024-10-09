@@ -1,8 +1,6 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth.models import User
 from reporteAcercamientos.models import Reporte
-
+from django.core.exceptions import ValidationError
 
 
 class Acuerdo(models.Model):
@@ -106,9 +104,6 @@ class DatosCooperante(models.Model):
         db_table = 'datos_cooperante'
 
 
-
-
-
 class Departamento(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
 
@@ -175,4 +170,11 @@ class Logro(models.Model):
 
     def __str__(self):
         return f"Logro para {self.resultado.nombre}"
+    
+    # Método para validar el tamaño del archivo
+    def clean(self):
+        super().clean()
+        # Validar que el archivo no exceda 20MB
+        if self.adjunto and self.adjunto.size > 20 * 1024 * 1024:  # 20MB en bytes
+            raise ValidationError("El archivo no puede superar los 20MB.")
 

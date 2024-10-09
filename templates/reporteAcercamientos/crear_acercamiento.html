@@ -43,6 +43,7 @@
         {{ formset.management_form }} 
         {% for form in formset %}
         <div class="acercamiento-form">
+          <h6 class="form-index">Formulario {{ forloop.counter }}</h6> 
           <div class="mb-3">
             <label for="{{ form.entidad.id_for_label }}" class="form-label"
               >Mencione aquí el nombre de la entidad con quien ha realizado los
@@ -204,17 +205,20 @@
         'input[name="form-TOTAL_FORMS"]'
       );
       totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+       // Actualizar índices de todos los formularios
+      updateIndices();
       validateForm(); // Actualizar validación después de eliminar el formulario
     });
 
     newForm.appendChild(deleteButton);
-
+     
     // Incrementar el contador de formularios
     totalFormsInput.value = totalForms + 1;
 
     // Añadir el nuevo formulario al contenedor
     formContainer.appendChild(newForm);
-
+    // Actualizar índices de todos los formularios
+    updateIndices();
     // Asignar eventos de 'input' a los campos de entidad y textarea en el nuevo formulario
     const newEntidadInput = newForm.querySelector('input[name$="entidad"]');
     newEntidadInput.addEventListener("input", () =>
@@ -293,7 +297,14 @@
     textarea.addEventListener("input", () => updatePerspectivasWordCount(textarea));
   });
 
-  
+  // Función para actualizar los índices de los formularios
+function updateIndices() {
+  const forms = document.querySelectorAll(".acercamiento-form");
+  forms.forEach((form, index) => {
+    const indexLabel = form.querySelector(".form-index");
+    indexLabel.textContent = `Formulario ${index + 1}`; // Actualizar el texto del índice
+  });
+}
 
   // Función para validar el formulario
   function validateForm() {

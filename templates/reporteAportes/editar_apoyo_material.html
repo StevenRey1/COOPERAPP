@@ -143,6 +143,85 @@ newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element
       element.setAttribute('for', newFor);
     }
   }
+
+  // Agregar evento para actualizar el requerido si es un input de cantidad
+ if (element.name.includes('cantidad_originales') || element.name.includes('cantidad_reproducciones')) {
+    element.addEventListener('input', function() {
+      actualizarRequeridoTipoMaterial(this);
+    });
+  }
+
+  // Agregar contador de palabras si es un textarea de objetivo principal o titulo material
+  if (element.name.includes('objetivo_principal')) {
+    const counter = document.createElement('p');
+    counter.textContent = '0/20 palabras';
+    counter.style.fontSize = '0.8rem';
+    counter.style.color = '#6c757d';
+    element.insertAdjacentElement('afterend', counter);
+    element.addEventListener('input', function() {
+      const count = element.value.trim().split(/\s+/).filter(Boolean).length;;
+      counter.textContent = ` ${count}/20 palabras`;
+      if (count > 20) {
+        counter.style.color = 'red';
+        element.classList.add('is-invalid');
+      } else {
+        counter.style.color = '#6c757d';
+        element.classList.remove('is-invalid');
+      }
+      validarFormulario();
+    });
+  } else if (element.name.includes('titulo_material')) {
+    const counter = document.createElement('p');
+    counter.textContent = '0/5 palabras';
+    counter.style.fontSize = '0.8rem';
+    counter.style.color = '#6c757d';
+    element.insertAdjacentElement('afterend', counter);
+    element.addEventListener('input', function() {
+      const count = element.value.trim().split(/\s+/).filter(Boolean).length;;
+      counter.textContent = ` ${count}/5 palabras`;
+      if (count > 5) {
+        counter.style.color = 'red';
+        element.classList.add('is-invalid');
+      } else {
+        counter.style.color = '#6c757d';
+        element.classList.remove('is-invalid');
+      }
+      validarFormulario();
+    });
+  }
+});
+
+// elminar el segundo p y el tercero de la fila
+newFieldGroup.querySelectorAll('p').forEach((element, index) => {
+  if (index === 1 || index === 3  ) {
+    element.remove();
+  }
+});
+
+// agrandar los text area segun el contenido
+
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+// quitar las clases is-invalid de los textarea
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.classList.remove('is-invalid');
+});
+
+
+// quitar los required de los select nuevos 
+newFieldGroup.querySelectorAll('select').forEach(element => {
+  element.required = false;
+});
+
+// limpiar los campos de texto
+
+newFieldGroup.querySelectorAll('textarea').forEach(element => {
+  element.value = '';
 });
 
     // Incrementar el contador de formularios
@@ -166,7 +245,7 @@ newFieldGroup.querySelectorAll('select, input, label, textarea').forEach(element
   // Contador de palabras
   resaltarApoyo.addEventListener('input', function () {
     //crear una variable que cuenta el numero de palabaras que se ingresan
-    const counter = resaltarApoyo.value.split(/\s+/).length;
+    const counter = resaltarApoyo.value.trim().split(/\s+/).filter(Boolean).length;
     resaltarApoyoCounter.textContent = ` ${counter}/100 palabras`;
     if (counter > 100) {
       resaltarApoyoCounter.style.color = 'red';
@@ -216,6 +295,82 @@ cantidadReproducciones.forEach(input => {
     actualizarRequeridoTipoMaterial(this); // Llamar a la función para actualizar el requerido
   });
 });
+
+
+// hacer que los texto de objetivo principal crezcan con el contenido
+// agregar contador de palabras a los campos de texto objetivo principal
+
+// agregar contador de palabras a los campos de texto objetivo principal
+const objetivoPrincipal = document.querySelectorAll('textarea[name*="objetivo_principal"]');
+
+objetivoPrincipal.forEach(element => {
+  // Crear un nuevo contador para cada textarea
+  const objetivoPrincipalCounter = document.createElement('p');
+  objetivoPrincipalCounter.textContent = '0/20 palabras';
+  objetivoPrincipalCounter.style.fontSize = '0.8rem';
+  objetivoPrincipalCounter.style.color = '#6c757d';
+
+  element.insertAdjacentElement('afterend', objetivoPrincipalCounter);
+  element.addEventListener('input', function () {
+    const counter = element.value.split(/\s+/).filter(Boolean).length;
+    objetivoPrincipalCounter.textContent = ` ${counter}/20 palabras`;
+    if (counter > 20) {
+      objetivoPrincipalCounter.style.color = 'red';
+      element.classList.add('is-invalid');
+    } else {
+      objetivoPrincipalCounter.style.color = '#6c757d';
+      element.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+});
+
+objetivoPrincipal.forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+
+// agregar contador de palabras a los campos titulo material y actualizar palabras
+
+const tituloMaterial = document.querySelectorAll('textarea[name*="titulo_material"]');
+tituloMaterial.forEach(element => {
+  element.addEventListener('input', function () {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  });
+});
+
+// agregar contador de palabras a los campos titulo material
+
+
+
+tituloMaterial.forEach(element => {
+  // Crear un nuevo contador para cada textarea
+  const tituloMaterialCounter = document.createElement('p');
+  tituloMaterialCounter.textContent = '0/5 palabras';
+  tituloMaterialCounter.style.fontSize = '0.8rem';
+  tituloMaterialCounter.style.color = '#6c757d';
+
+  element.insertAdjacentElement('afterend', tituloMaterialCounter);
+  element.addEventListener('input', function () {
+    const counter = element.value.split(/\s+/).filter(Boolean).length;
+    tituloMaterialCounter.textContent = ` ${counter}/5 palabras`;
+    if (counter > 5) {
+      tituloMaterialCounter.style.color = 'red';
+      element.classList.add('is-invalid');
+    } else {
+      tituloMaterialCounter.style.color = '#6c757d';
+      element.classList.remove('is-invalid');
+    }
+    validarFormulario();
+  });
+});
+
+
+
 
 
   // Validar formulario al cargar la página

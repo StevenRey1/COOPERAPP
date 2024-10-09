@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h5 class="text-center mb-4 form-title">Buscar Usuarios por Dependencia</h5>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ buscar_form.as_p }}
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    {% if usuarios %}
+        <h5 class="mt-4">Usuarios Encontrados:</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre del Usuario</th>
+                    <th>Rol</th>
+                    <th>Correo Electrónico</th>
+                    <th>Número de Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.nombre }}</td>
+                    <td>{{ usuario.rol }}</td>
+                    <td>{{ usuario.email }}</td>
+                    <td>{{ usuario.telefono }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Botón para generar PDF -->
+        <a href="{% url 'usuarioCooperacion:generar_pdf_usuarios' dependencia=buscar_form.dependencia.value %}" class="btn btn-success">
+            Generar PDF
+        </a>
+    {% elif buscar_form.is_bound %}
+        <p class="text-danger">No se encontraron usuarios para esta dependencia.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from reporteAcercamientos.models import Reporte
 
 
@@ -38,7 +39,8 @@ class ApoyoEventos(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(9999)],
         verbose_name="Cantidad total de participantes en los eventos en este periodo"
     )
-
+    
+    
 class ObjetivoViaje(models.Model):
     nombre = models.CharField(max_length=50)
 
@@ -144,7 +146,7 @@ class ApoyoMaterial(models.Model):
     
 class ApoyoMaterialDetalle(models.Model):
     apoyo_material = models.ForeignKey(ApoyoMaterial, on_delete=models.CASCADE)
-    titulo_material = models.CharField(max_length=255, verbose_name="Título material")
+    titulo_material = models.TextField(max_length=255, verbose_name="Título material")
     objetivo_principal = models.TextField(verbose_name="Objetivo principal")
     publico_destinatario = models.ForeignKey(publicoDestinatario, on_delete=models.SET_NULL, null=True, blank=True)
     tipo_material = models.ForeignKey(TipoMaterial, on_delete=models.SET_NULL, null=True, blank=True)
@@ -168,8 +170,8 @@ class ApoyoHerramientas(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(999)],
         verbose_name="Cantidad recibida",default=0
     )
-    descripcion = models.CharField(max_length=255, verbose_name="Descripción")
-    observaciones = models.CharField(max_length=255, verbose_name="Observaciones / detalle")
+    descripcion = models.CharField(max_length=255, verbose_name="Descripción", blank=True, null=True)
+    observaciones = models.CharField(max_length=255, verbose_name="Observaciones / detalle", blank=True, null=True)
 
     class Meta:
         verbose_name = "Apoyo de Herramientas"
